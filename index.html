@@ -6,14 +6,10 @@
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta name="referrer" content="no-referrer">
-    <title>Mon gestionnaire de notes</title>
+    <title>Notes sécurisées</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
             --primary: #378add;
@@ -27,7 +23,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             padding: 20px;
@@ -44,10 +40,7 @@
             align-items: center;
             justify-content: center;
         }
-
-        .lock-screen.show {
-            display: flex;
-        }
+        .lock-screen.show { display: flex; }
 
         .lock-card {
             background: white;
@@ -56,41 +49,24 @@
             max-width: 380px;
             width: 90%;
             text-align: center;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
             animation: slideUp 0.3s ease;
         }
-
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(24px); }
             to   { opacity: 1; transform: translateY(0); }
         }
-
         .lock-icon {
-            width: 72px;
-            height: 72px;
+            width: 72px; height: 72px;
             background: var(--primary);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             margin: 0 auto 20px;
-            font-size: 30px;
-            color: white;
-            box-shadow: 0 8px 24px rgba(55, 138, 221, 0.4);
+            font-size: 30px; color: white;
+            box-shadow: 0 8px 24px rgba(55,138,221,0.4);
         }
-
-        .lock-card h2 {
-            font-size: 20px;
-            margin-bottom: 6px;
-            color: var(--text-primary);
-        }
-
-        .lock-card p {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-            line-height: 1.5;
-        }
+        .lock-card h2 { font-size: 20px; margin-bottom: 6px; color: var(--text-primary); }
+        .lock-card p  { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5; }
 
         .lock-card input[type="password"] {
             width: 100%;
@@ -105,409 +81,188 @@
             color: var(--text-primary);
             transition: all 0.3s;
         }
-
         .lock-card input[type="password"]:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.15);
+            box-shadow: 0 0 0 3px rgba(55,138,221,0.15);
         }
+        .lock-card input:disabled { opacity: 0.6; }
 
-        .lock-error {
-            color: var(--danger);
-            font-size: 12px;
-            min-height: 20px;
-            margin-bottom: 10px;
-        }
+        .lock-error   { color: var(--danger); font-size: 12px; min-height: 20px; margin-bottom: 10px; }
+        .lock-attempts{ font-size: 11px; color: var(--danger); min-height: 16px; margin-top: 10px; }
 
         .lock-card .btn-primary {
-            width: 100%;
-            font-size: 15px;
-            padding: 14px;
-            margin-bottom: 18px;
+            width: 100%; font-size: 15px; padding: 14px; margin-bottom: 18px;
         }
+        .lock-card .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
         .lock-info {
-            font-size: 11px;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            font-size: 11px; color: var(--text-secondary);
+            display: flex; align-items: center; justify-content: center; gap: 6px;
         }
-
         .lock-info i { color: var(--success); }
 
-        .lock-attempts {
-            margin-top: 14px;
-            font-size: 11px;
-            color: var(--danger);
-            min-height: 16px;
+        .change-pwd-link {
+            font-size: 11px; color: var(--primary);
+            cursor: pointer; margin-top: 12px;
+            display: inline-block; text-decoration: underline;
         }
 
-        /* ── Barre d'en-tête avec bouton verrou ── */
+        /* ── En-tête app ── */
         .app-header {
-            max-width: 1200px;
-            margin: 0 auto 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            max-width: 1200px; margin: 0 auto 16px;
+            display: flex; align-items: center; justify-content: space-between;
         }
-
         .app-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 15px; font-weight: 600; color: var(--text-secondary);
+            display: flex; align-items: center; gap: 8px;
         }
-
         .app-title i { color: var(--primary); }
 
         .btn-lock {
             background: rgba(255,255,255,0.8);
             border: 1px solid var(--border);
             color: var(--text-secondary);
-            padding: 8px 14px;
-            font-size: 13px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            padding: 8px 14px; font-size: 13px; border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; gap: 6px;
             transition: all 0.2s;
         }
+        .btn-lock:hover { color: var(--danger); border-color: var(--danger); background: rgba(226,75,74,0.05); }
 
-        .btn-lock:hover {
-            color: var(--danger);
-            border-color: var(--danger);
-            background: rgba(226, 75, 74, 0.05);
-        }
-
-        /* ── Conteneur principal ── */
+        /* ── Grille principale ── */
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            max-width: 1200px; margin: 0 auto;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
         }
-
-        @media (max-width: 900px) {
-            .container { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
 
         .panel {
-            background: var(--bg-dark);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
+            background: var(--bg-dark); border-radius: 12px; padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
         }
-
         .panel-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-primary);
+            font-size: 18px; font-weight: 600; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 10px; color: var(--text-primary);
         }
+        .panel-title i { color: var(--primary); font-size: 20px; }
 
-        .panel-title i {
-            color: var(--primary);
-            font-size: 20px;
-        }
+        .input-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
 
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 16px;
+        input[type="text"], textarea {
+            padding: 12px 14px; border: 1px solid var(--border);
+            border-radius: 8px; font-family: inherit; font-size: 14px;
+            color: var(--text-primary); transition: all 0.3s;
         }
-
-        input[type="text"],
-        textarea {
-            padding: 12px 14px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 14px;
-            color: var(--text-primary);
-            transition: all 0.3s;
+        input[type="text"]:focus, textarea:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(55,138,221,0.1);
         }
-
-        input[type="text"]:focus,
-        textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.1);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 150px;
-            line-height: 1.5;
-        }
+        textarea { resize: vertical; min-height: 150px; line-height: 1.5; }
 
         button {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            padding: 12px 20px; border: none; border-radius: 8px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            transition: all 0.3s; display: flex; align-items: center;
+            justify-content: center; gap: 8px;
         }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
+        .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover {
-            background: #2770c0;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(55, 138, 221, 0.3);
+            background: #2770c0; transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(55,138,221,0.3);
         }
-
         .btn-primary:active { transform: translateY(0); }
-
-        .btn-secondary {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-        }
-
+        .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-primary); }
         .btn-secondary:hover { background: var(--bg-light); }
-
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
+        .btn-small { padding: 6px 12px; font-size: 12px; }
+        .btn-danger { background: var(--danger); color: white; }
         .btn-danger:hover { background: #c93a39; }
 
         .notes-list {
-            flex: 1;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+            flex: 1; overflow-y: auto; margin-bottom: 20px;
+            display: flex; flex-direction: column; gap: 12px;
         }
-
         .notes-list::-webkit-scrollbar { width: 6px; }
         .notes-list::-webkit-scrollbar-track { background: var(--bg-light); border-radius: 10px; }
         .notes-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-        .notes-list::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
         .category-group { margin-bottom: 16px; }
-
         .category-badge {
-            display: inline-block;
-            background: var(--primary);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            display: inline-block; background: var(--primary); color: white;
+            padding: 4px 12px; border-radius: 20px; font-size: 11px;
+            font-weight: 600; margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 0.5px;
         }
-
         .note-item {
-            background: var(--bg-light);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px;
-            transition: all 0.3s;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 12px;
+            background: var(--bg-light); border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px; transition: all 0.3s;
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 12px;
         }
-
-        .note-item:hover {
-            border-color: var(--primary);
-            box-shadow: 0 2px 8px rgba(55, 138, 221, 0.15);
-        }
-
-        .note-content {
-            flex: 1;
-            min-width: 0;
-            cursor: pointer;
-        }
-
-        .note-title {
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-            word-break: break-word;
-        }
-
+        .note-item:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(55,138,221,0.15); }
+        .note-content { flex: 1; min-width: 0; cursor: pointer; }
+        .note-title { font-weight: 600; font-size: 14px; color: var(--text-primary); margin-bottom: 4px; word-break: break-word; }
         .note-preview {
-            font-size: 12px;
-            color: var(--text-secondary);
-            line-height: 1.4;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+            font-size: 12px; color: var(--text-secondary); line-height: 1.4;
+            overflow: hidden; text-overflow: ellipsis;
+            display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;
             margin-bottom: 6px;
         }
-
         .note-meta { font-size: 11px; color: var(--text-secondary); }
-
         .note-actions { display: flex; gap: 4px; flex-shrink: 0; }
 
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-secondary);
-        }
-
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
         .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
         .empty-state p { font-size: 14px; }
 
-        .qa-section {
-            border-top: 1px solid var(--border);
-            padding-top: 16px;
-            margin-top: 16px;
-        }
-
+        .qa-section { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px; }
         .qa-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-primary);
+            font-size: 14px; font-weight: 600; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px; color: var(--text-primary);
         }
-
         .qa-title i { color: var(--primary); }
-
-        .qa-input-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
+        .qa-input-group { display: flex; gap: 8px; margin-bottom: 12px; }
         .qa-input-group input { flex: 1; margin: 0; }
         .qa-input-group button { padding: 12px 16px; flex-shrink: 0; }
 
         .response-area { max-height: 250px; overflow-y: auto; }
         .response-area::-webkit-scrollbar { width: 6px; }
-        .response-area::-webkit-scrollbar-track { background: var(--bg-light); }
         .response-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
         .response {
-            background: var(--bg-light);
-            border: 1px solid var(--border);
-            border-left: 3px solid var(--primary);
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 13px;
-            line-height: 1.6;
-            color: var(--text-primary);
-            white-space: pre-wrap;
-            word-break: break-word;
+            background: var(--bg-light); border: 1px solid var(--border);
+            border-left: 3px solid var(--primary); border-radius: 8px;
+            padding: 12px; font-size: 13px; line-height: 1.6;
+            color: var(--text-primary); white-space: pre-wrap; word-break: break-word;
         }
-
         .response.loading { color: var(--text-secondary); font-style: italic; }
-
         .response.error {
-            border-left-color: var(--danger);
-            background: rgba(226, 75, 74, 0.05);
-            color: var(--danger);
+            border-left-color: var(--danger); background: rgba(226,75,74,0.05); color: var(--danger);
         }
 
         .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            align-items: center; justify-content: center;
         }
-
         .modal.show { display: flex; }
-
         .modal-content {
-            background: var(--bg-dark);
-            border-radius: 12px;
-            padding: 24px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            background: var(--bg-dark); border-radius: 12px; padding: 24px;
+            max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-
         .modal-header {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            font-size: 18px; font-weight: 600; margin-bottom: 16px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
         .modal-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--text-secondary);
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: none; border: none; font-size: 24px; cursor: pointer;
+            color: var(--text-secondary); padding: 0; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
         }
-
         .modal-close:hover { color: var(--text-primary); }
-
-        .modal-body {
-            line-height: 1.6;
-            color: var(--text-primary);
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        .modal-footer {
-            margin-top: 20px;
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-        }
-
-        /* ── Modal changement de mot de passe ── */
-        .change-pwd-link {
-            font-size: 11px;
-            color: var(--primary);
-            cursor: pointer;
-            margin-top: 10px;
-            display: inline-block;
-            text-decoration: underline;
-        }
+        .modal-body { line-height: 1.6; color: var(--text-primary); white-space: pre-wrap; word-break: break-word; }
+        .modal-footer { margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end; }
     </style>
 </head>
 <body>
@@ -516,13 +271,11 @@
     <div class="lock-screen show" id="lockScreen">
         <div class="lock-card">
             <div class="lock-icon"><i class="fas fa-lock" id="lockIconEl"></i></div>
-            <h2 id="lockTitle">Mot de passe requis</h2>
-            <p id="lockSubtitle">Entrez votre mot de passe pour accéder à vos notes.</p>
+            <h2 id="lockTitle">Chargement…</h2>
+            <p id="lockSubtitle"></p>
             <input
-                type="password"
-                id="lockInput"
-                placeholder="••••••••"
-                maxlength="64"
+                type="password" id="lockInput"
+                placeholder="••••••••" maxlength="128"
                 autocomplete="current-password"
                 onkeydown="if(event.key==='Enter') handleLock()"
             />
@@ -531,7 +284,8 @@
                 <i class="fas fa-unlock-alt"></i> Déverrouiller
             </button>
             <div class="lock-info">
-                <i class="fas fa-shield-alt"></i> Notes chiffrées et stockées localement
+                <i class="fas fa-shield-alt"></i>
+                Notes chiffrées AES-256 — données illisibles sans mot de passe
             </div>
             <div class="lock-attempts" id="lockAttempts"></div>
             <span class="change-pwd-link" id="changePwdLink" style="display:none" onclick="startChangePwd()">
@@ -544,7 +298,7 @@
     <div id="appContent" style="display:none">
         <div class="app-header">
             <div class="app-title">
-                <i class="fas fa-shield-alt"></i> Notes sécurisées
+                <i class="fas fa-shield-alt"></i> Notes sécurisées (AES-256)
             </div>
             <button class="btn-lock" onclick="lockApp()">
                 <i class="fas fa-lock"></i> Verrouiller
@@ -552,11 +306,8 @@
         </div>
 
         <div class="container">
-            <!-- Panel Gauche : Création -->
             <div class="panel">
-                <div class="panel-title">
-                    <i class="fas fa-pen-fancy"></i> Nouvelle note
-                </div>
+                <div class="panel-title"><i class="fas fa-pen-fancy"></i> Nouvelle note</div>
                 <div class="input-group">
                     <input type="text" id="title" placeholder="Titre (optionnel)" />
                     <input type="text" id="category" placeholder="Catégorie (ex: Travail, Personnel, Étude)" />
@@ -567,26 +318,19 @@
                 </button>
             </div>
 
-            <!-- Panel Droit : Liste + Q&A -->
             <div class="panel">
-                <div class="panel-title">
-                    <i class="fas fa-layer-group"></i> Vos notes
-                </div>
+                <div class="panel-title"><i class="fas fa-layer-group"></i> Vos notes</div>
                 <div class="notes-list" id="notesList">
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
                         <p>Aucune note. Commencez à en ajouter!</p>
                     </div>
                 </div>
-
                 <div class="qa-section">
-                    <div class="qa-title">
-                        <i class="fas fa-comments"></i> Posez une question
-                    </div>
+                    <div class="qa-title"><i class="fas fa-comments"></i> Posez une question</div>
                     <div class="qa-input-group">
                         <input
-                            type="text"
-                            id="question"
+                            type="text" id="question"
                             placeholder="Ex: 'Résume mes notes sur le travail'"
                             onkeypress="if(event.key==='Enter') askQuestion()"
                         />
@@ -600,7 +344,7 @@
         </div>
     </div>
 
-    <!-- Modal : voir note complète -->
+    <!-- Modal note complète -->
     <div class="modal" id="noteModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -620,315 +364,459 @@
         </div>
     </div>
 
-    <script>
-    'use strict';
+<script>
+'use strict';
 
-    /* ══════════════════════════════════════════
-       SÉCURITÉ – Protection par mot de passe
-    ══════════════════════════════════════════ */
-    const HASH_KEY      = 'notes_pwd_hash_v2';
-    const LOCK_TIMEOUT  = 5 * 60 * 1000; // verrouillage auto après 5 min d'inactivité
-    const MAX_ATTEMPTS  = 5;             // blocage temporaire après 5 échecs
-    const BLOCK_MINUTES = 2;
+/* ════════════════════════════════════════════════════════════
+   CRYPTOGRAPHIE  —  AES-256-GCM  +  PBKDF2-SHA-256
+   Les notes sont chiffrées AVANT d'être écrites dans
+   localStorage. Sans le mot de passe, elles sont illisibles.
+════════════════════════════════════════════════════════════ */
+const LS_SALT = 'ns_salt_v3';   // sel PBKDF2 (public, non secret)
+const LS_DATA = 'ns_data_v3';   // notes chiffrées (base64)
+const PBKDF2_ITER  = 100_000;
+const LOCK_TIMEOUT = 5 * 60 * 1000;   // 5 min inactivité
+const MAX_ATTEMPTS = 5;
+const BLOCK_MS     = 2 * 60 * 1000;   // 2 min de blocage
 
-    let lockTimer      = null;
-    let failedAttempts = 0;
-    let blockedUntil   = 0;
-    let setupMode      = false;
-    let pendingNewHash = null;
+let encKey         = null;   // CryptoKey AES-GCM en mémoire — null = verrouillé
+let notes          = [];
+let lockTimer      = null;
+let failedAttempts = 0;
+let blockedUntil   = 0;
+let lockState      = 'unlock';  // machine d'états de l'écran
+let tempPwd        = null;
 
-    async function sha256(text) {
-        const data = new TextEncoder().encode(text);
-        const buf  = await crypto.subtle.digest('SHA-256', data);
-        return Array.from(new Uint8Array(buf))
-            .map(b => b.toString(16).padStart(2, '0')).join('');
+// ── Utilitaires binaires ──
+const enc = t => new TextEncoder().encode(t);
+const dec = b => new TextDecoder().decode(b);
+function toB64(buf) {
+    return btoa(String.fromCharCode(...new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer)));
+}
+function fromB64(s) {
+    return Uint8Array.from(atob(s), c => c.charCodeAt(0));
+}
+
+// ── Dérivation de clé (PBKDF2 → AES-256-GCM) ──
+async function deriveKey(password, salt) {
+    const raw = await crypto.subtle.importKey('raw', enc(password), { name: 'PBKDF2' }, false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt, iterations: PBKDF2_ITER, hash: 'SHA-256' },
+        raw,
+        { name: 'AES-GCM', length: 256 },
+        false, ['encrypt', 'decrypt']
+    );
+}
+
+// ── Chiffrement AES-256-GCM ──
+async function encryptData(data, key) {
+    const iv  = crypto.getRandomValues(new Uint8Array(12));
+    const ct  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc(JSON.stringify(data)));
+    const out = new Uint8Array(12 + ct.byteLength);
+    out.set(iv);
+    out.set(new Uint8Array(ct), 12);
+    return toB64(out);
+}
+
+// ── Déchiffrement AES-256-GCM (lève une exception si mauvaise clé) ──
+async function decryptData(b64str, key) {
+    const buf = fromB64(b64str);
+    const pt  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12));
+    return JSON.parse(dec(pt));
+}
+
+// ── Tenter un déverrouillage : retourne {key, data} ou null ──
+async function tryUnlock(password) {
+    const saltB64 = localStorage.getItem(LS_SALT);
+    if (!saltB64) return null;
+    try {
+        const key  = await deriveKey(password, fromB64(saltB64));
+        const blob = localStorage.getItem(LS_DATA);
+        const data = blob ? await decryptData(blob, key) : [];
+        return { key, data };
+    } catch {
+        return null;  // déchiffrement échoué = mauvais mot de passe
     }
+}
 
-    function showLockScreen(setup = false) {
-        setupMode = setup;
-        pendingNewHash = null;
-        document.getElementById('lockScreen').classList.add('show');
-        document.getElementById('appContent').style.display = 'none';
-        document.getElementById('lockIconEl').className = 'fas fa-lock';
-        document.getElementById('lockTitle').textContent    = setup ? 'Créer un mot de passe' : 'Application verrouillée';
-        document.getElementById('lockSubtitle').textContent = setup
-            ? 'Choisissez un mot de passe pour protéger vos notes (min. 4 caractères).'
-            : 'Entrez votre mot de passe pour accéder à vos notes.';
-        document.getElementById('lockBtn').innerHTML = setup
-            ? '<i class="fas fa-key"></i> Créer le mot de passe'
-            : '<i class="fas fa-unlock-alt"></i> Déverrouiller';
-        document.getElementById('lockInput').value  = '';
-        document.getElementById('lockError').textContent = '';
-        document.getElementById('lockAttempts').textContent = '';
-        document.getElementById('changePwdLink').style.display = !setup && localStorage.getItem(HASH_KEY) ? 'inline-block' : 'none';
-        clearTimeout(lockTimer);
-        setTimeout(() => document.getElementById('lockInput').focus(), 100);
+// ── Créer un nouveau compte (premier lancement) ──
+async function createAccount(password) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    localStorage.setItem(LS_SALT, toB64(salt));
+    const key  = await deriveKey(password, salt);
+    localStorage.setItem(LS_DATA, await encryptData([], key));
+    // Supprimer les anciennes données en clair si elles existent
+    localStorage.removeItem('notes');
+    localStorage.removeItem('notes_pwd_hash_v2');
+    return key;
+}
+
+// ── Changer de mot de passe (rechiffrement) ──
+async function reencryptWithNewPassword(newPassword) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    localStorage.setItem(LS_SALT, toB64(salt));
+    encKey = await deriveKey(newPassword, salt);
+    localStorage.setItem(LS_DATA, await encryptData(notes, encKey));
+}
+
+// ── Sauvegarder les notes chiffrées ──
+async function saveNotes() {
+    if (!encKey) return;
+    localStorage.setItem(LS_DATA, await encryptData(notes, encKey));
+    localStorage.removeItem('notes');  // migration: purger l'ancien stockage en clair
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   INTERFACE DE VERROUILLAGE  —  machine d'états
+════════════════════════════════════════════════════════════ */
+const $  = id => document.getElementById(id);
+
+function setLockUI({ icon = 'fa-lock', title, subtitle, btnHtml, error = '', attempts = '', showChangeLink = false }) {
+    $('lockIconEl').className         = `fas ${icon}`;
+    $('lockTitle').textContent        = title;
+    $('lockSubtitle').textContent     = subtitle;
+    $('lockBtn').innerHTML            = btnHtml;
+    $('lockError').textContent        = error;
+    $('lockAttempts').textContent     = attempts;
+    $('changePwdLink').style.display  = showChangeLink ? 'inline-block' : 'none';
+    $('lockInput').value              = '';
+    $('lockBtn').disabled             = false;
+    $('lockInput').disabled           = false;
+    setTimeout(() => $('lockInput').focus(), 80);
+}
+
+function showLockScreen() {
+    $('lockScreen').classList.add('show');
+    $('appContent').style.display = 'none';
+    clearTimeout(lockTimer);
+
+    const isNew = !localStorage.getItem(LS_SALT);
+    lockState   = isNew ? 'setup_1' : 'unlock';
+
+    if (isNew) {
+        setLockUI({
+            icon: 'fa-key',
+            title: 'Créer un mot de passe',
+            subtitle: 'Choisissez un mot de passe pour chiffrer vos notes (min. 4 caractères).',
+            btnHtml: '<i class="fas fa-key"></i> Continuer',
+        });
+    } else {
+        setLockUI({
+            icon: 'fa-lock',
+            title: 'Application verrouillée',
+            subtitle: 'Entrez votre mot de passe pour déchiffrer vos notes.',
+            btnHtml: '<i class="fas fa-unlock-alt"></i> Déverrouiller',
+            showChangeLink: true
+        });
     }
+}
 
-    function hideLockScreen() {
-        document.getElementById('lockScreen').classList.remove('show');
-        document.getElementById('appContent').style.display = 'block';
-        resetLockTimer();
+function hideLockScreen() {
+    $('lockScreen').classList.remove('show');
+    $('appContent').style.display = 'block';
+    resetLockTimer();
+    renderNotes();
+}
+
+function lockApp() {
+    encKey  = null;
+    notes   = [];
+    clearTimeout(lockTimer);
+    // Effacer l'affichage avant de verrouiller
+    $('notesList').innerHTML   = '';
+    $('responseArea').innerHTML = '';
+    closeModal();
+    showLockScreen();
+}
+
+function resetLockTimer() {
+    clearTimeout(lockTimer);
+    lockTimer = setTimeout(lockApp, LOCK_TIMEOUT);
+}
+
+function setLoading(on) {
+    $('lockBtn').disabled  = on;
+    $('lockInput').disabled = on;
+    if (on) $('lockBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chiffrement…';
+}
+
+async function handleLock() {
+    const now = Date.now();
+    if (now < blockedUntil) {
+        $('lockError').textContent = `Accès bloqué. Réessayez dans ${Math.ceil((blockedUntil - now) / 1000)}s.`;
+        return;
     }
+    const pwd = $('lockInput').value;
+    if (!pwd) { $('lockError').textContent = 'Veuillez entrer un mot de passe.'; return; }
 
-    function lockApp() {
-        clearTimeout(lockTimer);
-        showLockScreen(false);
-    }
+    setLoading(true);
+    try { await dispatch(pwd); }
+    finally { setLoading(false); }
+}
 
-    function resetLockTimer() {
-        clearTimeout(lockTimer);
-        lockTimer = setTimeout(lockApp, LOCK_TIMEOUT);
-    }
+async function dispatch(pwd) {
+    switch (lockState) {
 
-    async function handleLock() {
-        const now = Date.now();
-        if (now < blockedUntil) {
-            const secs = Math.ceil((blockedUntil - now) / 1000);
-            document.getElementById('lockError').textContent = `Trop de tentatives. Réessayez dans ${secs}s.`;
-            return;
-        }
-
-        const pwd = document.getElementById('lockInput').value;
-        if (!pwd) {
-            document.getElementById('lockError').textContent = 'Veuillez entrer un mot de passe.';
-            return;
-        }
-
-        const storedHash = localStorage.getItem(HASH_KEY);
-
-        if (setupMode || !storedHash) {
-            // ── Création du mot de passe ──
-            if (pwd.length < 4) {
-                document.getElementById('lockError').textContent = 'Minimum 4 caractères requis.';
-                return;
-            }
-            if (pendingNewHash === null) {
-                // première saisie : mémoriser le hash et demander confirmation
-                pendingNewHash = await sha256(pwd);
-                document.getElementById('lockInput').value = '';
-                document.getElementById('lockError').textContent = '';
-                document.getElementById('lockSubtitle').textContent = 'Confirmez votre mot de passe.';
-                document.getElementById('lockBtn').innerHTML = '<i class="fas fa-check"></i> Confirmer';
-                return;
-            }
-            // deuxième saisie : vérifier que les deux correspondent
-            const confirmHash = await sha256(pwd);
-            if (confirmHash !== pendingNewHash) {
-                pendingNewHash = null;
-                document.getElementById('lockInput').value = '';
-                document.getElementById('lockError').textContent = 'Les mots de passe ne correspondent pas. Recommencez.';
-                document.getElementById('lockSubtitle').textContent = 'Choisissez un mot de passe (min. 4 caractères).';
-                document.getElementById('lockBtn').innerHTML = '<i class="fas fa-key"></i> Créer le mot de passe';
-                return;
-            }
-            localStorage.setItem(HASH_KEY, pendingNewHash);
-            hideLockScreen();
-        } else {
-            // ── Vérification ──
-            const hash = await sha256(pwd);
-            if (hash === storedHash) {
+        case 'unlock': {
+            const r = await tryUnlock(pwd);
+            if (r) {
                 failedAttempts = 0;
-                document.getElementById('lockAttempts').textContent = '';
+                encKey = r.key;
+                notes  = r.data;
                 hideLockScreen();
             } else {
                 failedAttempts++;
-                document.getElementById('lockInput').value = '';
+                $('lockInput').value = '';
                 if (failedAttempts >= MAX_ATTEMPTS) {
-                    blockedUntil = Date.now() + BLOCK_MINUTES * 60 * 1000;
+                    blockedUntil   = Date.now() + BLOCK_MS;
                     failedAttempts = 0;
-                    document.getElementById('lockError').textContent = `Accès bloqué ${BLOCK_MINUTES} minutes.`;
+                    $('lockError').textContent    = 'Trop de tentatives. Accès bloqué 2 minutes.';
+                    $('lockAttempts').textContent = '';
                 } else {
                     const left = MAX_ATTEMPTS - failedAttempts;
-                    document.getElementById('lockError').textContent = 'Mot de passe incorrect.';
-                    document.getElementById('lockAttempts').textContent =
-                        `${left} tentative${left > 1 ? 's' : ''} restante${left > 1 ? 's' : ''}.`;
+                    $('lockError').textContent    = 'Mot de passe incorrect.';
+                    $('lockAttempts').textContent = `${left} tentative${left > 1 ? 's' : ''} restante${left > 1 ? 's' : ''}.`;
                 }
             }
-        }
-    }
-
-    function startChangePwd() {
-        setupMode = true;
-        pendingNewHash = null;
-        document.getElementById('lockInput').value = '';
-        document.getElementById('lockError').textContent = '';
-        document.getElementById('lockIconEl').className = 'fas fa-key';
-        document.getElementById('lockTitle').textContent    = 'Nouveau mot de passe';
-        document.getElementById('lockSubtitle').textContent = 'Choisissez un nouveau mot de passe (min. 4 caractères).';
-        document.getElementById('lockBtn').innerHTML = '<i class="fas fa-key"></i> Créer le mot de passe';
-        document.getElementById('changePwdLink').style.display = 'none';
-        document.getElementById('lockInput').focus();
-    }
-
-    // Verrouiller quand l'onglet passe en arrière-plan
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) lockApp();
-    });
-
-    // Réinitialiser le minuteur à chaque interaction
-    ['click', 'keydown', 'mousemove', 'touchstart'].forEach(ev =>
-        document.addEventListener(ev, () => {
-            if (document.getElementById('appContent').style.display !== 'none') resetLockTimer();
-        }, { passive: true })
-    );
-
-    // Initialisation : mot de passe existant ?
-    showLockScreen(!localStorage.getItem(HASH_KEY));
-
-
-    /* ══════════════════════════════════════════
-       GESTION DES NOTES
-    ══════════════════════════════════════════ */
-    let notes = JSON.parse(localStorage.getItem('notes')) || [];
-    let currentModalNoteId = null;
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    function formatNote(text) {
-        return text.split('\n\n').map(p => p.trim()).filter(p => p.length > 0).join('\n\n');
-    }
-
-    function generateTitle(text) {
-        const first = text.split('\n')[0].substring(0, 50);
-        return first.length > 0 ? first : 'Sans titre';
-    }
-
-    function addNote() {
-        const titleVal = document.getElementById('title').value.trim();
-        const cat      = document.getElementById('category').value.trim() || 'Sans catégorie';
-        const raw      = document.getElementById('noteText').value;
-        const text     = formatNote(raw);
-
-        if (!text) { alert('Veuillez entrer du texte.'); return; }
-
-        notes.push({
-            id:      Date.now(),
-            title:   titleVal || generateTitle(text),
-            category: cat,
-            text,
-            created: new Date().toLocaleDateString('fr-FR')
-        });
-
-        localStorage.setItem('notes', JSON.stringify(notes));
-        document.getElementById('title').value    = '';
-        document.getElementById('category').value = '';
-        document.getElementById('noteText').value = '';
-        renderNotes();
-    }
-
-    function deleteNote(id) {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer cette note ?')) return;
-        notes = notes.filter(n => n.id !== id);
-        localStorage.setItem('notes', JSON.stringify(notes));
-        renderNotes();
-    }
-
-    function deleteNoteFromModal() {
-        deleteNote(currentModalNoteId);
-        closeModal();
-    }
-
-    function openNote(id) {
-        const note = notes.find(n => n.id === id);
-        if (!note) return;
-        currentModalNoteId = id;
-        document.getElementById('modalTitle').textContent    = note.title;
-        document.getElementById('modalCategory').textContent = `📁 ${note.category} • ${note.created}`;
-        document.getElementById('modalBody').textContent     = note.text;
-        document.getElementById('noteModal').classList.add('show');
-    }
-
-    function closeModal() {
-        document.getElementById('noteModal').classList.remove('show');
-        currentModalNoteId = null;
-    }
-
-    function renderNotes() {
-        const list = document.getElementById('notesList');
-        if (notes.length === 0) {
-            list.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    <p>Aucune note. Commencez à en ajouter!</p>
-                </div>`;
-            return;
+            break;
         }
 
-        const grouped = {};
-        notes.forEach(n => {
-            if (!grouped[n.category]) grouped[n.category] = [];
-            grouped[n.category].push(n);
-        });
-
-        let html = '';
-        for (const [cat, items] of Object.entries(grouped)) {
-            html += `<div class="category-group">
-                <div class="category-badge">${escapeHtml(cat)}</div>`;
-            items.forEach(n => {
-                html += `
-                <div class="note-item">
-                    <div class="note-content" onclick="openNote(${n.id})">
-                        <div class="note-title">${escapeHtml(n.title)}</div>
-                        <div class="note-preview">${escapeHtml(n.text.substring(0, 100))}</div>
-                        <div class="note-meta">${n.created}</div>
-                    </div>
-                    <div class="note-actions">
-                        <button class="btn-secondary btn-small" onclick="deleteNote(${n.id})" title="Supprimer">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>`;
+        case 'setup_1': {
+            if (pwd.length < 4) { $('lockError').textContent = 'Minimum 4 caractères requis.'; return; }
+            tempPwd   = pwd;
+            lockState = 'setup_2';
+            setLockUI({
+                icon: 'fa-key',
+                title: 'Confirmez le mot de passe',
+                subtitle: 'Saisissez à nouveau votre mot de passe pour confirmer.',
+                btnHtml: '<i class="fas fa-check"></i> Confirmer'
             });
-            html += '</div>';
+            break;
         }
-        list.innerHTML = html;
-    }
 
-    /* ══════════════════════════════════════════
-       Q&A avec Claude
-    ══════════════════════════════════════════ */
-    async function askQuestion() {
-        const question    = document.getElementById('question').value.trim();
-        const responseArea = document.getElementById('responseArea');
+        case 'setup_2': {
+            if (pwd !== tempPwd) {
+                tempPwd   = null;
+                lockState = 'setup_1';
+                setLockUI({
+                    icon: 'fa-key',
+                    title: 'Créer un mot de passe',
+                    subtitle: 'Les mots de passe ne correspondent pas. Recommencez.',
+                    btnHtml: '<i class="fas fa-key"></i> Continuer',
+                    error: 'Les mots de passe ne correspondent pas.'
+                });
+                return;
+            }
+            encKey    = await createAccount(tempPwd);
+            notes     = [];
+            tempPwd   = null;
+            hideLockScreen();
+            break;
+        }
 
-        if (!question) { alert('Veuillez poser une question.'); return; }
-        if (notes.length === 0) { alert('Aucune note à analyser.'); return; }
-
-        responseArea.innerHTML = '<div class="response loading"><i class="fas fa-spinner fa-spin"></i> Analyse de vos notes...</div>';
-
-        const notesText = notes.map(n => `[${n.category}] ${n.title}:\n${n.text}`).join('\n\n---\n\n');
-
-        try {
-            const res = await fetch('https://api.anthropic.com/v1/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: 'claude-sonnet-4-6',
-                    max_tokens: 1000,
-                    system: 'Tu es un assistant pour la prise de notes. Réponds de manière concise et directe. Formate avec des listes à puces si nécessaire.',
-                    messages: [{ role: 'user', content: `Voici mes notes:\n\n${notesText}\n\nQuestion: ${question}` }]
-                })
+        case 'change_0': {
+            const r = await tryUnlock(pwd);
+            if (!r) {
+                $('lockError').textContent = 'Mot de passe actuel incorrect.';
+                $('lockInput').value = '';
+                return;
+            }
+            notes  = r.data;
+            lockState = 'change_1';
+            setLockUI({
+                icon: 'fa-key',
+                title: 'Nouveau mot de passe',
+                subtitle: 'Choisissez votre nouveau mot de passe (min. 4 caractères).',
+                btnHtml: '<i class="fas fa-key"></i> Continuer'
             });
+            break;
+        }
 
-            if (!res.ok) throw new Error(`Erreur API: ${res.status}`);
-            const data = await res.json();
-            responseArea.innerHTML = `<div class="response">${escapeHtml(data.content[0].text)}</div>`;
-            document.getElementById('question').value = '';
-        } catch (err) {
-            responseArea.innerHTML = `<div class="response error"><i class="fas fa-exclamation-circle"></i> ${escapeHtml(err.message)}</div>`;
+        case 'change_1': {
+            if (pwd.length < 4) { $('lockError').textContent = 'Minimum 4 caractères requis.'; return; }
+            tempPwd   = pwd;
+            lockState = 'change_2';
+            setLockUI({
+                icon: 'fa-key',
+                title: 'Confirmer le nouveau mot de passe',
+                subtitle: 'Saisissez à nouveau le nouveau mot de passe.',
+                btnHtml: '<i class="fas fa-check"></i> Confirmer'
+            });
+            break;
+        }
+
+        case 'change_2': {
+            if (pwd !== tempPwd) {
+                tempPwd   = null;
+                lockState = 'change_1';
+                setLockUI({
+                    icon: 'fa-key',
+                    title: 'Nouveau mot de passe',
+                    subtitle: 'Les mots de passe ne correspondent pas. Recommencez.',
+                    btnHtml: '<i class="fas fa-key"></i> Continuer',
+                    error: 'Les mots de passe ne correspondent pas.'
+                });
+                return;
+            }
+            await reencryptWithNewPassword(tempPwd);
+            tempPwd   = null;
+            hideLockScreen();
+            break;
         }
     }
+}
 
-    document.getElementById('noteModal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
+function startChangePwd() {
+    lockState = 'change_0';
+    setLockUI({
+        icon: 'fa-key',
+        title: 'Vérification',
+        subtitle: 'Entrez votre mot de passe actuel pour continuer.',
+        btnHtml: '<i class="fas fa-arrow-right"></i> Continuer'
     });
+}
 
+// Verrouiller dès que l'onglet passe en arrière-plan
+document.addEventListener('visibilitychange', () => { if (document.hidden) lockApp(); });
+
+// Réinitialiser le minuteur d'inactivité
+['click', 'keydown', 'mousemove', 'touchstart'].forEach(ev =>
+    document.addEventListener(ev, () => {
+        if ($('appContent').style.display !== 'none') resetLockTimer();
+    }, { passive: true })
+);
+
+// Démarrage
+showLockScreen();
+
+
+/* ════════════════════════════════════════════════════════════
+   GESTION DES NOTES
+════════════════════════════════════════════════════════════ */
+let currentModalNoteId = null;
+
+function escapeHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = t;
+    return d.innerHTML;
+}
+
+function formatNote(text) {
+    return text.split('\n\n').map(p => p.trim()).filter(Boolean).join('\n\n');
+}
+
+function generateTitle(text) {
+    const first = text.split('\n')[0].substring(0, 50);
+    return first || 'Sans titre';
+}
+
+async function addNote() {
+    const titleVal = $('title').value.trim();
+    const cat      = $('category').value.trim() || 'Sans catégorie';
+    const text     = formatNote($('noteText').value);
+    if (!text) { alert('Veuillez entrer du texte.'); return; }
+
+    notes.push({
+        id:       Date.now(),
+        title:    titleVal || generateTitle(text),
+        category: cat,
+        text,
+        created:  new Date().toLocaleDateString('fr-FR')
+    });
+    await saveNotes();
+    $('title').value = $('category').value = $('noteText').value = '';
     renderNotes();
-    </script>
+}
+
+async function deleteNote(id) {
+    if (!confirm('Supprimer cette note ?')) return;
+    notes = notes.filter(n => n.id !== id);
+    await saveNotes();
+    renderNotes();
+}
+
+async function deleteNoteFromModal() {
+    await deleteNote(currentModalNoteId);
+    closeModal();
+}
+
+function openNote(id) {
+    const note = notes.find(n => n.id === id);
+    if (!note) return;
+    currentModalNoteId = id;
+    $('modalTitle').textContent    = note.title;
+    $('modalCategory').textContent = `📁 ${note.category} • ${note.created}`;
+    $('modalBody').textContent     = note.text;
+    $('noteModal').classList.add('show');
+}
+
+function closeModal() {
+    $('noteModal').classList.remove('show');
+    currentModalNoteId = null;
+}
+
+function renderNotes() {
+    const list = $('notesList');
+    if (!notes.length) {
+        list.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>Aucune note. Commencez à en ajouter!</p></div>`;
+        return;
+    }
+    const grouped = {};
+    notes.forEach(n => { (grouped[n.category] ??= []).push(n); });
+    list.innerHTML = Object.entries(grouped).map(([cat, items]) => `
+        <div class="category-group">
+            <div class="category-badge">${escapeHtml(cat)}</div>
+            ${items.map(n => `
+            <div class="note-item">
+                <div class="note-content" onclick="openNote(${n.id})">
+                    <div class="note-title">${escapeHtml(n.title)}</div>
+                    <div class="note-preview">${escapeHtml(n.text.substring(0, 100))}</div>
+                    <div class="note-meta">${n.created}</div>
+                </div>
+                <div class="note-actions">
+                    <button class="btn-secondary btn-small" onclick="deleteNote(${n.id})" title="Supprimer">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>`).join('')}
+        </div>`).join('');
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   Q&A  —  Claude API
+════════════════════════════════════════════════════════════ */
+async function askQuestion() {
+    const question     = $('question').value.trim();
+    const responseArea = $('responseArea');
+    if (!question) { alert('Veuillez poser une question.'); return; }
+    if (!notes.length) { alert('Aucune note à analyser.'); return; }
+
+    responseArea.innerHTML = '<div class="response loading"><i class="fas fa-spinner fa-spin"></i> Analyse…</div>';
+
+    const notesText = notes.map(n => `[${n.category}] ${n.title}:\n${n.text}`).join('\n\n---\n\n');
+    try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'claude-sonnet-4-6',
+                max_tokens: 1000,
+                system: 'Tu es un assistant pour la prise de notes. Réponds de manière concise et directe. Utilise des listes à puces si nécessaire.',
+                messages: [{ role: 'user', content: `Mes notes:\n\n${notesText}\n\nQuestion: ${question}` }]
+            })
+        });
+        if (!res.ok) throw new Error(`Erreur API ${res.status}`);
+        const data = await res.json();
+        responseArea.innerHTML = `<div class="response">${escapeHtml(data.content[0].text)}</div>`;
+        $('question').value = '';
+    } catch (err) {
+        responseArea.innerHTML = `<div class="response error"><i class="fas fa-exclamation-circle"></i> ${escapeHtml(err.message)}</div>`;
+    }
+}
+
+$('noteModal').addEventListener('click', e => { if (e.target === $('noteModal')) closeModal(); });
+</script>
 </body>
 </html>
