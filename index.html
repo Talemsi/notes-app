@@ -537,6 +537,57 @@
         .rem-w { font-size: 11px; color: var(--ink-4); margin-top: 2px; }
 
         mark { background: rgba(37,99,235,.12); color: inherit; border-radius: 2px; padding: 0 1px; }
+
+        /* ── User selection grid ── */
+        .user-grid {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+            gap: 10px; margin-bottom: 20px;
+        }
+        .user-card {
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            padding: 16px 10px 12px;
+            border-radius: var(--r-sm); border: 1.5px solid var(--line);
+            background: var(--card-2); cursor: pointer;
+            transition: all .18s cubic-bezier(.4,0,.2,1);
+            position: relative; overflow: hidden;
+        }
+        .user-card:hover {
+            background: white; border-color: rgba(37,99,235,0.2);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08); transform: translateY(-1px);
+        }
+        .user-av {
+            width: 46px; height: 46px; border-radius: 50%;
+            background: var(--ink); color: white;
+            font-size: 19px; font-weight: 700; letter-spacing: -.5px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .user-av-new {
+            background: transparent; border: 1.5px dashed var(--ink-5);
+            color: var(--ink-4); font-size: 16px; font-weight: 400;
+            transition: all .18s;
+        }
+        .user-card:hover .user-av-new {
+            border-color: var(--blue); color: var(--blue); background: var(--blue-faint);
+        }
+        .user-nm {
+            font-size: 12px; font-weight: 550; color: var(--ink-2);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            max-width: 82px; text-align: center;
+        }
+        .user-nm-new { color: var(--ink-4); }
+        .user-del {
+            position: absolute; top: 5px; right: 5px;
+            width: 18px; height: 18px; border-radius: 50%;
+            background: var(--red-faint); border: none;
+            color: var(--red); font-size: 11px; font-weight: 700;
+            cursor: pointer; opacity: 0; transition: opacity .15s;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1;
+        }
+        .user-card:hover .user-del { opacity: 1; }
+        .user-del:hover { background: var(--red); color: white; }
     </style>
 </head>
 <body>
@@ -550,7 +601,9 @@
         <div class="lock-title" id="lockTitle">Notes</div>
         <div class="lock-hint"  id="lockHint"></div>
 
-        <div class="lock-field">
+        <div class="user-grid" id="userGrid"></div>
+
+        <div class="lock-field" id="lockField">
             <input id="lockInput" maxlength="128" placeholder=""
                    onkeydown="if(event.key==='Enter') handleLock()" />
             <button class="lock-eye" id="lockEye" type="button" onclick="togglePwd()" tabindex="-1">
@@ -564,6 +617,9 @@
         <button class="lock-submit" id="lockBtn" onclick="handleLock()">Continuer</button>
 
         <div class="lock-actions">
+            <button class="lock-text-btn" id="backLink" onclick="showSelectUser()" style="display:none">
+                ← Retour
+            </button>
             <button class="lock-text-btn" id="changePwdLink" onclick="startChangePwd()">
                 Changer de mot de passe
             </button>
@@ -693,20 +749,42 @@
 'use strict';
 
 /* ── Crypto ── */
-const LS_SALT      = 'ns_salt_v3';
-const LS_DATA      = 'ns_data_v4';
-const LS_BLOCK     = 'ns_block_v1';
-const SS_FAILS     = 'ns_fails_v1';
+const LS_SALT      = 'ns_salt_v3';   // legacy (migration only)
+const LS_DATA      = 'ns_data_v4';   // legacy (migration only)
+const LS_USERS     = 'ns_users_v1';
 const PBKDF2_ITER  = 100_000;
 const LOCK_TIMEOUT = 5 * 60 * 1000;
 const MAX_ATT      = 5;
 const BLOCK_MS     = 2 * 60 * 1000;
 
+const saltKey  = id => `ns_s3_${id}`;
+const dataKey  = id => `ns_d4_${id}`;
+const blockKey = id => `ns_bl_${id}`;
+const failsKey = id => `ns_fa_${id}`;
+
+function getUsers() { try { return JSON.parse(localStorage.getItem(LS_USERS) || '[]'); } catch { return []; } }
+function saveUsers(u) { localStorage.setItem(LS_USERS, JSON.stringify(u)); }
+
+function migrate() {
+    const oldSalt = localStorage.getItem(LS_SALT);
+    if (!oldSalt) return;
+    const users = getUsers();
+    if (users.find(u => u.id === '_v1')) return;
+    const id = '_v1';
+    localStorage.setItem(saltKey(id), oldSalt);
+    const d = localStorage.getItem(LS_DATA) || localStorage.getItem('ns_data_v3');
+    if (d) localStorage.setItem(dataKey(id), d);
+    users.unshift({ id, name: 'Mes notes' });
+    saveUsers(users);
+    ['ns_salt_v3','ns_data_v4','ns_data_v3','ns_block_v1','notes','ns_name'].forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem('ns_fails_v1');
+}
+
 let encKey = null, notes = [];
 let lockTimer;
-let fails        = parseInt(sessionStorage.getItem(SS_FAILS) || '0', 10);
-let blockedUntil = parseInt(localStorage.getItem(LS_BLOCK)   || '0', 10);
+let fails = 0, blockedUntil = 0;
 let state = 'unlock', tmpPwd = null;
+let currentUserId = null;
 
 const enc    = t => new TextEncoder().encode(t);
 const dec    = b => new TextDecoder().decode(b);
@@ -738,91 +816,147 @@ async function cryptDec(b64, key) {
     return JSON.parse(dec(pt));
 }
 async function tryUnlock(pw) {
-    const sb = localStorage.getItem(LS_SALT);
+    const sb = localStorage.getItem(saltKey(currentUserId));
     if (!sb) return null;
     try {
         const key = await deriveKey(pw, fromB64(sb));
-        for (const k of [LS_DATA,'ns_data_v3']) {
-            const blob = localStorage.getItem(k);
-            if (!blob) continue;
-            const raw = await cryptDec(blob, key);
-            return { key, notes: Array.isArray(raw) ? raw : (raw.notes||[]) };
-        }
-        return { key, notes:[] };
+        const blob = localStorage.getItem(dataKey(currentUserId));
+        if (!blob) return { key, notes: [] };
+        const raw = await cryptDec(blob, key);
+        return { key, notes: Array.isArray(raw) ? raw : (raw.notes || []) };
     } catch { return null; }
 }
 async function createVault(pw) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
-    localStorage.setItem(LS_SALT, toB64(salt));
+    localStorage.setItem(saltKey(currentUserId), toB64(salt));
     const key = await deriveKey(pw, salt);
-    localStorage.setItem(LS_DATA, await cryptEnc([], key));
-    ['notes','notes_pwd_hash_v2','ns_data_v3','ns_name'].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem(dataKey(currentUserId), await cryptEnc([], key));
     return key;
 }
 async function reencrypt(pw) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
-    localStorage.setItem(LS_SALT, toB64(salt));
+    localStorage.setItem(saltKey(currentUserId), toB64(salt));
     encKey = await deriveKey(pw, salt);
-    localStorage.setItem(LS_DATA, await cryptEnc(notes, encKey));
+    localStorage.setItem(dataKey(currentUserId), await cryptEnc(notes, encKey));
 }
 async function persist() {
-    if (!encKey) return;
-    localStorage.setItem(LS_DATA, await cryptEnc(notes, encKey));
-    localStorage.removeItem('notes');
+    if (!encKey || !currentUserId) return;
+    localStorage.setItem(dataKey(currentUserId), await cryptEnc(notes, encKey));
 }
 
 /* ── Lock screen ── */
 const $ = id => document.getElementById(id);
+const esc = t => { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; };
 
-function ui({ icon='fa-lock', title='Notes', hint='', btn='Continuer', err='', att='', showChange=false, pwMode=true }) {
-    $('lockIconEl').className      = `fas ${icon}`;
-    $('lockTitle').textContent     = title;
-    $('lockHint').textContent      = hint;
-    $('lockBtn').textContent       = btn;
-    $('lockErr').textContent       = err;
-    $('lockAtt').textContent       = att;
+function ui({ icon='fa-lock', title='Notes', hint='', btn='Continuer', err='', att='',
+              showChange=false, showBack=false, pwMode=true, placeholder='' }) {
+    $('lockIconEl').className        = `fas ${icon}`;
+    $('lockTitle').textContent       = title;
+    $('lockHint').textContent        = hint;
+    $('lockBtn').textContent         = btn;
+    $('lockErr').textContent         = err;
+    $('lockAtt').textContent         = att;
     $('changePwdLink').style.display = showChange ? 'inline' : 'none';
-    $('lockInput').type            = pwMode ? 'password' : 'text';
-    $('lockInput').className       = pwMode ? 'pw' : '';
-    $('lockInput').placeholder     = '';
-    $('lockInput').value           = '';
-    $('lockBtn').disabled          = false;
-    $('lockInput').disabled        = false;
+    $('backLink').style.display      = showBack   ? 'inline' : 'none';
+    $('lockInput').type              = pwMode ? 'password' : 'text';
+    $('lockInput').className         = pwMode ? 'pw' : '';
+    $('lockInput').placeholder       = placeholder;
+    $('lockInput').value             = '';
+    $('lockBtn').disabled            = false;
+    $('lockInput').disabled          = false;
     $('lockEye').classList.toggle('on', pwMode);
-    $('eyeIco').className          = 'fas fa-eye';
+    $('eyeIco').className            = 'fas fa-eye';
+    $('userGrid').style.display      = 'none';
+    $('lockField').style.display     = '';
+    $('lockBtn').style.display       = '';
     setTimeout(() => $('lockInput').focus(), 50);
+}
+
+function showSelectUser() {
+    state = 'select';
+    currentUserId = null;
+    fails = 0; blockedUntil = 0;
+    const users = getUsers();
+
+    $('lockIconEl').className        = 'fas fa-lock';
+    $('lockTitle').textContent       = 'Notes';
+    $('lockErr').textContent         = '';
+    $('lockAtt').textContent         = '';
+    $('lockHint').textContent        = users.length === 0 ? 'Créez votre premier profil.' : '';
+    $('changePwdLink').style.display = 'none';
+    $('backLink').style.display      = 'none';
+    $('lockField').style.display     = 'none';
+    $('lockBtn').style.display       = 'none';
+    $('userGrid').style.display      = 'grid';
+
+    $('userGrid').innerHTML = users.map(u =>
+        `<div class="user-card" onclick="selectUser('${u.id}')">
+            <div class="user-av">${esc(u.name.charAt(0).toUpperCase())}</div>
+            <div class="user-nm">${esc(u.name)}</div>
+            <button class="user-del" onclick="event.stopPropagation();deleteUser('${u.id}')" title="Supprimer">×</button>
+        </div>`
+    ).join('') +
+        `<div class="user-card" onclick="startNewUser()">
+            <div class="user-av user-av-new"><i class="fas fa-plus"></i></div>
+            <div class="user-nm user-nm-new">Nouveau</div>
+        </div>`;
+}
+
+function selectUser(id) {
+    const user = getUsers().find(u => u.id === id);
+    if (!user) return;
+    currentUserId = id;
+    fails        = parseInt(sessionStorage.getItem(failsKey(id)) || '0', 10);
+    blockedUntil = parseInt(localStorage.getItem(blockKey(id))   || '0', 10);
+
+    if (!localStorage.getItem(saltKey(id))) {
+        state = 'setup_1';
+        ui({ title: user.name, hint: 'Choisissez un mot de passe (min. 4 caractères).', btn: 'Continuer', showBack: true });
+    } else {
+        state = 'unlock';
+        ui({ title: user.name, btn: 'Déverrouiller', showChange: true, showBack: true });
+    }
+}
+
+function startNewUser() {
+    state = 'setup_name';
+    ui({ hint: 'Choisissez un nom pour ce profil.', btn: 'Continuer', showBack: true, pwMode: false, placeholder: 'Alice, Bob…' });
+}
+
+async function deleteUser(id) {
+    const user = getUsers().find(u => u.id === id);
+    if (!user || !confirm(`Supprimer le profil « ${user.name} » et toutes ses notes ?`)) return;
+    saveUsers(getUsers().filter(u => u.id !== id));
+    [saltKey(id), dataKey(id), blockKey(id)].forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem(failsKey(id));
+    showSelectUser();
 }
 
 function showLock() {
     $('lockScreen').classList.add('show');
     $('appContent').classList.remove('show');
     clearTimeout(lockTimer);
-    if (!localStorage.getItem(LS_SALT)) {
-        state = 'setup_1';
-        ui({ icon:'fa-lock', hint:'Choisissez un mot de passe (min. 4 caractères).', btn:'Continuer' });
-    } else {
-        state = 'unlock';
-        ui({ icon:'fa-lock', btn:'Déverrouiller', showChange:true });
-    }
+    migrate();
+    showSelectUser();
 }
 
 function showApp() {
     $('lockScreen').classList.remove('show');
     $('appContent').classList.add('show');
-    $('fDate').min = new Date().toISOString().split('T')[0]; // pas de date passée
+    $('fDate').min = new Date().toISOString().split('T')[0];
     resetTimer();
     render();
     checkRem();
 }
 
 function lockApp() {
-    encKey = null; notes = [];
+    encKey = null; notes = []; currentUserId = null;
     clearTimeout(lockTimer);
     $('nlist').innerHTML = '';
     selectMode = false; selected.clear();
     $('bulkBar').classList.remove('show');
     $('ribbon').classList.remove('show');
-    if ($('searchIn')) { $('searchIn').value=''; $('searchCt').textContent=''; }
+    if ($('searchIn')) { $('searchIn').value = ''; $('searchCt').textContent = ''; }
     $('searchClr')?.classList.remove('on');
     closeNote(); closeRem();
     showLock();
@@ -852,16 +986,30 @@ async function handleLock() {
 
 async function dispatch(v) {
     switch (state) {
+        case 'setup_name': {
+            const name = v.trim();
+            if (!name) { $('lockErr').textContent = 'Choisissez un nom.'; return; }
+            if (name.length > 30) { $('lockErr').textContent = 'Nom trop long (max 30 caractères).'; return; }
+            const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            const users = getUsers();
+            users.push({ id, name });
+            saveUsers(users);
+            currentUserId = id;
+            state = 'setup_1';
+            ui({ title: name, hint: 'Choisissez un mot de passe (min. 4 caractères).', btn: 'Continuer', showBack: true });
+            break;
+        }
+
         case 'setup_1':
             if (v.length < 4) { $('lockErr').textContent = 'Minimum 4 caractères.'; return; }
             tmpPwd = v; state = 'setup_2';
-            ui({ hint:'Confirmez votre mot de passe.', btn:'Créer' });
+            ui({ title: getUsers().find(u=>u.id===currentUserId)?.name||'Notes', hint:'Confirmez votre mot de passe.', btn:'Créer', showBack: true });
             break;
 
         case 'setup_2':
             if (v !== tmpPwd) {
                 tmpPwd = null; state = 'setup_1';
-                ui({ hint:'Choisissez un mot de passe (min. 4 caractères).', btn:'Continuer', err:'Les mots de passe ne correspondent pas.' });
+                ui({ hint:'Choisissez un mot de passe (min. 4 caractères).', btn:'Continuer', err:'Les mots de passe ne correspondent pas.', showBack: true });
                 return;
             }
             encKey = await createVault(tmpPwd); notes = []; tmpPwd = null;
@@ -872,19 +1020,19 @@ async function dispatch(v) {
             const r = await tryUnlock(v);
             if (r) {
                 fails = 0;
-                sessionStorage.removeItem(SS_FAILS);
-                localStorage.removeItem(LS_BLOCK);
+                sessionStorage.removeItem(failsKey(currentUserId));
+                localStorage.removeItem(blockKey(currentUserId));
                 encKey = r.key; notes = r.notes;
                 showApp();
             } else {
                 fails++;
-                sessionStorage.setItem(SS_FAILS, String(fails));
+                sessionStorage.setItem(failsKey(currentUserId), String(fails));
                 $('lockInput').value = '';
                 if (fails >= MAX_ATT) {
                     blockedUntil = Date.now() + BLOCK_MS;
-                    localStorage.setItem(LS_BLOCK, String(blockedUntil));
+                    localStorage.setItem(blockKey(currentUserId), String(blockedUntil));
                     fails = 0;
-                    sessionStorage.removeItem(SS_FAILS);
+                    sessionStorage.removeItem(failsKey(currentUserId));
                     $('lockErr').textContent = 'Accès bloqué 2 minutes.';
                 } else {
                     const left = MAX_ATT - fails;
@@ -942,8 +1090,6 @@ showLock();
 let activeNoteId = null;
 let selectMode   = false;
 let selected     = new Set();
-
-const esc = t => { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; };
 
 function fmtD(iso) {
     if (!iso) return '';
