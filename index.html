@@ -6,8 +6,13 @@
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://cdnjs.cloudflare.com; font-src https://cdnjs.cloudflare.com; base-uri 'none'; object-src 'none'; form-action 'none'; frame-ancestors 'none';">
     <title>Notes</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -690,18 +695,27 @@
 /* ── Crypto ── */
 const LS_SALT      = 'ns_salt_v3';
 const LS_DATA      = 'ns_data_v4';
+const LS_BLOCK     = 'ns_block_v1';
+const SS_FAILS     = 'ns_fails_v1';
 const PBKDF2_ITER  = 100_000;
 const LOCK_TIMEOUT = 5 * 60 * 1000;
 const MAX_ATT      = 5;
 const BLOCK_MS     = 2 * 60 * 1000;
 
 let encKey = null, notes = [];
-let lockTimer, fails = 0, blockedUntil = 0;
+let lockTimer;
+let fails        = parseInt(sessionStorage.getItem(SS_FAILS) || '0', 10);
+let blockedUntil = parseInt(localStorage.getItem(LS_BLOCK)   || '0', 10);
 let state = 'unlock', tmpPwd = null;
 
 const enc    = t => new TextEncoder().encode(t);
 const dec    = b => new TextDecoder().decode(b);
-const toB64  = buf => btoa(String.fromCharCode(...new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer)));
+function toB64(buf) {
+    const bytes = new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer);
+    let s = '';
+    for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+}
 const fromB64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 
 async function deriveKey(pw, salt) {
@@ -770,7 +784,7 @@ function ui({ icon='fa-lock', title='Notes', hint='', btn='Continuer', err='', a
     $('changePwdLink').style.display = showChange ? 'inline' : 'none';
     $('lockInput').type            = pwMode ? 'password' : 'text';
     $('lockInput').className       = pwMode ? 'pw' : '';
-    $('lockInput').placeholder     = pwMode ? '' : 'Votre prénom';
+    $('lockInput').placeholder     = '';
     $('lockInput').value           = '';
     $('lockBtn').disabled          = false;
     $('lockInput').disabled        = false;
@@ -857,13 +871,20 @@ async function dispatch(v) {
         case 'unlock': {
             const r = await tryUnlock(v);
             if (r) {
-                fails = 0; encKey = r.key; notes = r.notes;
+                fails = 0;
+                sessionStorage.removeItem(SS_FAILS);
+                localStorage.removeItem(LS_BLOCK);
+                encKey = r.key; notes = r.notes;
                 showApp();
             } else {
                 fails++;
+                sessionStorage.setItem(SS_FAILS, String(fails));
                 $('lockInput').value = '';
                 if (fails >= MAX_ATT) {
-                    blockedUntil = Date.now() + BLOCK_MS; fails = 0;
+                    blockedUntil = Date.now() + BLOCK_MS;
+                    localStorage.setItem(LS_BLOCK, String(blockedUntil));
+                    fails = 0;
+                    sessionStorage.removeItem(SS_FAILS);
                     $('lockErr').textContent = 'Accès bloqué 2 minutes.';
                 } else {
                     const left = MAX_ATT - fails;
