@@ -12,461 +12,471 @@
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --blue:        #2563EB;
-            --blue-hover:  #1D4ED8;
-            --blue-tint:   rgba(37,99,235,0.08);
-            --red:         #DC2626;
-            --red-tint:    rgba(220,38,38,0.07);
-            --amber:       #D97706;
-            --amber-tint:  rgba(217,119,6,0.09);
-            --green:       #16A34A;
-            --ink:         #0F172A;
-            --ink-2:       #334155;
-            --ink-3:       #64748B;
-            --ink-4:       #94A3B8;
-            --line:        #E2E8F0;
-            --surface:     #F8FAFC;
-            --card:        #FFFFFF;
-            --r:           10px;
-            --r-sm:        7px;
-            --shadow-xs:   0 1px 2px rgba(0,0,0,0.05);
-            --shadow-sm:   0 1px 4px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.04);
-            --shadow:      0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
-            --shadow-lg:   0 20px 60px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.08);
+            /* Zinc scale */
+            --z-950: #09090B;
+            --z-900: #18181B;
+            --z-800: #27272A;
+            --z-700: #3F3F46;
+            --z-500: #71717A;
+            --z-400: #A1A1AA;
+            --z-300: #D4D4D8;
+            --z-200: #E4E4E7;
+            --z-100: #F4F4F5;
+            --z-50:  #FAFAFA;
+
+            /* Accent */
+            --blue:       #2563EB;
+            --blue-dark:  #1D4ED8;
+            --blue-faint: rgba(37,99,235,0.07);
+            --blue-ring:  rgba(37,99,235,0.2);
+
+            /* Status */
+            --red:        #DC2626;
+            --red-faint:  rgba(220,38,38,0.07);
+            --amber:      #D97706;
+            --amber-faint:rgba(217,119,6,0.08);
+            --green:      #16A34A;
+
+            /* Radius */
+            --r:    10px;
+            --r-sm: 6px;
+            --r-xs: 4px;
+
+            /* Shadows */
+            --sh-xs: 0 1px 2px rgba(0,0,0,0.04);
+            --sh-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --sh:    0 4px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+            --sh-xl: 0 32px 80px rgba(0,0,0,0.22), 0 8px 24px rgba(0,0,0,0.1);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            background: var(--surface);
+            background: var(--z-100);
             min-height: 100vh;
-            color: var(--ink);
+            color: var(--z-900);
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ─── LOCK SCREEN ─── */
+        /* ══════════════════════════════
+           LOCK SCREEN
+        ══════════════════════════════ */
         .lock-screen {
             display: none; position: fixed; inset: 0;
-            background: #0C0F1A;
-            z-index: 9999; align-items: center; justify-content: center;
+            background: #08080F;
+            z-index: 9999;
+            align-items: center; justify-content: center;
         }
-        .lock-screen.show { display: flex; }
-        .lock-screen::before {
+        .lock-screen::after {
             content: '';
             position: absolute; inset: 0;
-            background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(37,99,235,0.18) 0%, transparent 70%);
+            background: radial-gradient(ellipse 70% 50% at 50% -10%, rgba(37,99,235,0.15) 0%, transparent 65%);
             pointer-events: none;
         }
+        .lock-screen.show { display: flex; }
 
         .lock-card {
-            position: relative;
-            background: var(--card);
-            border-radius: 20px;
-            padding: 52px 48px 44px;
-            width: 100%; max-width: 388px;
+            position: relative; z-index: 1;
+            background: #FFFFFF;
+            border-radius: 18px;
+            padding: 48px 44px 40px;
+            width: 100%; max-width: 360px;
             text-align: center;
-            box-shadow: var(--shadow-lg);
-            animation: appear .3s cubic-bezier(.22,1,.36,1);
+            box-shadow: var(--sh-xl);
+            animation: rise .28s cubic-bezier(.22,1,.36,1);
         }
-        @keyframes appear {
-            from { opacity: 0; transform: translateY(20px); }
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(16px); }
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        .lock-logo {
-            width: 56px; height: 56px; border-radius: 14px;
-            background: var(--ink);
+        .lock-icon-wrap {
+            width: 52px; height: 52px; border-radius: 13px;
+            background: var(--z-950);
             display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 28px; color: white; font-size: 22px;
+            margin: 0 auto 24px; color: white; font-size: 20px;
         }
-        .lock-title    { font-size: 20px; font-weight: 700; color: var(--ink);   letter-spacing: -.3px; margin-bottom: 6px; }
-        .lock-subtitle { font-size: 14px; color: var(--ink-3); margin-bottom: 28px; line-height: 1.5; }
+        .lock-title {
+            font-size: 22px; font-weight: 700; letter-spacing: -.4px;
+            color: var(--z-950); margin-bottom: 24px;
+        }
+        .lock-hint {
+            font-size: 13px; color: var(--z-500);
+            margin-bottom: 16px; line-height: 1.5;
+            min-height: 20px;
+        }
 
-        .lock-field {
-            position: relative; margin-bottom: 10px;
-            text-align: left;
-        }
+        .lock-field { position: relative; margin-bottom: 8px; }
         .lock-field input {
-            width: 100%; padding: 13px 44px 13px 14px;
-            border: 1.5px solid var(--line);
+            width: 100%; padding: 12px 40px 12px 14px;
+            border: 1.5px solid var(--z-200);
             border-radius: var(--r-sm);
-            font-family: inherit; font-size: 15px; color: var(--ink);
-            background: var(--surface);
+            font-family: inherit; font-size: 15px; color: var(--z-900);
+            background: var(--z-50); outline: none;
             transition: border-color .15s, box-shadow .15s;
-            outline: none;
         }
-        .lock-field input.pw { letter-spacing: 4px; }
+        .lock-field input.pw { letter-spacing: 5px; }
+        .lock-field input.pw::placeholder { letter-spacing: 0; }
         .lock-field input:focus {
             border-color: var(--blue);
-            box-shadow: 0 0 0 3px var(--blue-tint);
+            box-shadow: 0 0 0 3px var(--blue-ring);
             background: white;
         }
-        .lock-field input::placeholder { letter-spacing: 0; color: var(--ink-4); }
-        .lock-field input:disabled { opacity: .5; }
-        .eye-btn {
+        .lock-field input::placeholder { color: var(--z-400); }
+        .lock-field input:disabled { opacity: .45; }
+        .lock-eye {
             position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
             background: none; border: none; cursor: pointer;
-            color: var(--ink-4); font-size: 15px; padding: 4px;
+            color: var(--z-400); font-size: 14px; padding: 4px;
             transition: color .15s; display: none; line-height: 1;
         }
-        .eye-btn.visible { display: block; }
-        .eye-btn:hover { color: var(--ink-2); }
+        .lock-eye.on { display: block; }
+        .lock-eye:hover { color: var(--z-700); }
 
-        .lock-error {
-            font-size: 13px; font-weight: 500; color: var(--red);
-            min-height: 20px; margin-bottom: 8px; text-align: left;
-        }
-        .lock-attempts { font-size: 12px; color: var(--ink-3); min-height: 18px; text-align: left; }
+        .lock-err  { font-size: 12px; font-weight: 500; color: var(--red); min-height: 18px; margin-bottom: 10px; text-align: left; }
+        .lock-att  { font-size: 12px; color: var(--z-400); min-height: 16px; text-align: left; }
 
-        .lock-btn {
-            width: 100%; padding: 13px; margin-top: 4px; margin-bottom: 20px;
-            background: var(--ink); color: white;
+        .lock-submit {
+            width: 100%; padding: 12px; margin-top: 8px; margin-bottom: 24px;
+            background: var(--z-950); color: white;
             border: none; border-radius: var(--r-sm);
-            font-family: inherit; font-size: 15px; font-weight: 600;
-            cursor: pointer; transition: background .15s, transform .1s;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
+            font-family: inherit; font-size: 14px; font-weight: 600;
+            cursor: pointer; letter-spacing: .1px;
+            transition: background .15s, transform .1s;
         }
-        .lock-btn:hover:not(:disabled) { background: var(--ink-2); }
-        .lock-btn:active:not(:disabled) { transform: scale(.99); }
-        .lock-btn:disabled { opacity: .55; cursor: not-allowed; }
+        .lock-submit:hover:not(:disabled) { background: var(--z-800); }
+        .lock-submit:active:not(:disabled) { transform: scale(.99); }
+        .lock-submit:disabled { opacity: .5; cursor: not-allowed; }
 
-        .lock-footer { display: flex; justify-content: center; gap: 20px; }
-        .lock-link {
-            font-size: 13px; color: var(--ink-3); cursor: pointer;
-            background: none; border: none; font-family: inherit;
-            padding: 0; text-decoration: underline; text-underline-offset: 2px;
-            transition: color .15s; display: none;
+        .lock-actions { display: flex; justify-content: center; }
+        .lock-text-btn {
+            font-size: 12px; color: var(--z-400); background: none; border: none;
+            cursor: pointer; font-family: inherit; text-decoration: underline;
+            text-underline-offset: 2px; transition: color .15s; display: none;
+            padding: 0;
         }
-        .lock-link:hover { color: var(--ink); }
+        .lock-text-btn:hover { color: var(--z-700); }
 
-        /* ─── APP SHELL ─── */
+        /* ══════════════════════════════
+           APP SHELL
+        ══════════════════════════════ */
         .app { display: none; flex-direction: column; min-height: 100vh; }
         .app.show { display: flex; }
 
-        .topbar {
-            background: var(--card);
-            border-bottom: 1px solid var(--line);
-            padding: 0 24px;
-            height: 56px;
+        /* Topbar */
+        .bar {
+            height: 52px; background: white;
+            border-bottom: 1px solid var(--z-200);
+            padding: 0 20px;
             display: flex; align-items: center; justify-content: space-between;
             position: sticky; top: 0; z-index: 100;
         }
-        .topbar-left { display: flex; align-items: center; gap: 12px; }
-        .topbar-icon {
-            width: 30px; height: 30px; border-radius: 8px; background: var(--ink);
+        .bar-brand { display: flex; align-items: center; gap: 10px; }
+        .bar-logo {
+            width: 28px; height: 28px; border-radius: 7px; background: var(--z-950);
             display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 13px; flex-shrink: 0;
+            color: white; font-size: 12px; flex-shrink: 0;
         }
-        .topbar-greeting {
-            font-size: 14px; font-weight: 600; color: var(--ink);
+        .bar-name { font-size: 14px; font-weight: 600; color: var(--z-900); letter-spacing: -.1px; }
+        .btn-lock {
             display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: var(--r-sm);
+            background: none; border: 1px solid var(--z-200);
+            font-family: inherit; font-size: 12px; font-weight: 500;
+            color: var(--z-500); cursor: pointer; transition: all .15s;
+            box-shadow: var(--sh-xs);
         }
-        .topbar-greeting span { color: var(--ink-2); }
+        .btn-lock:hover { background: var(--z-50); color: var(--red); border-color: var(--red); }
 
-        .topbar-right { display: flex; gap: 8px; }
-        .btn-tb {
-            padding: 7px 14px; border-radius: var(--r-sm);
-            background: none; border: 1px solid var(--line);
-            font-family: inherit; font-size: 13px; font-weight: 500;
-            color: var(--ink-2); cursor: pointer; transition: all .15s;
-            display: flex; align-items: center; gap: 6px;
-            box-shadow: var(--shadow-xs);
+        /* Reminder ribbon */
+        .ribbon {
+            background: #FFFBEB; border-bottom: 1px solid #FEF3C7;
+            padding: 9px 20px;
+            display: none; align-items: center; gap: 10px;
         }
-        .btn-tb:hover { background: var(--surface); color: var(--red); border-color: currentColor; }
-
-        /* ─── REMINDER BANNER ─── */
-        .rem-bar {
-            background: #FFFBEB;
-            border-bottom: 1px solid #FDE68A;
-            padding: 10px 24px;
-            display: none; align-items: center; gap: 12px;
-        }
-        .rem-bar.show { display: flex; }
-        .rem-bar-icon { color: var(--amber); font-size: 14px; flex-shrink: 0; }
-        .rem-bar-msg  { flex: 1; font-size: 13px; color: var(--ink-2); }
-        .rem-bar-msg strong { color: var(--ink); }
-        .rem-bar-cta {
-            padding: 5px 14px; border: none; border-radius: 6px;
+        .ribbon.show { display: flex; }
+        .ribbon-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+        .ribbon-txt { flex: 1; font-size: 13px; color: var(--z-700); }
+        .ribbon-txt b { color: var(--z-900); }
+        .ribbon-btn {
+            padding: 4px 12px; border: none; border-radius: var(--r-xs);
             background: var(--amber); color: white;
             font-family: inherit; font-size: 12px; font-weight: 600;
             cursor: pointer; transition: background .15s; flex-shrink: 0;
         }
-        .rem-bar-cta:hover { background: #B45309; }
-        .rem-bar-close {
+        .ribbon-btn:hover { background: #B45309; }
+        .ribbon-x {
             background: none; border: none; cursor: pointer;
-            color: var(--ink-4); font-size: 16px; line-height: 1; flex-shrink: 0;
+            color: var(--z-400); font-size: 15px; flex-shrink: 0; padding: 0;
         }
 
-        /* ─── MAIN ─── */
-        .main {
-            flex: 1; padding: 24px;
-            display: grid; grid-template-columns: 380px 1fr; gap: 20px;
-            max-width: 1160px; margin: 0 auto; width: 100%;
+        /* Grid */
+        .workspace {
+            flex: 1; padding: 24px 20px;
+            display: grid; grid-template-columns: 340px 1fr; gap: 16px;
+            max-width: 1100px; margin: 0 auto; width: 100%;
+            align-items: start;
         }
-        @media (max-width: 860px) { .main { grid-template-columns: 1fr; } }
+        @media (max-width: 820px) { .workspace { grid-template-columns: 1fr; } }
 
-        .card {
-            background: var(--card); border: 1px solid var(--line);
-            border-radius: var(--r); padding: 24px;
-            box-shadow: var(--shadow-sm);
+        /* Panels */
+        .panel {
+            background: white; border: 1px solid var(--z-200);
+            border-radius: var(--r); padding: 20px;
+            box-shadow: var(--sh-sm);
         }
-        .card-title {
-            font-size: 13px; font-weight: 600; color: var(--ink-3);
-            text-transform: uppercase; letter-spacing: .6px;
-            margin-bottom: 18px;
+        .panel-hd {
+            font-size: 11px; font-weight: 600; color: var(--z-400);
+            text-transform: uppercase; letter-spacing: .8px;
+            margin-bottom: 16px;
         }
 
-        /* ─── FORM ─── */
-        .form-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
-        .form-label {
-            font-size: 12px; font-weight: 500; color: var(--ink-3);
+        /* Form */
+        .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+        .field-lbl { font-size: 12px; font-weight: 500; color: var(--z-500); }
+        .field input[type="text"],
+        .field input[type="date"],
+        .field textarea {
+            padding: 8px 11px;
+            border: 1.5px solid var(--z-200); border-radius: var(--r-sm);
+            font-family: inherit; font-size: 13px; color: var(--z-900);
+            background: var(--z-50); outline: none;
+            transition: border-color .15s, box-shadow .15s;
         }
-        .form-field input[type="text"],
-        .form-field input[type="date"],
-        .form-field textarea {
-            padding: 9px 12px;
-            border: 1.5px solid var(--line); border-radius: var(--r-sm);
-            font-family: inherit; font-size: 14px; color: var(--ink);
-            background: white; outline: none; transition: border-color .15s, box-shadow .15s;
+        .field input:focus, .field textarea:focus {
+            border-color: var(--blue); background: white;
+            box-shadow: 0 0 0 3px var(--blue-faint);
         }
-        .form-field input:focus, .form-field textarea:focus {
-            border-color: var(--blue);
-            box-shadow: 0 0 0 3px var(--blue-tint);
-        }
-        .form-field textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
-        .form-field input[type="date"] { color: var(--ink); }
-
-        .reminder-hint {
-            font-size: 11px; color: var(--ink-4); margin-top: 3px;
-        }
+        .field textarea { min-height: 100px; line-height: 1.6; resize: vertical; }
+        .field-sub { font-size: 11px; color: var(--z-400); margin-top: 3px; }
 
         .btn-add {
-            width: 100%; padding: 11px; border: none; border-radius: var(--r-sm);
-            background: var(--blue); color: white;
-            font-family: inherit; font-size: 14px; font-weight: 600;
+            width: 100%; padding: 10px; margin-top: 6px;
+            background: var(--z-950); color: white;
+            border: none; border-radius: var(--r-sm);
+            font-family: inherit; font-size: 13px; font-weight: 600;
             cursor: pointer; transition: background .15s, transform .1s;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            margin-top: 4px;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
         }
-        .btn-add:hover  { background: var(--blue-hover); }
+        .btn-add:hover  { background: var(--z-800); }
         .btn-add:active { transform: scale(.99); }
 
-        /* ─── NOTES PANEL ─── */
-        .search-row {
-            display: flex; align-items: center; gap: 10px;
-            background: var(--surface); border: 1.5px solid var(--line);
-            border-radius: var(--r-sm); padding: 9px 12px;
-            margin-bottom: 16px; transition: border-color .15s, box-shadow .15s;
+        /* Search */
+        .search {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 11px; margin-bottom: 12px;
+            background: var(--z-50); border: 1.5px solid var(--z-200);
+            border-radius: var(--r-sm);
+            transition: border-color .15s, box-shadow .15s;
         }
-        .search-row:focus-within {
-            border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-tint);
-        }
-        .search-row i { color: var(--ink-4); font-size: 13px; flex-shrink: 0; }
-        .search-row input {
+        .search:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-faint); }
+        .search i { color: var(--z-400); font-size: 12px; flex-shrink: 0; }
+        .search input {
             flex: 1; border: none; background: none; outline: none;
-            font-family: inherit; font-size: 14px; color: var(--ink);
+            font-family: inherit; font-size: 13px; color: var(--z-900);
         }
-        .search-row input::placeholder { color: var(--ink-4); }
+        .search input::placeholder { color: var(--z-400); }
         .search-clr {
-            background: none; border: none; cursor: pointer; color: var(--ink-4);
-            font-size: 15px; line-height: 1; display: none; padding: 0; transition: color .15s;
+            background: none; border: none; cursor: pointer; color: var(--z-400);
+            font-size: 14px; padding: 0; display: none; transition: color .15s; line-height: 1;
         }
         .search-clr.on { display: block; }
         .search-clr:hover { color: var(--red); }
-        .search-cnt { font-size: 12px; color: var(--ink-4); font-weight: 500; flex-shrink: 0; }
+        .search-ct { font-size: 11px; color: var(--z-400); font-weight: 500; flex-shrink: 0; }
 
-        .notes-scroll { overflow-y: auto; max-height: 560px; display: flex; flex-direction: column; gap: 2px; }
-        .notes-scroll::-webkit-scrollbar { width: 4px; }
-        .notes-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+        /* Notes list */
+        .nlist { overflow-y: auto; max-height: 560px; }
+        .nlist::-webkit-scrollbar { width: 3px; }
+        .nlist::-webkit-scrollbar-thumb { background: var(--z-200); border-radius: 3px; }
 
-        .cat-row {
-            font-size: 11px; font-weight: 600; color: var(--ink-4);
-            text-transform: uppercase; letter-spacing: .8px;
-            padding: 12px 2px 6px; display: flex; align-items: center; gap: 8px;
+        .cat-hd {
+            font-size: 10px; font-weight: 600; color: var(--z-400);
+            text-transform: uppercase; letter-spacing: .9px;
+            padding: 10px 4px 5px;
+            display: flex; align-items: center; gap: 8px;
         }
-        .cat-row::after { content:''; flex:1; height:1px; background: var(--line); }
+        .cat-hd::after { content:''; flex:1; height:1px; background: var(--z-100); }
 
         .note-row {
-            display: flex; align-items: flex-start; gap: 10px;
-            padding: 11px 12px; border-radius: var(--r-sm);
-            cursor: pointer; transition: background .12s; border: 1px solid transparent;
+            display: flex; align-items: flex-start; gap: 8px;
+            padding: 10px 8px; border-radius: var(--r-sm);
+            cursor: pointer; transition: background .12s;
         }
-        .note-row:hover { background: var(--surface); border-color: var(--line); }
-        .note-row-body { flex: 1; min-width: 0; }
-        .note-row-title {
-            font-size: 14px; font-weight: 600; color: var(--ink);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
+        .note-row:hover { background: var(--z-50); }
+        .note-body { flex: 1; min-width: 0; }
+        .note-t {
+            font-size: 13px; font-weight: 600; color: var(--z-900);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-bottom: 2px;
         }
-        .note-row-preview {
-            font-size: 12px; color: var(--ink-3); line-height: 1.4;
+        .note-p {
+            font-size: 12px; color: var(--z-500); line-height: 1.4;
             overflow: hidden; text-overflow: ellipsis;
             display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical;
             margin-bottom: 5px;
         }
-        .note-row-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .note-row-date { font-size: 11px; color: var(--ink-4); }
+        .note-foot { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+        .note-date { font-size: 11px; color: var(--z-400); }
 
         .rbadge {
-            font-size: 11px; font-weight: 500;
+            font-size: 10px; font-weight: 500;
             display: inline-flex; align-items: center; gap: 3px;
-            padding: 1px 7px; border-radius: 20px;
+            padding: 1px 6px; border-radius: 20px;
         }
         .rbadge.future  { background: #EFF6FF; color: var(--blue); }
-        .rbadge.today   { background: #FFFBEB; color: var(--amber); animation: blink 2.5s ease infinite; }
+        .rbadge.today   { background: #FFFBEB; color: var(--amber); animation: pulse 2.5s ease infinite; }
         .rbadge.overdue { background: #FEF2F2; color: var(--red); }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.5} }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
 
         .note-del {
             background: none; border: none; cursor: pointer;
-            color: var(--ink-4); font-size: 13px; padding: 4px;
-            border-radius: 6px; transition: all .15s; flex-shrink: 0;
-            opacity: 0;
+            color: var(--z-300); font-size: 12px; padding: 4px;
+            border-radius: var(--r-xs); transition: all .15s;
+            flex-shrink: 0; opacity: 0;
         }
         .note-row:hover .note-del { opacity: 1; }
-        .note-del:hover { background: var(--red-tint); color: var(--red); }
+        .note-del:hover { background: var(--red-faint); color: var(--red); }
 
-        .empty {
-            text-align: center; padding: 48px 20px; color: var(--ink-4);
-        }
-        .empty svg { width: 40px; height: 40px; margin-bottom: 14px; opacity: .3; }
-        .empty p { font-size: 14px; line-height: 1.6; }
+        /* Empty state */
+        .empty { text-align: center; padding: 52px 20px 40px; }
+        .empty-ico { color: var(--z-300); font-size: 28px; margin-bottom: 12px; }
+        .empty p { font-size: 13px; color: var(--z-400); line-height: 1.6; }
 
-        /* ─── MODALS ─── */
+        /* Overlays */
         .overlay {
             display: none; position: fixed; inset: 0;
-            background: rgba(15,23,42,.4); z-index: 200;
+            background: rgba(9,9,11,.45); z-index: 200;
             align-items: center; justify-content: center;
-            backdrop-filter: blur(3px);
+            backdrop-filter: blur(4px);
         }
         .overlay.show { display: flex; }
+
         .modal {
-            background: var(--card); border: 1px solid var(--line);
-            border-radius: var(--r); padding: 28px;
-            width: 90%; max-width: 560px; max-height: 80vh; overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-            animation: appear .2s cubic-bezier(.22,1,.36,1);
+            background: white; border: 1px solid var(--z-200);
+            border-radius: var(--r); padding: 24px;
+            width: 90%; max-width: 540px; max-height: 80vh; overflow-y: auto;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.14);
+            animation: rise .2s cubic-bezier(.22,1,.36,1);
         }
-        .modal-sm { max-width: 420px; }
-        .modal-hd {
-            display: flex; justify-content: space-between; align-items: flex-start;
-            gap: 16px; margin-bottom: 16px;
-        }
-        .modal-ttl { font-size: 17px; font-weight: 700; color: var(--ink); letter-spacing: -.2px; }
-        .modal-sub { font-size: 12px; color: var(--ink-3); margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .modal-sm { max-width: 400px; }
+
+        .modal-hd { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+        .modal-ttl { font-size: 16px; font-weight: 700; color: var(--z-950); letter-spacing: -.2px; }
+        .modal-meta { font-size: 12px; color: var(--z-400); margin-top: 3px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
         .modal-x {
-            width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
-            background: var(--surface); border: 1px solid var(--line);
+            width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+            background: var(--z-100); border: 1px solid var(--z-200);
             display: flex; align-items: center; justify-content: center;
-            font-size: 15px; color: var(--ink-3); cursor: pointer; transition: all .15s;
+            font-size: 14px; color: var(--z-500); cursor: pointer; transition: all .15s;
         }
-        .modal-x:hover { background: var(--red-tint); color: var(--red); border-color: var(--red); }
-        .modal-body { font-size: 14px; line-height: 1.8; color: var(--ink-2); white-space: pre-wrap; word-break: break-word; }
-        .modal-ft { margin-top: 20px; display: flex; gap: 8px; justify-content: flex-end; }
+        .modal-x:hover { background: var(--red-faint); color: var(--red); border-color: var(--red); }
+        .modal-body { font-size: 14px; line-height: 1.8; color: var(--z-700); white-space: pre-wrap; word-break: break-word; }
+        .modal-ft { margin-top: 18px; display: flex; gap: 8px; justify-content: flex-end; }
         .btn-ghost {
-            padding: 8px 16px; border-radius: var(--r-sm);
-            background: none; border: 1px solid var(--line);
+            padding: 7px 14px; border-radius: var(--r-sm);
+            background: none; border: 1px solid var(--z-200);
             font-family: inherit; font-size: 13px; font-weight: 500;
-            color: var(--ink-2); cursor: pointer; transition: all .15s;
+            color: var(--z-500); cursor: pointer; transition: all .15s;
         }
-        .btn-ghost:hover { background: var(--surface); }
+        .btn-ghost:hover { background: var(--z-50); color: var(--z-700); }
         .btn-del {
-            padding: 8px 16px; border-radius: var(--r-sm);
-            background: var(--red-tint); border: 1px solid rgba(220,38,38,.2);
+            padding: 7px 14px; border-radius: var(--r-sm);
+            background: var(--red-faint); border: 1px solid rgba(220,38,38,.15);
             font-family: inherit; font-size: 13px; font-weight: 500;
             color: var(--red); cursor: pointer; transition: all .15s;
             display: flex; align-items: center; gap: 6px;
         }
-        .btn-del:hover { background: var(--red); color: white; }
+        .btn-del:hover { background: var(--red); color: white; border-color: var(--red); }
 
-        /* reminder modal */
+        /* Reminder items */
         .rem-item {
-            display: flex; align-items: flex-start; gap: 12px;
-            padding: 12px; border-radius: var(--r-sm); margin-bottom: 6px;
-            cursor: pointer; border: 1px solid var(--line); transition: background .12s;
+            display: flex; gap: 10px; padding: 10px 8px;
+            border-radius: var(--r-sm); margin-bottom: 4px;
+            cursor: pointer; border: 1px solid var(--z-100); transition: background .12s;
         }
-        .rem-item:hover { background: var(--surface); }
-        .rem-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+        .rem-item:hover { background: var(--z-50); }
+        .rem-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
         .rem-item.today   .rem-dot { background: var(--amber); }
         .rem-item.overdue .rem-dot { background: var(--red); }
-        .rem-item-ttl { font-size: 14px; font-weight: 600; color: var(--ink); }
-        .rem-item-when { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+        .rem-t { font-size: 13px; font-weight: 600; color: var(--z-900); }
+        .rem-w { font-size: 11px; color: var(--z-400); margin-top: 2px; }
 
-        mark { background: rgba(37,99,235,.15); color: inherit; border-radius: 2px; }
+        mark { background: rgba(37,99,235,.12); color: inherit; border-radius: 2px; padding: 0 1px; }
     </style>
 </head>
 <body>
 
-<!-- ══ Lock screen ══ -->
+<!-- Lock screen -->
 <div class="lock-screen show" id="lockScreen">
     <div class="lock-card">
-        <div class="lock-logo"><i class="fas fa-lock" id="lockIconEl"></i></div>
-        <div class="lock-title"    id="lockTitle">Notes</div>
-        <div class="lock-subtitle" id="lockSubtitle"></div>
+        <div class="lock-icon-wrap">
+            <i class="fas fa-lock" id="lockIconEl"></i>
+        </div>
+        <div class="lock-title" id="lockTitle">Notes</div>
+        <div class="lock-hint"  id="lockHint"></div>
 
         <div class="lock-field">
-            <input id="lockInput" maxlength="128"
+            <input id="lockInput" maxlength="128" placeholder=""
                    onkeydown="if(event.key==='Enter') handleLock()" />
-            <button class="eye-btn" id="eyeBtn" type="button" onclick="togglePwd()" tabindex="-1">
-                <i class="fas fa-eye" id="eyeIcon"></i>
+            <button class="lock-eye" id="lockEye" type="button" onclick="togglePwd()" tabindex="-1">
+                <i class="fas fa-eye" id="eyeIco"></i>
             </button>
         </div>
 
-        <div class="lock-error"    id="lockError"></div>
-        <div class="lock-attempts" id="lockAttempts"></div>
+        <div class="lock-err" id="lockErr"></div>
+        <div class="lock-att" id="lockAtt"></div>
 
-        <button class="lock-btn" id="lockBtn" onclick="handleLock()">Continuer</button>
+        <button class="lock-submit" id="lockBtn" onclick="handleLock()">Continuer</button>
 
-        <div class="lock-footer">
-            <button class="lock-link" id="changePwdLink" onclick="startChangePwd()">
+        <div class="lock-actions">
+            <button class="lock-text-btn" id="changePwdLink" onclick="startChangePwd()">
                 Changer de mot de passe
             </button>
         </div>
     </div>
 </div>
 
-<!-- ══ App ══ -->
+<!-- App -->
 <div class="app" id="appContent">
 
-    <header class="topbar">
-        <div class="topbar-left">
-            <div class="topbar-icon"><i class="fas fa-lock"></i></div>
-            <div class="topbar-greeting">Notes</div>
+    <header class="bar">
+        <div class="bar-brand">
+            <div class="bar-logo"><i class="fas fa-lock"></i></div>
+            <span class="bar-name">Notes</span>
         </div>
-        <div class="topbar-right">
-            <button class="btn-tb" onclick="lockApp()">
-                <i class="fas fa-lock"></i> Verrouiller
-            </button>
-        </div>
+        <button class="btn-lock" onclick="lockApp()">
+            <i class="fas fa-lock"></i> Verrouiller
+        </button>
     </header>
 
-    <div class="rem-bar" id="remBar">
-        <i class="fas fa-bell rem-bar-icon"></i>
-        <div class="rem-bar-msg" id="remBarMsg"></div>
-        <button class="rem-bar-cta" onclick="openRemModal()">Afficher</button>
-        <button class="rem-bar-close" onclick="$('remBar').classList.remove('show')">&times;</button>
+    <div class="ribbon" id="ribbon">
+        <div class="ribbon-dot"></div>
+        <div class="ribbon-txt" id="ribbonTxt"></div>
+        <button class="ribbon-btn" onclick="openRem()">Voir</button>
+        <button class="ribbon-x" onclick="$('ribbon').classList.remove('show')">&times;</button>
     </div>
 
-    <div class="main">
+    <div class="workspace">
 
-        <!-- New note -->
-        <div class="card">
-            <div class="card-title">Nouvelle note</div>
+        <!-- Compose -->
+        <div class="panel">
+            <div class="panel-hd">Nouvelle note</div>
 
-            <div class="form-field">
-                <label class="form-label">Titre</label>
-                <input type="text" id="title" placeholder="Titre de la note" />
+            <div class="field">
+                <label class="field-lbl">Titre</label>
+                <input type="text" id="fTitle" placeholder="Titre de la note" />
             </div>
-            <div class="form-field">
-                <label class="form-label">Catégorie</label>
-                <input type="text" id="category" placeholder="Travail, Personnel, Études…" />
+            <div class="field">
+                <label class="field-lbl">Catégorie</label>
+                <input type="text" id="fCat" placeholder="Travail, Personnel, Études…" />
             </div>
-            <div class="form-field">
-                <label class="form-label">Contenu</label>
-                <textarea id="noteText" placeholder="Commencez à écrire…"></textarea>
+            <div class="field">
+                <label class="field-lbl">Contenu</label>
+                <textarea id="fText" placeholder="Écrivez votre note…"></textarea>
             </div>
-            <div class="form-field">
-                <label class="form-label">Rappel</label>
-                <input type="date" id="reminderDate" />
-                <span class="reminder-hint">Vous serez averti à l'ouverture de l'application.</span>
+            <div class="field">
+                <label class="field-lbl">Rappel</label>
+                <input type="date" id="fDate" />
+                <span class="field-sub">Affiché à chaque ouverture jusqu'à la date.</span>
             </div>
 
             <button class="btn-add" onclick="addNote()">
@@ -474,25 +484,22 @@
             </button>
         </div>
 
-        <!-- Notes list -->
-        <div class="card">
-            <div class="card-title">Mes notes</div>
+        <!-- Notes -->
+        <div class="panel">
+            <div class="panel-hd">Mes notes</div>
 
-            <div class="search-row">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Rechercher…"
-                       oninput="filterNotes()" autocomplete="off" />
-                <button class="search-clr" id="searchClr" onclick="clearSearch()">&times;</button>
-                <span id="searchCnt" class="search-cnt"></span>
+            <div class="search">
+                <i class="fas fa-magnifying-glass"></i>
+                <input type="text" id="searchIn" placeholder="Rechercher…"
+                       oninput="onSearch()" autocomplete="off" />
+                <button class="search-clr" id="searchClr" onclick="clearSrc()">&times;</button>
+                <span class="search-ct" id="searchCt"></span>
             </div>
 
-            <div class="notes-scroll" id="notesList">
+            <div class="nlist" id="nlist">
                 <div class="empty">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                    </svg>
-                    <p>Aucune note pour l'instant.<br>Créez votre première note.</p>
+                    <div class="empty-ico"><i class="far fa-file-alt"></i></div>
+                    <p>Aucune note.<br>Créez votre première note.</p>
                 </div>
             </div>
         </div>
@@ -500,36 +507,36 @@
     </div>
 </div>
 
-<!-- Note detail overlay -->
-<div class="overlay" id="noteOverlay">
+<!-- Note detail -->
+<div class="overlay" id="noteOv">
     <div class="modal">
         <div class="modal-hd">
             <div>
-                <div class="modal-ttl" id="modalTitle"></div>
-                <div class="modal-sub" id="modalSub"></div>
+                <div class="modal-ttl"  id="mTitle"></div>
+                <div class="modal-meta" id="mMeta"></div>
             </div>
             <button class="modal-x" onclick="closeNote()">&times;</button>
         </div>
-        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-body" id="mBody"></div>
         <div class="modal-ft">
-            <button class="btn-del" onclick="deleteFromModal()">
-                <i class="fas fa-trash"></i> Supprimer
+            <button class="btn-del" onclick="delFromModal()">
+                <i class="fas fa-trash-can"></i> Supprimer
             </button>
             <button class="btn-ghost" onclick="closeNote()">Fermer</button>
         </div>
     </div>
 </div>
 
-<!-- Reminders overlay -->
-<div class="overlay" id="remOverlay">
+<!-- Reminders -->
+<div class="overlay" id="remOv">
     <div class="modal modal-sm">
         <div class="modal-hd">
             <div class="modal-ttl">Rappels</div>
-            <button class="modal-x" onclick="closeRemModal()">&times;</button>
+            <button class="modal-x" onclick="closeRem()">&times;</button>
         </div>
         <div id="remList"></div>
         <div class="modal-ft">
-            <button class="btn-ghost" onclick="closeRemModal()">Fermer</button>
+            <button class="btn-ghost" onclick="closeRem()">Fermer</button>
         </div>
     </div>
 </div>
@@ -537,22 +544,21 @@
 <script>
 'use strict';
 
-/* ── Crypto constants ── */
-const LS_SALT = 'ns_salt_v3';
-const LS_DATA = 'ns_data_v4';
+/* ── Crypto ── */
+const LS_SALT      = 'ns_salt_v3';
+const LS_DATA      = 'ns_data_v4';
 const PBKDF2_ITER  = 100_000;
 const LOCK_TIMEOUT = 5 * 60 * 1000;
-const MAX_ATTEMPTS = 5;
+const MAX_ATT      = 5;
 const BLOCK_MS     = 2 * 60 * 1000;
 
 let encKey = null, notes = [];
-let lockTimer, failedAttempts = 0, blockedUntil = 0;
-let lockState = 'unlock', tempPwd = null;
+let lockTimer, fails = 0, blockedUntil = 0;
+let state = 'unlock', tmpPwd = null;
 
-/* ── Binary utils ── */
-const enc = t => new TextEncoder().encode(t);
-const dec = b => new TextDecoder().decode(b);
-const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer)));
+const enc    = t => new TextEncoder().encode(t);
+const dec    = b => new TextDecoder().decode(b);
+const toB64  = buf => btoa(String.fromCharCode(...new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer)));
 const fromB64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 
 async function deriveKey(pw, salt) {
@@ -562,110 +568,104 @@ async function deriveKey(pw, salt) {
         raw, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
     );
 }
-async function encryptData(data, key) {
+async function cryptEnc(data, key) {
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, enc(JSON.stringify(data)));
     const out = new Uint8Array(12 + ct.byteLength);
     out.set(iv); out.set(new Uint8Array(ct), 12);
     return toB64(out);
 }
-async function decryptData(b64, key) {
+async function cryptDec(b64, key) {
     const buf = fromB64(b64);
     const pt  = await crypto.subtle.decrypt({ name:'AES-GCM', iv:buf.slice(0,12) }, key, buf.slice(12));
     return JSON.parse(dec(pt));
 }
-
 async function tryUnlock(pw) {
-    const saltB64 = localStorage.getItem(LS_SALT);
-    if (!saltB64) return null;
+    const sb = localStorage.getItem(LS_SALT);
+    if (!sb) return null;
     try {
-        const key = await deriveKey(pw, fromB64(saltB64));
-        for (const k of [LS_DATA, 'ns_data_v3']) {
+        const key = await deriveKey(pw, fromB64(sb));
+        for (const k of [LS_DATA,'ns_data_v3']) {
             const blob = localStorage.getItem(k);
             if (!blob) continue;
-            const raw = await decryptData(blob, key);
-            return { key, notes: Array.isArray(raw) ? raw : (raw.notes || []) };
+            const raw = await cryptDec(blob, key);
+            return { key, notes: Array.isArray(raw) ? raw : (raw.notes||[]) };
         }
-        return { key, notes: [] };
+        return { key, notes:[] };
     } catch { return null; }
 }
-
-async function createAccount(pw) {
+async function createVault(pw) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     localStorage.setItem(LS_SALT, toB64(salt));
     const key = await deriveKey(pw, salt);
-    localStorage.setItem(LS_DATA, await encryptData([], key));
+    localStorage.setItem(LS_DATA, await cryptEnc([], key));
     ['notes','notes_pwd_hash_v2','ns_data_v3','ns_name'].forEach(k => localStorage.removeItem(k));
     return key;
 }
-
 async function reencrypt(pw) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     localStorage.setItem(LS_SALT, toB64(salt));
     encKey = await deriveKey(pw, salt);
-    localStorage.setItem(LS_DATA, await encryptData(notes, encKey));
+    localStorage.setItem(LS_DATA, await cryptEnc(notes, encKey));
 }
-
-async function save() {
+async function persist() {
     if (!encKey) return;
-    localStorage.setItem(LS_DATA, await encryptData(notes, encKey));
+    localStorage.setItem(LS_DATA, await cryptEnc(notes, encKey));
     localStorage.removeItem('notes');
 }
 
 /* ── Lock screen ── */
 const $ = id => document.getElementById(id);
 
-function setUI({ icon='fa-lock', title, sub, btn, err='', att='', showChange=false, textMode=false }) {
-    $('lockIconEl').className         = `fas ${icon}`;
-    $('lockTitle').textContent        = title;
-    $('lockSubtitle').textContent     = sub;
-    $('lockBtn').textContent          = btn;
-    $('lockError').textContent        = err;
-    $('lockAttempts').textContent     = att;
-    $('changePwdLink').style.display  = showChange ? 'inline' : 'none';
-    $('lockInput').type               = textMode ? 'text' : 'password';
-    $('lockInput').className          = textMode ? '' : 'pw';
-    $('lockInput').placeholder        = textMode ? 'Votre prénom' : '';
-    $('lockInput').autocomplete       = textMode ? 'given-name' : 'current-password';
-    $('lockInput').value              = '';
-    $('lockBtn').disabled             = false;
-    $('lockInput').disabled           = false;
-    $('eyeBtn').classList.toggle('visible', !textMode);
-    $('eyeIcon').className            = 'fas fa-eye';
-    setTimeout(() => $('lockInput').focus(), 60);
+function ui({ icon='fa-lock', title='Notes', hint='', btn='Continuer', err='', att='', showChange=false, pwMode=true }) {
+    $('lockIconEl').className      = `fas ${icon}`;
+    $('lockTitle').textContent     = title;
+    $('lockHint').textContent      = hint;
+    $('lockBtn').textContent       = btn;
+    $('lockErr').textContent       = err;
+    $('lockAtt').textContent       = att;
+    $('changePwdLink').style.display = showChange ? 'inline' : 'none';
+    $('lockInput').type            = pwMode ? 'password' : 'text';
+    $('lockInput').className       = pwMode ? 'pw' : '';
+    $('lockInput').placeholder     = pwMode ? '' : 'Votre prénom';
+    $('lockInput').value           = '';
+    $('lockBtn').disabled          = false;
+    $('lockInput').disabled        = false;
+    $('lockEye').classList.toggle('on', pwMode);
+    $('eyeIco').className          = 'fas fa-eye';
+    setTimeout(() => $('lockInput').focus(), 50);
 }
 
-function showLockScreen() {
+function showLock() {
     $('lockScreen').classList.add('show');
     $('appContent').classList.remove('show');
     clearTimeout(lockTimer);
-    const isNew = !localStorage.getItem(LS_SALT);
-    if (isNew) {
-        lockState = 'setup_1';
-        setUI({ icon:'fa-lock', title:'Notes', sub:'Créez un mot de passe pour protéger vos notes (min. 4 caractères).', btn:'Continuer' });
+    if (!localStorage.getItem(LS_SALT)) {
+        state = 'setup_1';
+        ui({ icon:'fa-lock', hint:'Choisissez un mot de passe (min. 4 caractères).', btn:'Continuer' });
     } else {
-        lockState = 'unlock';
-        setUI({ icon:'fa-lock', title:'Notes', sub:'Entrez votre mot de passe.', btn:'Déverrouiller', showChange:true });
+        state = 'unlock';
+        ui({ icon:'fa-lock', btn:'Déverrouiller', showChange:true });
     }
 }
 
-function hideLockScreen() {
+function showApp() {
     $('lockScreen').classList.remove('show');
     $('appContent').classList.add('show');
     resetTimer();
     render();
-    checkReminders();
+    checkRem();
 }
 
 function lockApp() {
     encKey = null; notes = [];
     clearTimeout(lockTimer);
-    $('notesList').innerHTML = '';
-    $('remBar').classList.remove('show');
-    if ($('searchInput')) { $('searchInput').value = ''; $('searchCnt').textContent = ''; }
+    $('nlist').innerHTML = '';
+    $('ribbon').classList.remove('show');
+    if ($('searchIn')) { $('searchIn').value=''; $('searchCt').textContent=''; }
     $('searchClr')?.classList.remove('on');
-    closeNote(); closeRemModal();
-    showLockScreen();
+    closeNote(); closeRem();
+    showLock();
 }
 
 function resetTimer() {
@@ -676,207 +676,198 @@ function resetTimer() {
 function setBusy(on) {
     $('lockBtn').disabled   = on;
     $('lockInput').disabled = on;
-    if (on) $('lockBtn').textContent = 'Chargement…';
+    if (on) $('lockBtn').textContent = '…';
 }
 
 async function handleLock() {
-    const now = Date.now();
-    if (now < blockedUntil) {
-        $('lockError').textContent = `Trop de tentatives. Réessayez dans ${Math.ceil((blockedUntil-now)/1000)} s.`;
+    if (Date.now() < blockedUntil) {
+        $('lockErr').textContent = `Trop de tentatives — réessayez dans ${Math.ceil((blockedUntil-Date.now())/1000)} s.`;
         return;
     }
-    const val = $('lockInput').value;
-    if (!val.trim()) { $('lockError').textContent = 'Ce champ est requis.'; return; }
+    const v = $('lockInput').value;
+    if (!v.trim()) { $('lockErr').textContent = 'Champ requis.'; return; }
     setBusy(true);
-    try { await dispatch(val); } finally { setBusy(false); }
+    try { await dispatch(v); } finally { setBusy(false); }
 }
 
-async function dispatch(val) {
-    switch (lockState) {
+async function dispatch(v) {
+    switch (state) {
         case 'setup_1':
-            if (val.length < 4) { $('lockError').textContent = 'Minimum 4 caractères.'; return; }
-            tempPwd = val; lockState = 'setup_2';
-            setUI({ icon:'fa-key', title:'Confirmez', sub:'Saisissez à nouveau votre mot de passe.', btn:'Créer mon espace' });
+            if (v.length < 4) { $('lockErr').textContent = 'Minimum 4 caractères.'; return; }
+            tmpPwd = v; state = 'setup_2';
+            ui({ hint:'Confirmez votre mot de passe.', btn:'Créer' });
             break;
 
         case 'setup_2':
-            if (val !== tempPwd) {
-                tempPwd = null; lockState = 'setup_1';
-                setUI({ icon:'fa-key', title:'Notes', sub:'Les mots de passe ne correspondent pas. Réessayez.', btn:'Continuer', err:'Mots de passe différents.' });
+            if (v !== tmpPwd) {
+                tmpPwd = null; state = 'setup_1';
+                ui({ hint:'Choisissez un mot de passe (min. 4 caractères).', btn:'Continuer', err:'Les mots de passe ne correspondent pas.' });
                 return;
             }
-            encKey = await createAccount(tempPwd);
-            notes = []; tempPwd = null;
-            hideLockScreen();
+            encKey = await createVault(tmpPwd); notes = []; tmpPwd = null;
+            showApp();
             break;
 
         case 'unlock': {
-            const r = await tryUnlock(val);
+            const r = await tryUnlock(v);
             if (r) {
-                failedAttempts = 0;
-                encKey = r.key; notes = r.notes;
-                hideLockScreen();
+                fails = 0; encKey = r.key; notes = r.notes;
+                showApp();
             } else {
-                failedAttempts++;
+                fails++;
                 $('lockInput').value = '';
-                if (failedAttempts >= MAX_ATTEMPTS) {
-                    blockedUntil = Date.now() + BLOCK_MS; failedAttempts = 0;
-                    $('lockError').textContent = 'Accès temporairement bloqué (2 minutes).';
+                if (fails >= MAX_ATT) {
+                    blockedUntil = Date.now() + BLOCK_MS; fails = 0;
+                    $('lockErr').textContent = 'Accès bloqué 2 minutes.';
                 } else {
-                    const left = MAX_ATTEMPTS - failedAttempts;
-                    $('lockError').textContent = 'Mot de passe incorrect.';
-                    $('lockAttempts').textContent = `${left} essai${left>1?'s':''} restant${left>1?'s':''}.`;
+                    const left = MAX_ATT - fails;
+                    $('lockErr').textContent = 'Mot de passe incorrect.';
+                    $('lockAtt').textContent = `${left} essai${left>1?'s':''} restant${left>1?'s':''}.`;
                 }
             }
             break;
         }
 
-        case 'change_0': {
-            const r = await tryUnlock(val);
-            if (!r) { $('lockError').textContent = 'Mot de passe actuel incorrect.'; $('lockInput').value=''; return; }
-            notes = r.notes; lockState = 'change_1';
-            setUI({ icon:'fa-key', title:'Nouveau mot de passe', sub:'Choisissez un nouveau mot de passe (min. 4 caractères).', btn:'Continuer' });
+        case 'ch0': {
+            const r = await tryUnlock(v);
+            if (!r) { $('lockErr').textContent = 'Mot de passe actuel incorrect.'; $('lockInput').value=''; return; }
+            notes = r.notes; state = 'ch1';
+            ui({ hint:'Nouveau mot de passe (min. 4 caractères).', btn:'Continuer' });
             break;
         }
-        case 'change_1':
-            if (val.length < 4) { $('lockError').textContent = 'Minimum 4 caractères.'; return; }
-            tempPwd = val; lockState = 'change_2';
-            setUI({ icon:'fa-key', title:'Confirmez', sub:'Saisissez à nouveau le nouveau mot de passe.', btn:'Enregistrer' });
+        case 'ch1':
+            if (v.length < 4) { $('lockErr').textContent = 'Minimum 4 caractères.'; return; }
+            tmpPwd = v; state = 'ch2';
+            ui({ hint:'Confirmez le nouveau mot de passe.', btn:'Enregistrer' });
             break;
 
-        case 'change_2':
-            if (val !== tempPwd) {
-                tempPwd = null; lockState = 'change_1';
-                setUI({ icon:'fa-key', title:'Nouveau mot de passe', sub:'Mots de passe différents. Réessayez.', btn:'Continuer', err:'Mots de passe différents.' });
+        case 'ch2':
+            if (v !== tmpPwd) {
+                tmpPwd = null; state = 'ch1';
+                ui({ hint:'Nouveau mot de passe (min. 4 caractères).', btn:'Continuer', err:'Mots de passe différents.' });
                 return;
             }
-            await reencrypt(tempPwd); tempPwd = null;
-            hideLockScreen();
+            await reencrypt(tmpPwd); tmpPwd = null;
+            showApp();
             break;
     }
 }
 
 function startChangePwd() {
-    lockState = 'change_0';
-    setUI({ icon:'fa-key', title:'Vérification', sub:'Entrez votre mot de passe actuel.', btn:'Vérifier' });
+    state = 'ch0';
+    ui({ hint:'Entrez votre mot de passe actuel.', btn:'Vérifier' });
 }
 
 function togglePwd() {
-    const i = $('lockInput'), hidden = i.type === 'password';
-    i.type = hidden ? 'text' : 'password';
-    i.classList.toggle('pw', !hidden);
-    $('eyeIcon').className = hidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+    const i = $('lockInput'), h = i.type==='password';
+    i.type = h ? 'text' : 'password';
+    i.className = h ? '' : 'pw';
+    $('eyeIco').className = h ? 'fas fa-eye-slash' : 'fas fa-eye';
 }
 
 document.addEventListener('visibilitychange', () => { if (document.hidden) lockApp(); });
 ['click','keydown','mousemove','touchstart'].forEach(e =>
     document.addEventListener(e, () => { if ($('appContent').classList.contains('show')) resetTimer(); }, { passive:true })
 );
-showLockScreen();
+showLock();
 
 /* ── Notes ── */
-let openNoteId = null;
+let activeNoteId = null;
 
 const esc = t => { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; };
 
-function fmtDate(iso) {
+function fmtD(iso) {
     if (!iso) return '';
     if (iso.includes('-')) { const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
     return iso;
 }
-function rStatus(iso) {
+function rSt(iso) {
     if (!iso) return null;
     const t = new Date().toISOString().split('T')[0];
-    return iso < t ? 'overdue' : iso === t ? 'today' : 'future';
+    return iso < t ? 'overdue' : iso===t ? 'today' : 'future';
 }
-function rLabel(s) { return s==='overdue' ? 'En retard' : s==='today' ? "Aujourd'hui" : 'À venir'; }
+function rLbl(s) { return s==='overdue' ? 'En retard' : s==='today' ? "Aujourd'hui" : 'À venir'; }
 
 async function addNote() {
-    const title    = $('title').value.trim();
-    const cat      = $('category').value.trim() || 'Général';
-    const text     = $('noteText').value.trim();
-    const reminder = $('reminderDate').value || null;
-    if (!text) { $('noteText').focus(); return; }
+    const title    = $('fTitle').value.trim();
+    const cat      = $('fCat').value.trim() || 'Général';
+    const text     = $('fText').value.trim();
+    const reminder = $('fDate').value || null;
+    if (!text) { $('fText').focus(); return; }
     notes.push({
-        id:           Date.now(),
-        title:        title || text.split('\n')[0].substring(0,50) || 'Sans titre',
-        category:     cat, text,
-        created:      new Date().toISOString().split('T')[0],
+        id:   Date.now(),
+        title: title || text.split('\n')[0].substring(0,50) || 'Note',
+        category: cat, text,
+        created:  new Date().toISOString().split('T')[0],
         reminderDate: reminder
     });
-    await save();
-    ['title','category','noteText','reminderDate'].forEach(id => $(id).value='');
-    filterNotes();
-    $('noteText').focus();
+    await persist();
+    ['fTitle','fCat','fText','fDate'].forEach(id => $(id).value='');
+    onSearch();
+    $('fText').focus();
 }
 
-async function deleteNote(id) {
+async function delNote(id) {
     if (!confirm('Supprimer cette note ?')) return;
-    notes = notes.filter(n => n.id !== id);
-    await save();
-    filterNotes();
+    notes = notes.filter(n => n.id!==id);
+    await persist();
+    onSearch();
 }
 
-async function deleteFromModal() {
-    await deleteNote(openNoteId);
-    closeNote();
-}
+async function delFromModal() { await delNote(activeNoteId); closeNote(); }
 
 function openNote(id) {
-    const n = notes.find(n => n.id === id);
+    const n = notes.find(n=>n.id===id);
     if (!n) return;
-    openNoteId = id;
-    $('modalTitle').textContent = n.title;
-    const rs = rStatus(n.reminderDate);
-    const badge = rs ? `<span class="rbadge ${rs}"><i class="fas fa-bell"></i> ${fmtDate(n.reminderDate)} — ${rLabel(rs)}</span>` : '';
-    $('modalSub').innerHTML = `<span>${esc(n.category)}</span><span>·</span><span>${fmtDate(n.created)}</span>${badge ? '<span>·</span>'+badge : ''}`;
-    $('modalBody').textContent = n.text;
-    $('noteOverlay').classList.add('show');
+    activeNoteId = id;
+    $('mTitle').textContent = n.title;
+    const rs = rSt(n.reminderDate);
+    const badge = rs ? `<span class="rbadge ${rs}">${fmtD(n.reminderDate)} — ${rLbl(rs)}</span>` : '';
+    $('mMeta').innerHTML = `<span>${esc(n.category)}</span><span>·</span><span>${fmtD(n.created)}</span>${badge?'<span>·</span>'+badge:''}`;
+    $('mBody').textContent = n.text;
+    $('noteOv').classList.add('show');
 }
-
-function closeNote() { $('noteOverlay').classList.remove('show'); openNoteId=null; }
+function closeNote() { $('noteOv').classList.remove('show'); activeNoteId=null; }
 
 /* ── Reminders ── */
-function checkReminders() {
+function checkRem() {
     const t = new Date().toISOString().split('T')[0];
-    const due = notes.filter(n => n.reminderDate && n.reminderDate <= t);
+    const due = notes.filter(n=>n.reminderDate && n.reminderDate<=t);
     if (!due.length) return;
-    const today   = due.filter(n => n.reminderDate === t).length;
-    const overdue = due.filter(n => n.reminderDate <  t).length;
-    let msg = today && overdue
-        ? `<strong>${today}</strong> aujourd'hui · <strong>${overdue}</strong> en retard`
-        : today
-        ? `<strong>${today}</strong> rappel${today>1?'s':''} pour aujourd'hui`
-        : `<strong>${overdue}</strong> rappel${overdue>1?'s':''} en retard`;
-    $('remBarMsg').innerHTML = msg;
-    $('remBar').classList.add('show');
+    const td = due.filter(n=>n.reminderDate===t).length;
+    const ov = due.filter(n=>n.reminderDate<t).length;
+    $('ribbonTxt').innerHTML = td && ov
+        ? `<b>${td}</b> rappel${td>1?'s':''} aujourd'hui · <b>${ov}</b> en retard`
+        : td ? `<b>${td}</b> rappel${td>1?'s':''} pour aujourd'hui`
+             : `<b>${ov}</b> rappel${ov>1?'s':''} en retard`;
+    $('ribbon').classList.add('show');
 }
 
-function openRemModal() {
+function openRem() {
     const t = new Date().toISOString().split('T')[0];
-    const due = notes.filter(n => n.reminderDate && n.reminderDate <= t);
+    const due = notes.filter(n=>n.reminderDate && n.reminderDate<=t);
     $('remList').innerHTML = due.map(n => {
-        const s = rStatus(n.reminderDate);
-        return `<div class="rem-item ${s}" onclick="closeRemModal(); openNote(${n.id})">
+        const s = rSt(n.reminderDate);
+        return `<div class="rem-item ${s}" onclick="closeRem(); openNote(${n.id})">
             <div class="rem-dot"></div>
             <div>
-                <div class="rem-item-ttl">${esc(n.title)}</div>
-                <div class="rem-item-when">${s==='today' ? "Aujourd'hui" : 'En retard — '+fmtDate(n.reminderDate)}</div>
+                <div class="rem-t">${esc(n.title)}</div>
+                <div class="rem-w">${s==='today'?"Aujourd'hui":'En retard — '+fmtD(n.reminderDate)}</div>
             </div>
         </div>`;
     }).join('');
-    $('remOverlay').classList.add('show');
-    $('remBar').classList.remove('show');
+    $('remOv').classList.add('show');
+    $('ribbon').classList.remove('show');
 }
-function closeRemModal() { $('remOverlay').classList.remove('show'); }
+function closeRem() { $('remOv').classList.remove('show'); }
 
 /* ── Search + render ── */
-function filterNotes() {
-    const q = $('searchInput').value.trim().toLowerCase();
-    $('searchClr').classList.toggle('on', q.length > 0);
+function onSearch() {
+    const q = $('searchIn').value.trim().toLowerCase();
+    $('searchClr').classList.toggle('on', q.length>0);
     render(q);
 }
-function clearSearch() { $('searchInput').value=''; filterNotes(); }
+function clearSrc() { $('searchIn').value=''; onSearch(); }
 
 function hl(html, q) {
     if (!q) return html;
@@ -884,49 +875,48 @@ function hl(html, q) {
 }
 
 function render(q='') {
-    const list = $('notesList');
+    const el = $('nlist');
     const items = q ? notes.filter(n =>
         n.title.toLowerCase().includes(q) ||
         n.text.toLowerCase().includes(q)  ||
         n.category.toLowerCase().includes(q)) : notes;
 
-    $('searchCnt').textContent = q && items.length!==notes.length ? `${items.length} / ${notes.length}` : '';
+    $('searchCt').textContent = q && items.length!==notes.length ? `${items.length}/${notes.length}` : '';
 
     if (!items.length) {
-        list.innerHTML = q
-            ? `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg><p>Aucun résultat pour « ${esc(q)} »</p></div>`
-            : `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg><p>Aucune note pour l'instant.<br>Créez votre première note.</p></div>`;
+        el.innerHTML = q
+            ? `<div class="empty"><div class="empty-ico"><i class="fas fa-magnifying-glass"></i></div><p>Aucun résultat pour « ${esc(q)} »</p></div>`
+            : `<div class="empty"><div class="empty-ico"><i class="far fa-file-alt"></i></div><p>Aucune note.<br>Créez votre première note.</p></div>`;
         return;
     }
 
-    const grouped = {};
-    items.forEach(n => { (grouped[n.category]??=[]).push(n); });
+    const g = {};
+    items.forEach(n => { (g[n.category]??=[]).push(n); });
 
-    list.innerHTML = Object.entries(grouped).map(([cat, arr]) => `
-        <div class="cat-row">${esc(cat)}</div>
+    el.innerHTML = Object.entries(g).map(([cat, arr]) => `
+        <div class="cat-hd">${esc(cat)}</div>
         ${arr.map(n => {
-            const rs = rStatus(n.reminderDate);
-            const badge = rs ? `<span class="rbadge ${rs}"><i class="fas fa-bell"></i> ${fmtDate(n.reminderDate)}</span>` : '';
+            const rs = rSt(n.reminderDate);
+            const b  = rs ? `<span class="rbadge ${rs}"><i class="fas fa-bell"></i> ${fmtD(n.reminderDate)}</span>` : '';
             return `<div class="note-row" onclick="openNote(${n.id})">
-                <div class="note-row-body">
-                    <div class="note-row-title">${hl(esc(n.title), q)}</div>
-                    <div class="note-row-preview">${hl(esc(n.text.substring(0,80)), q)}</div>
-                    <div class="note-row-meta">
-                        <span class="note-row-date">${fmtDate(n.created)}</span>
-                        ${badge}
+                <div class="note-body">
+                    <div class="note-t">${hl(esc(n.title),q)}</div>
+                    <div class="note-p">${hl(esc(n.text.substring(0,80)),q)}</div>
+                    <div class="note-foot">
+                        <span class="note-date">${fmtD(n.created)}</span>
+                        ${b}
                     </div>
                 </div>
-                <button class="note-del" onclick="event.stopPropagation(); deleteNote(${n.id})" title="Supprimer">
-                    <i class="fas fa-trash"></i>
+                <button class="note-del" onclick="event.stopPropagation(); delNote(${n.id})" title="Supprimer">
+                    <i class="fas fa-trash-can"></i>
                 </button>
             </div>`;
         }).join('')}
     `).join('');
 }
 
-/* ── Close on backdrop click ── */
-$('noteOverlay').addEventListener('click', e => { if(e.target===$('noteOverlay')) closeNote(); });
-$('remOverlay').addEventListener('click',  e => { if(e.target===$('remOverlay'))  closeRemModal(); });
+$('noteOv').addEventListener('click', e => { if(e.target===$('noteOv')) closeNote(); });
+$('remOv').addEventListener('click',  e => { if(e.target===$('remOv'))  closeRem(); });
 </script>
 </body>
 </html>
