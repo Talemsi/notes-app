@@ -264,23 +264,23 @@
         .modal-body { line-height: 1.6; color: var(--text-primary); white-space: pre-wrap; word-break: break-word; }
         .modal-footer { margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end; }
 
-        .api-key-config {
-            display: flex; align-items: center; gap: 8px;
-            margin-bottom: 10px;
+        .search-bar {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--bg-light); border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;
+            transition: border-color 0.2s;
         }
-        .api-key-config input {
-            flex: 1; padding: 8px 10px; font-size: 12px; margin: 0;
+        .search-bar:focus-within { border-color: var(--primary); }
+        .search-bar i { color: var(--text-secondary); flex-shrink: 0; }
+        .search-bar input {
+            border: none; background: none; flex: 1; font-size: 14px;
+            color: var(--text-primary); outline: none; font-family: inherit;
         }
-        .api-key-status {
-            color: var(--success); display: flex; align-items: center; gap: 6px;
-            flex: 1; font-size: 12px; font-weight: 600;
+        .search-count { font-size: 11px; color: var(--text-secondary); flex-shrink: 0; }
+        mark {
+            background: rgba(55,138,221,0.25); color: inherit;
+            border-radius: 2px; padding: 0 1px;
         }
-        .api-key-notice {
-            background: rgba(55,138,221,0.06); border: 1px solid rgba(55,138,221,0.2);
-            border-radius: 6px; padding: 6px 10px; font-size: 11px;
-            color: var(--text-secondary); margin-bottom: 10px; line-height: 1.5;
-        }
-        .api-key-notice i { color: var(--primary); }
     </style>
 </head>
 <body>
@@ -338,30 +338,21 @@
 
             <div class="panel">
                 <div class="panel-title"><i class="fas fa-layer-group"></i> Vos notes</div>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input
+                        type="text" id="searchInput"
+                        placeholder="Rechercher dans vos notes…"
+                        oninput="filterNotes()"
+                        autocomplete="off"
+                    />
+                    <span id="searchCount" class="search-count"></span>
+                </div>
                 <div class="notes-list" id="notesList">
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
                         <p>Aucune note. Commencez à en ajouter!</p>
                     </div>
-                </div>
-                <div class="qa-section">
-                    <div class="qa-title"><i class="fas fa-comments"></i> Posez une question</div>
-                    <div class="api-key-notice">
-                        <i class="fas fa-info-circle"></i>
-                        La clé API est chiffrée AES-256 avec votre mot de passe — jamais stockée en clair.
-                    </div>
-                    <div id="apiKeyConfig" class="api-key-config"></div>
-                    <div class="qa-input-group">
-                        <input
-                            type="text" id="question"
-                            placeholder="Ex: 'Résume mes notes sur le travail'"
-                            onkeypress="if(event.key==='Enter') askQuestion()"
-                        />
-                        <button class="btn-primary" onclick="askQuestion()">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                    <div class="response-area" id="responseArea"></div>
                 </div>
             </div>
         </div>
@@ -404,8 +395,6 @@ const BLOCK_MS     = 2 * 60 * 1000;   // 2 min de blocage
 
 let encKey         = null;   // CryptoKey AES-GCM en mémoire — null = verrouillé
 let notes          = [];
-let apiKey         = '';     // clé API Anthropic — chiffrée au repos, en mémoire à l'usage
-let qaConsented    = false;  // avertissement affiché cette session
 let lockTimer      = null;
 let failedAttempts = 0;
 let blockedUntil   = 0;
@@ -450,18 +439,18 @@ async function decryptData(b64str, key) {
     return JSON.parse(dec(pt));
 }
 
-// ── Tenter un déverrouillage : retourne {key, notes, apiKey} ou null ──
+// ── Tenter un déverrouillage : retourne {key, notes} ou null ──
 async function tryUnlock(password) {
     const saltB64 = localStorage.getItem(LS_SALT);
     if (!saltB64) return null;
     try {
         const key  = await deriveKey(password, fromB64(saltB64));
         const blob = localStorage.getItem(LS_DATA);
-        if (!blob) return { key, notes: [], apiKey: '' };
+        if (!blob) return { key, notes: [] };
         const raw  = await decryptData(blob, key);
-        // Migration: ancien format = tableau, nouveau = {notes, apiKey}
-        if (Array.isArray(raw)) return { key, notes: raw, apiKey: '' };
-        return { key, notes: raw.notes || [], apiKey: raw.apiKey || '' };
+        // Migration : formats précédents (tableau direct ou {notes, apiKey})
+        if (Array.isArray(raw)) return { key, notes: raw };
+        return { key, notes: raw.notes || [] };
     } catch {
         return null;  // déchiffrement échoué = mauvais mot de passe
     }
@@ -472,24 +461,24 @@ async function createAccount(password) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     localStorage.setItem(LS_SALT, toB64(salt));
     const key  = await deriveKey(password, salt);
-    localStorage.setItem(LS_DATA, await encryptData({ notes: [], apiKey: '' }, key));
+    localStorage.setItem(LS_DATA, await encryptData([], key));
     localStorage.removeItem('notes');
     localStorage.removeItem('notes_pwd_hash_v2');
     return key;
 }
 
-// ── Changer de mot de passe (rechiffrement complet : notes + clé API) ──
+// ── Changer de mot de passe (rechiffrement) ──
 async function reencryptWithNewPassword(newPassword) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     localStorage.setItem(LS_SALT, toB64(salt));
     encKey = await deriveKey(newPassword, salt);
-    localStorage.setItem(LS_DATA, await encryptData({ notes, apiKey }, encKey));
+    localStorage.setItem(LS_DATA, await encryptData(notes, encKey));
 }
 
-// ── Sauvegarder notes + clé API, tous deux chiffrés ──
+// ── Sauvegarder les notes chiffrées ──
 async function saveData() {
     if (!encKey) return;
-    localStorage.setItem(LS_DATA, await encryptData({ notes, apiKey }, encKey));
+    localStorage.setItem(LS_DATA, await encryptData(notes, encKey));
     localStorage.removeItem('notes');  // migration: purger l'ancien stockage en clair
 }
 
@@ -544,17 +533,15 @@ function hideLockScreen() {
     $('appContent').style.display = 'block';
     resetLockTimer();
     renderNotes();
-    renderApiKeyStatus();
 }
 
 function lockApp() {
-    encKey      = null;
-    notes       = [];
-    apiKey      = '';
-    qaConsented = false;
+    encKey = null;
+    notes  = [];
     clearTimeout(lockTimer);
-    $('notesList').innerHTML    = '';
-    $('responseArea').innerHTML = '';
+    $('notesList').innerHTML = '';
+    if ($('searchInput')) $('searchInput').value = '';
+    if ($('searchCount')) $('searchCount').textContent = '';
     closeModal();
     showLockScreen();
 }
@@ -591,9 +578,8 @@ async function dispatch(pwd) {
             const r = await tryUnlock(pwd);
             if (r) {
                 failedAttempts = 0;
-                encKey  = r.key;
-                notes   = r.notes;
-                apiKey  = r.apiKey;
+                encKey = r.key;
+                notes  = r.notes;
                 hideLockScreen();
             } else {
                 failedAttempts++;
@@ -786,22 +772,37 @@ function closeModal() {
     currentModalNoteId = null;
 }
 
-function renderNotes() {
+function renderNotes(filter = '') {
     const list = $('notesList');
-    if (!notes.length) {
-        list.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>Aucune note. Commencez à en ajouter!</p></div>`;
+    const filtered = filter
+        ? notes.filter(n =>
+            n.title.toLowerCase().includes(filter) ||
+            n.text.toLowerCase().includes(filter) ||
+            n.category.toLowerCase().includes(filter))
+        : notes;
+
+    if ($('searchCount')) {
+        $('searchCount').textContent = filter && filtered.length !== notes.length
+            ? `${filtered.length} / ${notes.length}` : '';
+    }
+
+    if (!filtered.length) {
+        list.innerHTML = filter
+            ? `<div class="empty-state"><i class="fas fa-search"></i><p>Aucun résultat pour « ${escapeHtml(filter)} »</p></div>`
+            : `<div class="empty-state"><i class="fas fa-inbox"></i><p>Aucune note. Commencez à en ajouter!</p></div>`;
         return;
     }
+
     const grouped = {};
-    notes.forEach(n => { (grouped[n.category] ??= []).push(n); });
+    filtered.forEach(n => { (grouped[n.category] ??= []).push(n); });
     list.innerHTML = Object.entries(grouped).map(([cat, items]) => `
         <div class="category-group">
             <div class="category-badge">${escapeHtml(cat)}</div>
             ${items.map(n => `
             <div class="note-item">
                 <div class="note-content" onclick="openNote(${n.id})">
-                    <div class="note-title">${escapeHtml(n.title)}</div>
-                    <div class="note-preview">${escapeHtml(n.text.substring(0, 100))}</div>
+                    <div class="note-title">${highlightMatch(escapeHtml(n.title), filter)}</div>
+                    <div class="note-preview">${highlightMatch(escapeHtml(n.text.substring(0, 100)), filter)}</div>
                     <div class="note-meta">${n.created}</div>
                 </div>
                 <div class="note-actions">
@@ -815,104 +816,17 @@ function renderNotes() {
 
 
 /* ════════════════════════════════════════════════════════════
-   Q&A  —  Claude API
-   La clé API est stockée chiffrée (AES-256-GCM) avec les notes.
-   Elle n'apparaît jamais en clair dans localStorage.
+   RECHERCHE LOCALE  —  aucune communication réseau
 ════════════════════════════════════════════════════════════ */
 
-function renderApiKeyStatus() {
-    const c = $('apiKeyConfig');
-    if (!c) return;
-    if (apiKey) {
-        c.innerHTML = `
-            <div class="api-key-status">
-                <i class="fas fa-check-circle"></i> Clé API configurée (chiffrée)
-            </div>
-            <button class="btn-secondary btn-small" onclick="clearApiKey()">
-                <i class="fas fa-times"></i> Effacer
-            </button>`;
-    } else {
-        c.innerHTML = `
-            <input type="password" id="apiKeyInput"
-                placeholder="Clé Anthropic — sk-ant-…"
-                autocomplete="off" style="font-size:12px;"
-                onkeydown="if(event.key==='Enter') saveApiKey($('apiKeyInput').value)"
-            />
-            <button class="btn-primary btn-small" onclick="saveApiKey($('apiKeyInput').value)">
-                <i class="fas fa-save"></i>
-            </button>`;
-    }
+function filterNotes() {
+    renderNotes($('searchInput').value.trim().toLowerCase());
 }
 
-async function saveApiKey(val) {
-    const trimmed = val.trim();
-    if (!trimmed) return;
-    apiKey = trimmed;
-    await saveData();
-    renderApiKeyStatus();
-}
-
-async function clearApiKey() {
-    apiKey = '';
-    await saveData();
-    renderApiKeyStatus();
-}
-
-async function askQuestion() {
-    const question     = $('question').value.trim();
-    const responseArea = $('responseArea');
-    if (!question) { alert('Veuillez poser une question.'); return; }
-    if (!notes.length) { alert('Aucune note à analyser.'); return; }
-
-    if (!apiKey) {
-        responseArea.innerHTML = `<div class="response error">
-            <i class="fas fa-key"></i> Clé API requise. Entrez-la dans le champ ci-dessus.
-        </div>`;
-        return;
-    }
-
-    if (!qaConsented) {
-        const ok = confirm(
-            '⚠️  Avertissement de confidentialité\n\n' +
-            'Vos notes vont être envoyées à l\'API Anthropic pour analyse.\n' +
-            'Elles transitent par leurs serveurs (HTTPS) et sont soumises\n' +
-            'à leur politique de confidentialité (anthropic.com/privacy).\n\n' +
-            'Continuer ?'
-        );
-        if (!ok) return;
-        qaConsented = true;
-    }
-
-    responseArea.innerHTML = '<div class="response loading"><i class="fas fa-spinner fa-spin"></i> Analyse…</div>';
-
-    // Envoi minimal : catégorie + titre + texte uniquement (pas d'IDs ni timestamps)
-    const notesText = notes.map(n => `[${n.category}] ${n.title}:\n${n.text}`).join('\n\n---\n\n');
-    try {
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': apiKey,
-                'anthropic-version': '2023-06-01',
-                'anthropic-dangerous-direct-browser-access': 'true'
-            },
-            body: JSON.stringify({
-                model: 'claude-sonnet-4-6',
-                max_tokens: 1000,
-                system: 'Tu es un assistant pour la prise de notes. Réponds de manière concise et directe. Utilise des listes à puces si nécessaire.',
-                messages: [{ role: 'user', content: `Mes notes:\n\n${notesText}\n\nQuestion: ${question}` }]
-            })
-        });
-        if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.error?.message || `Erreur API ${res.status}`);
-        }
-        const data = await res.json();
-        responseArea.innerHTML = `<div class="response">${escapeHtml(data.content[0].text)}</div>`;
-        $('question').value = '';
-    } catch (err) {
-        responseArea.innerHTML = `<div class="response error"><i class="fas fa-exclamation-circle"></i> ${escapeHtml(err.message)}</div>`;
-    }
+function highlightMatch(escapedHtml, filter) {
+    if (!filter) return escapedHtml;
+    const re = new RegExp(`(${filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return escapedHtml.replace(re, '<mark>$1</mark>');
 }
 
 $('noteModal').addEventListener('click', e => { if (e.target === $('noteModal')) closeModal(); });
