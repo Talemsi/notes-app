@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon gestionnaire de notes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #378add;
+            --danger: #e24b4a;
+            --success: #639922;
+            --bg-light: #f5f5f5;
+            --bg-dark: #ffffff;
+            --text-primary: #2c2c2a;
+            --text-secondary: #888780;
+            --border: #d3d1c7;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            min-height: 100vh;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-dark);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+        }
+
+        .panel-title i {
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        input[type="text"],
+        textarea {
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+            line-height: 1.5;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2770c0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(55, 138, 221, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-light);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c93a39;
+        }
+
+        .notes-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .notes-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .notes-list::-webkit-scrollbar-track {
+            background: var(--bg-light);
+            border-radius: 10px;
+        }
+
+        .notes-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        .notes-list::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        .category-group {
+            margin-bottom: 16px;
+        }
+
+        .category-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .note-item {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .note-item:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(55, 138, 221, 0.15);
+        }
+
+        .note-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .note-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .note-preview {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            margin-bottom: 6px;
+        }
+
+        .note-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.3;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        .qa-section {
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+            margin-top: 16px;
+        }
+
+        .qa-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+        }
+
+        .qa-title i {
+            color: var(--primary);
+        }
+
+        .qa-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .qa-input-group input {
+            flex: 1;
+            margin: 0;
+        }
+
+        .qa-input-group button {
+            padding: 12px 16px;
+            flex-shrink: 0;
+        }
+
+        .response-area {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .response-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .response-area::-webkit-scrollbar-track {
+            background: var(--bg-light);
+        }
+
+        .response-area::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .response {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--primary);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .response.loading {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .response.error {
+            border-left-color: var(--danger);
+            background: rgba(226, 75, 74, 0.05);
+            color: var(--danger);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-dark);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            line-height: 1.6;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .modal-footer {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text-primary);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            margin-bottom: 8px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Panel Gauche: Création de notes -->
+        <div class="panel">
+            <div class="panel-title">
+                <i class="fas fa-pen-fancy"></i> Nouvelle note
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="title" placeholder="Titre (optionnel)" />
+                <input type="text" id="category" placeholder="Catégorie (ex: Travail, Personnel, Étude)" />
+                <textarea id="noteText" placeholder="Tapez votre note ici..."></textarea>
+            </div>
+
+            <button class="btn-primary" onclick="addNote()">
+                <i class="fas fa-plus"></i> Ajouter la note
+            </button>
+        </div>
+
+        <!-- Panel Droit: Gestion des notes et Q&A -->
+        <div class="panel">
+            <div class="panel-title">
+                <i class="fas fa-layer-group"></i> Vos notes
+            </div>
+
+            <div class="notes-list" id="notesList">
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Aucune note. Commencez à en ajouter!</p>
+                </div>
+            </div>
+
+            <div class="qa-section">
+                <div class="qa-title">
+                    <i class="fas fa-comments"></i> Posez une question
+                </div>
+
+                <div class="qa-input-group">
+                    <input 
+                        type="text" 
+                        id="question" 
+                        placeholder="Ex: 'Résume mes notes sur le travail'" 
+                        onkeypress="if(event.key==='Enter') askQuestion()"
+                    />
+                    <button class="btn-primary" onclick="askQuestion()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+
+                <div class="response-area" id="responseArea"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour voir la note complète -->
+    <div class="modal" id="noteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <div id="modalTitle"></div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;" id="modalCategory"></div>
+                </div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button class="btn-danger" onclick="deleteNoteFromModal()">
+                    <i class="fas fa-trash"></i> Supprimer
+                </button>
+                <button class="btn-secondary" onclick="closeModal()">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let notes = JSON.parse(localStorage.getItem('notes')) || [];
+        let currentModalNoteId = null;
+
+        function formatNote(text) {
+            return text
+                .split('\n\n')
+                .map(para => para.trim())
+                .filter(para => para.length > 0)
+                .join('\n\n');
+        }
+
+        function generateTitle(text) {
+            const first = text.split('\n')[0].substring(0, 50);
+            return first.length > 0 ? first : 'Sans titre';
+        }
+
+        function addNote() {
+            const title = document.getElementById('title').value || generateTitle(document.getElementById('noteText').value);
+            const category = document.getElementById('category').value || 'Sans catégorie';
+            const text = formatNote(document.getElementById('noteText').value);
+
+            if (!text.trim()) {
+                alert('Veuillez entrer du texte');
+                return;
+            }
+
+            notes.push({
+                id: Date.now(),
+                title,
+                category,
+                text,
+                created: new Date().toLocaleDateString('fr-FR')
+            });
+
+            localStorage.setItem('notes', JSON.stringify(notes));
+            document.getElementById('title').value = '';
+            document.getElementById('category').value = '';
+            document.getElementById('noteText').value = '';
+            renderNotes();
+        }
+
+        function deleteNote(id) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette note?')) {
+                notes = notes.filter(n => n.id !== id);
+                localStorage.setItem('notes', JSON.stringify(notes));
+                renderNotes();
+            }
+        }
+
+        function deleteNoteFromModal() {
+            deleteNote(currentModalNoteId);
+            closeModal();
+        }
+
+        function openNote(id) {
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                currentModalNoteId = id;
+                document.getElementById('modalTitle').textContent = note.title;
+                document.getElementById('modalCategory').textContent = `📁 ${note.category} • ${note.created}`;
+                document.getElementById('modalBody').textContent = note.text;
+                document.getElementById('noteModal').classList.add('show');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('noteModal').classList.remove('show');
+            currentModalNoteId = null;
+        }
+
+        function renderNotes() {
+            const list = document.getElementById('notesList');
+
+            if (notes.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Aucune note. Commencez à en ajouter!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const grouped = {};
+            notes.forEach(note => {
+                if (!grouped[note.category]) grouped[note.category] = [];
+                grouped[note.category].push(note);
+            });
+
+            let html = '';
+            for (const [category, notesInCat] of Object.entries(grouped)) {
+                html += '<div class="category-group">';
+                html += `<div class="category-badge">${escapeHtml(category)}</div>`;
+                
+                notesInCat.forEach(note => {
+                    html += `
+                        <div class="note-item">
+                            <div class="note-content" onclick="openNote(${note.id})" style="cursor: pointer;">
+                                <div class="note-title">${escapeHtml(note.title)}</div>
+                                <div class="note-preview">${escapeHtml(note.text.substring(0, 100))}</div>
+                                <div class="note-meta">${note.created}</div>
+                            </div>
+                            <div class="note-actions">
+                                <button class="btn-secondary btn-small" onclick="deleteNote(${note.id})" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+
+            list.innerHTML = html;
+        }
+
+        async function askQuestion() {
+            const question = document.getElementById('question').value;
+            const responseArea = document.getElementById('responseArea');
+
+            if (!question.trim()) {
+                alert('Veuillez poser une question');
+                return;
+            }
+
+            if (notes.length === 0) {
+                alert('Aucune note à analyser');
+                return;
+            }
+
+            responseArea.innerHTML = '<div class="response loading"><i class="fas fa-spinner fa-spin"></i> Analyse de vos notes...</div>';
+
+            const notesText = notes.map(n => `[${n.category}] ${n.title}:\n${n.text}`).join('\n\n---\n\n');
+
+            try {
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 1000,
+                        system: `Tu es un assistant pour la prise de notes. Réponds de manière concise et directe aux questions sur le contenu des notes. Formate bien ta réponse avec des listes à puces si nécessaire. Sois clair et utile.`,
+                        messages: [
+                            {
+                                role: 'user',
+                                content: `Voici mes notes:\n\n${notesText}\n\nQuestion: ${question}`
+                            }
+                        ]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erreur API: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const text = data.content[0].text;
+                responseArea.innerHTML = `<div class="response">${escapeHtml(text)}</div>`;
+                document.getElementById('question').value = '';
+            } catch (err) {
+                responseArea.innerHTML = `<div class="response error"><i class="fas fa-exclamation-circle"></i> Erreur: ${escapeHtml(err.message)}</div>`;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Fermer la modal en cliquant en dehors
+        document.getElementById('noteModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        renderNotes();
+    </script>
+</body>
+</html>
