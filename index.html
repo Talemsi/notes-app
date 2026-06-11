@@ -538,6 +538,89 @@
 
         mark { background: rgba(37,99,235,.12); color: inherit; border-radius: 2px; padding: 0 1px; }
 
+        /* ── Compile button ── */
+        .btn-compile {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 9px; border-radius: var(--r-xs);
+            background: var(--card-2); border: 1px solid var(--line);
+            color: var(--ink-3); font-size: 11px; font-weight: 550;
+            cursor: pointer; transition: all .18s; font-family: inherit; flex-shrink: 0;
+        }
+        .btn-compile:hover { background: var(--blue-faint); color: var(--blue); border-color: var(--blue-ring); }
+
+        /* ── Compiler modal ── */
+        .modal-compile { max-width: 680px; }
+        .compile-ctrl {
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            margin-bottom: 16px; flex-wrap: wrap;
+        }
+        .compile-tabs {
+            display: flex; gap: 3px;
+            background: var(--card-2); border: 1px solid var(--line);
+            border-radius: var(--r-sm); padding: 3px;
+        }
+        .ctab {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 13px; border-radius: var(--r-xs);
+            border: none; background: none;
+            font-family: inherit; font-size: 12px; font-weight: 500;
+            color: var(--ink-3); cursor: pointer; transition: all .15s;
+        }
+        .ctab.active { background: white; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .compile-scope {
+            padding: 6px 10px; border: 1.5px solid var(--line);
+            border-radius: var(--r-sm); background: var(--card-2);
+            font-family: inherit; font-size: 12px; color: var(--ink-2); outline: none; cursor: pointer;
+            transition: border-color .15s;
+        }
+        .compile-scope:focus { border-color: var(--blue); }
+
+        .cr-view { max-height: 400px; overflow-y: auto; }
+        .cr-view::-webkit-scrollbar { width: 3px; }
+        .cr-view::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+        .cr-empty { text-align: center; padding: 40px 20px; color: var(--ink-4); font-size: 13px; }
+        .cr-cat {
+            font-size: 10px; font-weight: 600; color: var(--ink-4);
+            text-transform: uppercase; letter-spacing: 1px;
+            padding: 14px 0 6px; border-top: 1px solid var(--line-2); margin-top: 2px;
+        }
+        .cr-cat:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+        .cr-note {
+            padding: 10px 12px; margin-bottom: 5px;
+            border: 1px solid var(--line-2); border-radius: var(--r-sm);
+            background: var(--card-2);
+        }
+        .cr-note-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+        .cr-note-body { font-size: 13px; color: var(--ink-2); line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+        .cr-note-meta { font-size: 11px; color: var(--ink-4); margin-top: 6px; display: flex; gap: 8px; }
+
+        .prompt-hint {
+            display: flex; align-items: flex-start; gap: 9px;
+            padding: 10px 13px; margin-bottom: 10px;
+            background: #EFF6FF; border: 1px solid #BFDBFE;
+            border-radius: var(--r-sm); font-size: 12px; color: #1E40AF; line-height: 1.55;
+        }
+        .prompt-hint i { margin-top: 1px; flex-shrink: 0; }
+        .prompt-hint a { color: inherit; font-weight: 600; text-decoration: underline; }
+        .prompt-ta {
+            width: 100%; min-height: 220px; max-height: 340px;
+            padding: 12px; border: 1.5px solid var(--line); border-radius: var(--r-sm);
+            background: var(--card-2); font-family: inherit; font-size: 12px;
+            color: var(--ink-2); line-height: 1.65; resize: vertical; outline: none;
+            transition: border-color .15s;
+        }
+        .prompt-ta:focus { border-color: var(--blue); background: white; }
+        .btn-copy-compile {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: var(--r-sm);
+            background: var(--ink); border: none; color: white;
+            font-family: inherit; font-size: 13px; font-weight: 500;
+            cursor: pointer; transition: background .18s, transform .1s;
+        }
+        .btn-copy-compile:hover { background: var(--ink-2); }
+        .btn-copy-compile:active { transform: scale(.98); }
+        .btn-copy-compile.copied { background: var(--green); }
+
         /* ── User selection grid ── */
         .user-grid {
             display: none;
@@ -681,7 +764,7 @@
 
         <!-- Notes -->
         <div class="panel">
-            <div class="panel-hd">Mes notes</div>
+            <div class="panel-hd">Mes notes <button class="btn-compile" onclick="openCompiler()"><i class="fas fa-wand-magic-sparkles"></i> Compiler</button></div>
 
             <div class="search">
                 <i class="fas fa-magnifying-glass"></i>
@@ -741,6 +824,51 @@
         <div id="remList"></div>
         <div class="modal-ft">
             <button class="btn-ghost" onclick="closeRem()">Fermer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Compiler -->
+<div class="overlay" id="compileOv">
+    <div class="modal modal-compile">
+        <div class="modal-hd">
+            <div>
+                <div class="modal-ttl">Compiler les notes</div>
+                <div class="modal-meta" id="compileMeta"></div>
+            </div>
+            <button class="modal-x" onclick="closeCompiler()">&times;</button>
+        </div>
+
+        <div class="compile-ctrl">
+            <div class="compile-tabs">
+                <button class="ctab active" id="tabCR" onclick="switchCompileTab('cr')">
+                    <i class="fas fa-file-lines"></i> Compte rendu
+                </button>
+                <button class="ctab" id="tabPrompt" onclick="switchCompileTab('prompt')">
+                    <i class="fas fa-wand-magic-sparkles"></i> Prompt Claude
+                </button>
+            </div>
+            <select class="compile-scope" id="compileScope" onchange="refreshCompiler()">
+                <option value="all">Toutes les notes</option>
+                <option value="filtered">Notes filtrées</option>
+            </select>
+        </div>
+
+        <div class="cr-view" id="viewCR"></div>
+
+        <div id="viewPrompt" style="display:none">
+            <div class="prompt-hint">
+                <i class="fas fa-circle-info"></i>
+                <span>Copiez ce prompt et collez-le dans <a href="https://claude.ai" target="_blank" rel="noopener noreferrer">claude.ai</a> pour obtenir un compte rendu enrichi et complété automatiquement.</span>
+            </div>
+            <textarea class="prompt-ta" id="promptTa" readonly></textarea>
+        </div>
+
+        <div class="modal-ft">
+            <button class="btn-ghost" onclick="closeCompiler()">Fermer</button>
+            <button class="btn-copy-compile" id="copyCompileBtn" onclick="copyCompiled()">
+                <i class="fas fa-copy"></i> Copier le texte
+            </button>
         </div>
     </div>
 </div>
@@ -1286,8 +1414,120 @@ function render(q='') {
     `).join('');
 }
 
-$('noteOv').addEventListener('click', e => { if(e.target===$('noteOv')) closeNote(); });
-$('remOv').addEventListener('click',  e => { if(e.target===$('remOv'))  closeRem(); });
+$('noteOv').addEventListener('click',    e => { if(e.target===$('noteOv'))    closeNote(); });
+$('remOv').addEventListener('click',     e => { if(e.target===$('remOv'))     closeRem(); });
+$('compileOv').addEventListener('click', e => { if(e.target===$('compileOv')) closeCompiler(); });
+
+/* ── Compiler ── */
+let compileTab = 'cr';
+
+function openCompiler() {
+    if (!notes.length) {
+        $('compileOv').classList.add('show');
+        $('viewCR').innerHTML = '<div class="cr-empty"><i class="far fa-file-alt" style="font-size:24px;display:block;margin-bottom:10px"></i>Aucune note à compiler.</div>';
+        $('viewPrompt').style.display = 'none';
+        $('viewCR').style.display = '';
+        $('compileMeta').textContent = '';
+        $('tabCR').classList.add('active');
+        $('tabPrompt').classList.remove('active');
+        return;
+    }
+    $('compileScope').value = 'all';
+    compileTab = 'cr';
+    $('tabCR').classList.add('active');
+    $('tabPrompt').classList.remove('active');
+    $('viewCR').style.display = '';
+    $('viewPrompt').style.display = 'none';
+    refreshCompiler();
+    $('compileOv').classList.add('show');
+}
+
+function closeCompiler() { $('compileOv').classList.remove('show'); }
+
+function switchCompileTab(tab) {
+    compileTab = tab;
+    $('tabCR').classList.toggle('active', tab === 'cr');
+    $('tabPrompt').classList.toggle('active', tab === 'prompt');
+    $('viewCR').style.display     = tab === 'cr'     ? '' : 'none';
+    $('viewPrompt').style.display = tab === 'prompt' ? '' : 'none';
+    $('copyCompileBtn').innerHTML = `<i class="fas fa-copy"></i> ${tab === 'cr' ? 'Copier le texte' : 'Copier le prompt'}`;
+    $('copyCompileBtn').classList.remove('copied');
+}
+
+function getCompileNotes() {
+    if ($('compileScope').value === 'filtered') {
+        const q = $('searchIn').value.trim().toLowerCase();
+        if (q) return notes.filter(n =>
+            n.title.toLowerCase().includes(q) ||
+            n.text.toLowerCase().includes(q)  ||
+            n.category.toLowerCase().includes(q));
+    }
+    return notes;
+}
+
+function groupBy(arr) {
+    const g = {};
+    arr.forEach(n => { (g[n.category] ??= []).push(n); });
+    return g;
+}
+
+function refreshCompiler() {
+    const list = getCompileNotes();
+    const n    = list.length;
+    $('compileMeta').textContent = `${n} note${n > 1 ? 's' : ''}`;
+
+    const groups = groupBy(list);
+
+    /* ── Compte rendu view ── */
+    if (!n) {
+        $('viewCR').innerHTML = '<div class="cr-empty">Aucune note correspondante.</div>';
+    } else {
+        $('viewCR').innerHTML = Object.entries(groups).map(([cat, items]) =>
+            `<div class="cr-cat">${esc(cat)}</div>` +
+            items.map(note =>
+                `<div class="cr-note">
+                    <div class="cr-note-title">${esc(note.title)}</div>
+                    ${note.text ? `<div class="cr-note-body">${esc(note.text)}</div>` : ''}
+                    <div class="cr-note-meta">
+                        <span><i class="fas fa-calendar-days" style="font-size:9px"></i> ${fmtD(note.created)}</span>
+                        ${note.reminderDate ? `<span><i class="fas fa-bell" style="font-size:9px"></i> ${fmtD(note.reminderDate)}</span>` : ''}
+                    </div>
+                </div>`
+            ).join('')
+        ).join('');
+    }
+
+    /* ── Prompt Claude (compact, économique) ── */
+    const today = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+    let prompt = `Date : ${today}\n\nMes notes :\n`;
+    for (const [cat, items] of Object.entries(groups)) {
+        prompt += `\n[${cat}]\n`;
+        items.forEach(note => {
+            const preview = note.text.length > 200 ? note.text.slice(0, 200) + '…' : note.text;
+            prompt += `• ${note.title}${preview ? ' : ' + preview.replace(/\n/g, ' ') : ''}\n`;
+        });
+    }
+    prompt += `\nTâche : génère un compte rendu structuré en français. Pour chaque point, ajoute un court complément si utile (conseil, ressource, point de vigilance). Format : sections par thème, points clés, compléments en italique.`;
+    $('promptTa').value = prompt;
+}
+
+async function copyCompiled() {
+    const text = compileTab === 'cr'
+        ? $('viewCR').innerText.trim()
+        : $('promptTa').value;
+    const btn = $('copyCompileBtn');
+    try {
+        await navigator.clipboard.writeText(text);
+    } catch {
+        $('promptTa').style.display = '';
+        $('promptTa').select();
+        document.execCommand('copy');
+    }
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i> Copié !';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2200);
+}
 </script>
 </body>
 </html>
