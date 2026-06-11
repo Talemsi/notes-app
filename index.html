@@ -260,6 +260,47 @@
         .btn-add:hover  { background: var(--z-800); }
         .btn-add:active { transform: scale(.99); }
 
+        /* Bulk actions bar */
+        .bulk-bar {
+            display: none; align-items: center; gap: 8px;
+            padding: 8px 10px; margin-bottom: 10px;
+            background: #EFF6FF; border: 1px solid #BFDBFE;
+            border-radius: var(--r-sm);
+        }
+        .bulk-bar.show { display: flex; }
+        .bulk-ct { font-size: 12px; font-weight: 600; color: var(--blue); flex: 1; }
+        .btn-bulk-del {
+            padding: 5px 12px; border: none; border-radius: var(--r-xs);
+            background: var(--red); color: white;
+            font-family: inherit; font-size: 12px; font-weight: 600;
+            cursor: pointer; transition: background .15s;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .btn-bulk-del:hover { background: #B91C1C; }
+        .btn-bulk-cancel {
+            padding: 5px 10px; border: 1px solid var(--z-200); border-radius: var(--r-xs);
+            background: white; color: var(--z-500);
+            font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer;
+        }
+        /* Checkbox on note rows */
+        .note-check {
+            width: 16px; height: 16px; border-radius: 4px;
+            border: 1.5px solid var(--z-300); background: white;
+            cursor: pointer; flex-shrink: 0; margin-top: 2px;
+            accent-color: var(--blue); display: none;
+        }
+        .select-mode .note-check { display: block; }
+        .select-mode .note-del   { display: none; }
+        /* Select-all row */
+        .bulk-toggle {
+            font-size: 12px; color: var(--z-400); cursor: pointer;
+            background: none; border: none; font-family: inherit;
+            display: none; padding: 0 4px; text-decoration: underline;
+            text-underline-offset: 2px; transition: color .15s;
+        }
+        .bulk-toggle:hover { color: var(--blue); }
+        .bulk-toggle.show { display: inline; }
+
         /* Search */
         .search {
             display: flex; align-items: center; gap: 8px;
@@ -478,6 +519,9 @@
                 <input type="date" id="fDate" />
                 <span class="field-sub">Affiché à chaque ouverture jusqu'à la date.</span>
             </div>
+            <span class="field-sub" id="dateErr" style="color:var(--red);display:none">
+                La date doit être aujourd'hui ou dans le futur.
+            </span>
 
             <button class="btn-add" onclick="addNote()">
                 <i class="fas fa-plus"></i> Ajouter
@@ -494,6 +538,15 @@
                        oninput="onSearch()" autocomplete="off" />
                 <button class="search-clr" id="searchClr" onclick="clearSrc()">&times;</button>
                 <span class="search-ct" id="searchCt"></span>
+                <button class="bulk-toggle" id="bulkToggle" onclick="enterSelect()">Sélectionner</button>
+            </div>
+
+            <div class="bulk-bar" id="bulkBar">
+                <span class="bulk-ct" id="bulkCt">0 sélectionnée(s)</span>
+                <button class="btn-bulk-cancel" onclick="exitSelect()">Annuler</button>
+                <button class="btn-bulk-del" onclick="deleteSelected()">
+                    <i class="fas fa-trash-can"></i> Supprimer
+                </button>
             </div>
 
             <div class="nlist" id="nlist">
@@ -652,6 +705,7 @@ function showLock() {
 function showApp() {
     $('lockScreen').classList.remove('show');
     $('appContent').classList.add('show');
+    $('fDate').min = new Date().toISOString().split('T')[0]; // pas de date passée
     resetTimer();
     render();
     checkRem();
@@ -661,6 +715,8 @@ function lockApp() {
     encKey = null; notes = [];
     clearTimeout(lockTimer);
     $('nlist').innerHTML = '';
+    selectMode = false; selected.clear();
+    $('bulkBar').classList.remove('show');
     $('ribbon').classList.remove('show');
     if ($('searchIn')) { $('searchIn').value=''; $('searchCt').textContent=''; }
     $('searchClr')?.classList.remove('on');
@@ -773,6 +829,8 @@ showLock();
 
 /* ── Notes ── */
 let activeNoteId = null;
+let selectMode   = false;
+let selected     = new Set();
 
 const esc = t => { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; };
 
@@ -794,6 +852,18 @@ async function addNote() {
     const text     = $('fText').value.trim();
     const reminder = $('fDate').value || null;
     if (!text) { $('fText').focus(); return; }
+
+    // Validation : date ne peut pas être dans le passé
+    if (reminder) {
+        const today = new Date().toISOString().split('T')[0];
+        if (reminder < today) {
+            $('dateErr').style.display = 'block';
+            $('fDate').focus();
+            return;
+        }
+    }
+    $('dateErr').style.display = 'none';
+
     notes.push({
         id:   Date.now(),
         title: title || text.split('\n')[0].substring(0,50) || 'Note',
@@ -812,6 +882,41 @@ async function delNote(id) {
     notes = notes.filter(n => n.id!==id);
     await persist();
     onSearch();
+}
+
+/* ── Bulk select ── */
+function enterSelect() {
+    selectMode = true; selected.clear();
+    $('nlist').classList.add('select-mode');
+    $('bulkBar').classList.add('show');
+    $('bulkToggle').textContent = 'Tout sélectionner';
+    updateBulkCount();
+    render($('searchIn').value.trim().toLowerCase());
+}
+
+function exitSelect() {
+    selectMode = false; selected.clear();
+    $('nlist').classList.remove('select-mode');
+    $('bulkBar').classList.remove('show');
+    $('bulkToggle').textContent = 'Sélectionner';
+    render($('searchIn').value.trim().toLowerCase());
+}
+
+function toggleSelect(id, cb) {
+    if (cb.checked) selected.add(id); else selected.delete(id);
+    updateBulkCount();
+}
+
+function updateBulkCount() {
+    $('bulkCt').textContent = `${selected.size} sélectionnée${selected.size>1?'s':''}`;
+}
+
+async function deleteSelected() {
+    if (!selected.size) return;
+    if (!confirm(`Supprimer ${selected.size} note${selected.size>1?'s':''} ?`)) return;
+    notes = notes.filter(n => !selected.has(n.id));
+    await persist();
+    exitSelect();
 }
 
 async function delFromModal() { await delNote(activeNoteId); closeNote(); }
@@ -893,12 +998,21 @@ function render(q='') {
     const g = {};
     items.forEach(n => { (g[n.category]??=[]).push(n); });
 
+    // Show/hide "Sélectionner" toggle
+    $('bulkToggle').classList.toggle('show', items.length > 0);
+    if (selectMode && $('bulkToggle').textContent === 'Tout sélectionner') {
+        $('bulkToggle').onclick = () => { items.forEach(n => selected.add(n.id)); updateBulkCount(); render(q); };
+    }
+
     el.innerHTML = Object.entries(g).map(([cat, arr]) => `
         <div class="cat-hd">${esc(cat)}</div>
         ${arr.map(n => {
-            const rs = rSt(n.reminderDate);
-            const b  = rs ? `<span class="rbadge ${rs}"><i class="fas fa-bell"></i> ${fmtD(n.reminderDate)}</span>` : '';
-            return `<div class="note-row" onclick="openNote(${n.id})">
+            const rs  = rSt(n.reminderDate);
+            const b   = rs ? `<span class="rbadge ${rs}"><i class="fas fa-bell"></i> ${fmtD(n.reminderDate)}</span>` : '';
+            const chk = selectMode ? `<input type="checkbox" class="note-check" ${selected.has(n.id)?'checked':''} onclick="event.stopPropagation(); toggleSelect(${n.id}, this)" />` : '';
+            const click = selectMode ? '' : `onclick="openNote(${n.id})"`;
+            return `<div class="note-row" ${click}>
+                ${chk}
                 <div class="note-body">
                     <div class="note-t">${hl(esc(n.title),q)}</div>
                     <div class="note-p">${hl(esc(n.text.substring(0,80)),q)}</div>
