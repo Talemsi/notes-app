@@ -108,6 +108,17 @@
             background: none; border: none; font-family: inherit;
         }
 
+        .lock-input-wrap { position: relative; margin-bottom: 6px; }
+        .lock-input-wrap #lockInput { padding-right: 44px; width: 100%; margin-bottom: 0; }
+        .eye-btn {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: var(--text-2); font-size: 15px; padding: 4px;
+            transition: color .2s; display: none;
+        }
+        .eye-btn.show { display: block; }
+        .eye-btn:hover { color: var(--primary); }
+
         /* ════ APP HEADER ════ */
         .app-header {
             max-width: 1200px; margin: 0 auto 16px;
@@ -133,6 +144,31 @@
             box-shadow: var(--shadow-sm);
         }
         .btn-header:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-light); }
+
+        .btn-edit-name {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-2); font-size: 12px; padding: 2px 5px;
+            transition: color .2s; vertical-align: middle;
+        }
+        .btn-edit-name:hover { color: var(--primary); }
+        .name-edit-wrap {
+            display: none; align-items: center; gap: 6px;
+        }
+        .name-edit-wrap.show { display: flex; }
+        .name-edit-wrap input {
+            padding: 5px 10px; font-size: 14px; font-weight: 600;
+            border: 1.5px solid var(--primary); border-radius: var(--r-sm);
+            outline: none; background: white; color: var(--text);
+            width: 140px; box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .name-edit-wrap button {
+            padding: 5px 9px; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 13px; transition: all .15s;
+        }
+        .name-save-btn { background: var(--primary); color: white; }
+        .name-save-btn:hover { background: var(--primary-dark); }
+        .name-cancel-btn { background: var(--bg); color: var(--text-2); border: 1px solid var(--border) !important; }
+        .name-cancel-btn:hover { color: var(--danger); }
 
         /* ════ REMINDER BANNER ════ */
         .rem-banner {
@@ -345,8 +381,13 @@
         <div class="lock-avatar"><i class="fas fa-lock" id="lockIconEl"></i></div>
         <div class="lock-title"    id="lockTitle">Chargement…</div>
         <div class="lock-subtitle" id="lockSubtitle"></div>
-        <input id="lockInput" maxlength="128" placeholder="••••••••"
-               onkeydown="if(event.key==='Enter') handleLock()" />
+        <div class="lock-input-wrap">
+            <input id="lockInput" maxlength="128" placeholder="••••••••"
+                   onkeydown="if(event.key==='Enter') handleLock()" />
+            <button class="eye-btn" id="eyeBtn" type="button" onclick="togglePwd()" tabindex="-1">
+                <i class="fas fa-eye" id="eyeIcon"></i>
+            </button>
+        </div>
         <div class="lock-error"    id="lockError"></div>
         <button id="lockBtn" onclick="handleLock()">
             <i class="fas fa-unlock-alt"></i> Déverrouiller
@@ -367,7 +408,18 @@
     <div class="app-header">
         <div class="app-brand">
             <div class="app-brand-icon"><i class="fas fa-shield-alt"></i></div>
-            <div class="app-greeting">Bonjour, <span id="appUserName"></span> 👋</div>
+            <div id="greetingDisplay" class="app-greeting">
+                Bonjour, <span id="appUserName"></span> 👋
+                <button class="btn-edit-name" onclick="startEditName()" title="Modifier le prénom">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+            </div>
+            <div class="name-edit-wrap" id="nameEditWrap">
+                <input type="text" id="nameEditInput" placeholder="Votre prénom"
+                       maxlength="30" onkeydown="if(event.key==='Enter') saveNameEdit(); if(event.key==='Escape') cancelNameEdit()" />
+                <button class="name-save-btn"   onclick="saveNameEdit()"><i class="fas fa-check"></i></button>
+                <button class="name-cancel-btn" onclick="cancelNameEdit()"><i class="fas fa-times"></i></button>
+            </div>
         </div>
         <button class="btn-header" onclick="lockApp()">
             <i class="fas fa-lock"></i> Verrouiller
@@ -599,7 +651,17 @@ function setLockUI({ icon='fa-lock', title, subtitle, btnText, error='', attempt
     $('lockInput').value             = '';
     $('lockBtn').disabled            = false;
     $('lockInput').disabled          = false;
+    // Œil : visible uniquement en mode mot de passe
+    $('eyeBtn').classList.toggle('show', !textMode);
+    $('eyeIcon').className = 'fas fa-eye';
     setTimeout(() => $('lockInput').focus(), 80);
+}
+
+function togglePwd() {
+    const input = $('lockInput');
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    $('eyeIcon').className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
 }
 
 function showLockScreen() {
@@ -952,6 +1014,30 @@ function renderNotes(filter = '') {
 
 $('noteModal').addEventListener('click', e => { if (e.target === $('noteModal')) closeModal(); });
 $('remModal').addEventListener('click',  e => { if (e.target === $('remModal'))  closeRemModal(); });
+
+/* Modification du prénom */
+function startEditName() {
+    $('nameEditInput').value = userName;
+    $('greetingDisplay').style.display = 'none';
+    $('nameEditWrap').classList.add('show');
+    $('nameEditInput').focus();
+    $('nameEditInput').select();
+}
+
+function cancelNameEdit() {
+    $('nameEditWrap').classList.remove('show');
+    $('greetingDisplay').style.display = '';
+}
+
+async function saveNameEdit() {
+    const newName = $('nameEditInput').value.trim();
+    if (!newName) { $('nameEditInput').focus(); return; }
+    userName = newName;
+    localStorage.setItem(LS_NAME, userName);
+    await saveData();
+    $('appUserName').textContent = userName;
+    cancelNameEdit();
+}
 </script>
 </body>
 </html>
