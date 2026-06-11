@@ -6,371 +6,411 @@
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta name="referrer" content="no-referrer">
-    <title>Notes sécurisées</title>
+    <title>Notes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --primary:       #4f7ef7;
-            --primary-dark:  #3b6ae0;
-            --primary-light: rgba(79,126,247,0.1);
-            --danger:        #ef4444;
-            --danger-light:  rgba(239,68,68,0.08);
-            --success:       #22c55e;
-            --warning:       #f59e0b;
-            --warning-light: rgba(245,158,11,0.1);
-            --bg:            #f1f5f9;
-            --card:          #ffffff;
-            --text:          #1e293b;
-            --text-2:        #64748b;
-            --border:        #e2e8f0;
-            --shadow-sm:     0 1px 3px rgba(0,0,0,0.07);
-            --shadow:        0 4px 16px rgba(0,0,0,0.08);
-            --shadow-lg:     0 24px 64px rgba(0,0,0,0.18);
-            --r:             12px;
-            --r-sm:          8px;
+            --blue:        #2563EB;
+            --blue-hover:  #1D4ED8;
+            --blue-tint:   rgba(37,99,235,0.08);
+            --red:         #DC2626;
+            --red-tint:    rgba(220,38,38,0.07);
+            --amber:       #D97706;
+            --amber-tint:  rgba(217,119,6,0.09);
+            --green:       #16A34A;
+            --ink:         #0F172A;
+            --ink-2:       #334155;
+            --ink-3:       #64748B;
+            --ink-4:       #94A3B8;
+            --line:        #E2E8F0;
+            --surface:     #F8FAFC;
+            --card:        #FFFFFF;
+            --r:           10px;
+            --r-sm:        7px;
+            --shadow-xs:   0 1px 2px rgba(0,0,0,0.05);
+            --shadow-sm:   0 1px 4px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.04);
+            --shadow:      0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+            --shadow-lg:   0 20px 60px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.08);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--surface);
             min-height: 100vh;
-            padding: 24px 20px;
-            color: var(--text);
+            color: var(--ink);
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* ════ LOCK SCREEN ════ */
+        /* ─── LOCK SCREEN ─── */
         .lock-screen {
             display: none; position: fixed; inset: 0;
-            background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%);
+            background: #0C0F1A;
             z-index: 9999; align-items: center; justify-content: center;
         }
         .lock-screen.show { display: flex; }
+        .lock-screen::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(37,99,235,0.18) 0%, transparent 70%);
+            pointer-events: none;
+        }
 
         .lock-card {
-            background: rgba(255,255,255,0.98);
-            border-radius: 24px; padding: 48px 44px;
-            max-width: 400px; width: 90%; text-align: center;
+            position: relative;
+            background: var(--card);
+            border-radius: 20px;
+            padding: 52px 48px 44px;
+            width: 100%; max-width: 388px;
+            text-align: center;
             box-shadow: var(--shadow-lg);
-            animation: popIn .35s cubic-bezier(.34,1.56,.64,1);
+            animation: appear .3s cubic-bezier(.22,1,.36,1);
         }
-        @keyframes popIn {
-            from { opacity: 0; transform: translateY(28px) scale(.96); }
-            to   { opacity: 1; transform: translateY(0)   scale(1); }
+        @keyframes appear {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
-        .lock-avatar {
-            width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 20px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        .lock-logo {
+            width: 56px; height: 56px; border-radius: 14px;
+            background: var(--ink);
             display: flex; align-items: center; justify-content: center;
-            font-size: 32px; color: white;
-            box-shadow: 0 8px 24px rgba(79,126,247,.4);
+            margin: 0 auto 28px; color: white; font-size: 22px;
         }
-        .lock-title    { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-        .lock-subtitle { font-size: 13px; color: var(--text-2); margin-bottom: 28px; line-height: 1.6; }
+        .lock-title    { font-size: 20px; font-weight: 700; color: var(--ink);   letter-spacing: -.3px; margin-bottom: 6px; }
+        .lock-subtitle { font-size: 14px; color: var(--ink-3); margin-bottom: 28px; line-height: 1.5; }
 
-        #lockInput {
-            width: 100%; padding: 14px 16px; margin-bottom: 6px;
-            border: 2px solid var(--border); border-radius: var(--r-sm);
-            font-size: 16px; letter-spacing: 5px; text-align: center;
-            font-family: inherit; color: var(--text);
-            transition: border-color .2s, box-shadow .2s; background: var(--bg);
+        .lock-field {
+            position: relative; margin-bottom: 10px;
+            text-align: left;
         }
-        #lockInput.text-mode { letter-spacing: 0; }
-        #lockInput:focus {
-            outline: none; border-color: var(--primary);
-            box-shadow: 0 0 0 4px var(--primary-light); background: white;
+        .lock-field input {
+            width: 100%; padding: 13px 44px 13px 14px;
+            border: 1.5px solid var(--line);
+            border-radius: var(--r-sm);
+            font-family: inherit; font-size: 15px; color: var(--ink);
+            background: var(--surface);
+            transition: border-color .15s, box-shadow .15s;
+            outline: none;
         }
-        #lockInput:disabled { opacity: .5; }
-
-        .lock-error    { color: var(--danger); font-size: 12px; min-height: 20px; margin: 4px 0 10px; font-weight: 500; }
-        .lock-attempts { font-size: 11px; color: var(--text-2); min-height: 16px; margin-top: 4px; }
-
-        #lockBtn {
-            width: 100%; padding: 14px; margin-bottom: 16px; border: none;
-            border-radius: var(--r-sm); font-size: 15px; font-weight: 600; cursor: pointer;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white;
-            box-shadow: 0 4px 14px rgba(79,126,247,.35);
-            transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+        .lock-field input.pw { letter-spacing: 4px; }
+        .lock-field input:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-tint);
+            background: white;
         }
-        #lockBtn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79,126,247,.45); }
-        #lockBtn:disabled { opacity: .7; cursor: not-allowed; }
-
-        .lock-info {
-            font-size: 11px; color: var(--text-2);
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-        }
-        .lock-info i { color: var(--success); }
-        .lock-link {
-            font-size: 11px; color: var(--primary); cursor: pointer;
-            margin-top: 12px; display: none; text-decoration: underline;
-            background: none; border: none; font-family: inherit;
-        }
-
-        .lock-input-wrap { position: relative; margin-bottom: 6px; }
-        .lock-input-wrap #lockInput { padding-right: 44px; width: 100%; margin-bottom: 0; }
+        .lock-field input::placeholder { letter-spacing: 0; color: var(--ink-4); }
+        .lock-field input:disabled { opacity: .5; }
         .eye-btn {
             position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
             background: none; border: none; cursor: pointer;
-            color: var(--text-2); font-size: 15px; padding: 4px;
-            transition: color .2s; display: none;
+            color: var(--ink-4); font-size: 15px; padding: 4px;
+            transition: color .15s; display: none; line-height: 1;
         }
-        .eye-btn.show { display: block; }
-        .eye-btn:hover { color: var(--primary); }
+        .eye-btn.visible { display: block; }
+        .eye-btn:hover { color: var(--ink-2); }
 
-        /* ════ APP HEADER ════ */
-        .app-header {
-            max-width: 1200px; margin: 0 auto 16px;
+        .lock-error {
+            font-size: 13px; font-weight: 500; color: var(--red);
+            min-height: 20px; margin-bottom: 8px; text-align: left;
+        }
+        .lock-attempts { font-size: 12px; color: var(--ink-3); min-height: 18px; text-align: left; }
+
+        .lock-btn {
+            width: 100%; padding: 13px; margin-top: 4px; margin-bottom: 20px;
+            background: var(--ink); color: white;
+            border: none; border-radius: var(--r-sm);
+            font-family: inherit; font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: background .15s, transform .1s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .lock-btn:hover:not(:disabled) { background: var(--ink-2); }
+        .lock-btn:active:not(:disabled) { transform: scale(.99); }
+        .lock-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+        .lock-footer { display: flex; justify-content: center; gap: 20px; }
+        .lock-link {
+            font-size: 13px; color: var(--ink-3); cursor: pointer;
+            background: none; border: none; font-family: inherit;
+            padding: 0; text-decoration: underline; text-underline-offset: 2px;
+            transition: color .15s; display: none;
+        }
+        .lock-link:hover { color: var(--ink); }
+
+        /* ─── APP SHELL ─── */
+        .app { display: none; flex-direction: column; min-height: 100vh; }
+        .app.show { display: flex; }
+
+        .topbar {
+            background: var(--card);
+            border-bottom: 1px solid var(--line);
+            padding: 0 24px;
+            height: 56px;
             display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
         }
-        .app-brand { display: flex; align-items: center; gap: 12px; }
-        .app-brand-icon {
-            width: 38px; height: 38px; border-radius: 10px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        .topbar-left { display: flex; align-items: center; gap: 12px; }
+        .topbar-icon {
+            width: 30px; height: 30px; border-radius: 8px; background: var(--ink);
             display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 16px;
-            box-shadow: 0 4px 12px rgba(79,126,247,.3);
+            color: white; font-size: 13px; flex-shrink: 0;
         }
-        .app-greeting { font-size: 15px; font-weight: 600; color: var(--text); }
-        .app-greeting span { color: var(--primary); }
-
-        .btn-header {
-            background: var(--card); border: 1px solid var(--border);
-            color: var(--text-2); padding: 8px 14px; font-size: 13px;
-            border-radius: var(--r-sm); cursor: pointer;
+        .topbar-greeting {
+            font-size: 14px; font-weight: 600; color: var(--ink);
             display: flex; align-items: center; gap: 6px;
-            transition: all .2s; font-weight: 500;
-            box-shadow: var(--shadow-sm);
         }
-        .btn-header:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-light); }
+        .topbar-greeting span { color: var(--ink-2); }
+        .btn-rename {
+            background: none; border: none; cursor: pointer; color: var(--ink-4);
+            font-size: 12px; padding: 3px 5px; transition: color .15s; line-height: 1;
+        }
+        .btn-rename:hover { color: var(--blue); }
+        .name-inline-edit { display: none; align-items: center; gap: 6px; }
+        .name-inline-edit.open { display: flex; }
+        .name-inline-edit input {
+            padding: 5px 10px; font-size: 13px; font-weight: 600;
+            border: 1.5px solid var(--blue); border-radius: var(--r-sm);
+            outline: none; background: white; color: var(--ink);
+            box-shadow: 0 0 0 3px var(--blue-tint); width: 140px; font-family: inherit;
+        }
+        .name-inline-edit button {
+            border: none; cursor: pointer; border-radius: 6px;
+            padding: 5px 10px; font-size: 13px; font-family: inherit; transition: background .15s;
+        }
+        .ni-save   { background: var(--blue); color: white; }
+        .ni-save:hover { background: var(--blue-hover); }
+        .ni-cancel { background: var(--surface); color: var(--ink-3); border: 1px solid var(--line) !important; }
 
-        .btn-edit-name {
-            background: none; border: none; cursor: pointer;
-            color: var(--text-2); font-size: 12px; padding: 2px 5px;
-            transition: color .2s; vertical-align: middle;
+        .topbar-right { display: flex; gap: 8px; }
+        .btn-tb {
+            padding: 7px 14px; border-radius: var(--r-sm);
+            background: none; border: 1px solid var(--line);
+            font-family: inherit; font-size: 13px; font-weight: 500;
+            color: var(--ink-2); cursor: pointer; transition: all .15s;
+            display: flex; align-items: center; gap: 6px;
+            box-shadow: var(--shadow-xs);
         }
-        .btn-edit-name:hover { color: var(--primary); }
-        .name-edit-wrap {
-            display: none; align-items: center; gap: 6px;
-        }
-        .name-edit-wrap.show { display: flex; }
-        .name-edit-wrap input {
-            padding: 5px 10px; font-size: 14px; font-weight: 600;
-            border: 1.5px solid var(--primary); border-radius: var(--r-sm);
-            outline: none; background: white; color: var(--text);
-            width: 140px; box-shadow: 0 0 0 3px var(--primary-light);
-        }
-        .name-edit-wrap button {
-            padding: 5px 9px; border: none; border-radius: 6px;
-            cursor: pointer; font-size: 13px; transition: all .15s;
-        }
-        .name-save-btn { background: var(--primary); color: white; }
-        .name-save-btn:hover { background: var(--primary-dark); }
-        .name-cancel-btn { background: var(--bg); color: var(--text-2); border: 1px solid var(--border) !important; }
-        .name-cancel-btn:hover { color: var(--danger); }
+        .btn-tb:hover { background: var(--surface); color: var(--red); border-color: currentColor; }
 
-        /* ════ REMINDER BANNER ════ */
-        .rem-banner {
-            max-width: 1200px; margin: 0 auto 16px;
-            background: var(--warning-light); border: 1px solid rgba(245,158,11,.3);
-            border-radius: var(--r-sm); padding: 12px 16px;
+        /* ─── REMINDER BANNER ─── */
+        .rem-bar {
+            background: #FFFBEB;
+            border-bottom: 1px solid #FDE68A;
+            padding: 10px 24px;
             display: none; align-items: center; gap: 12px;
         }
-        .rem-banner.show { display: flex; animation: slideDown .3s ease; }
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-8px); }
-            to   { opacity: 1; transform: translateY(0); }
+        .rem-bar.show { display: flex; }
+        .rem-bar-icon { color: var(--amber); font-size: 14px; flex-shrink: 0; }
+        .rem-bar-msg  { flex: 1; font-size: 13px; color: var(--ink-2); }
+        .rem-bar-msg strong { color: var(--ink); }
+        .rem-bar-cta {
+            padding: 5px 14px; border: none; border-radius: 6px;
+            background: var(--amber); color: white;
+            font-family: inherit; font-size: 12px; font-weight: 600;
+            cursor: pointer; transition: background .15s; flex-shrink: 0;
         }
-        .rem-banner i.bell { color: var(--warning); font-size: 16px; flex-shrink: 0; }
-        .rem-banner-text  { flex: 1; font-size: 13px; color: var(--text); }
-        .rem-banner-see {
-            background: var(--warning); color: white; border: none;
-            padding: 6px 14px; border-radius: 6px; font-size: 12px;
-            font-weight: 600; cursor: pointer; flex-shrink: 0;
-            transition: background .2s;
-        }
-        .rem-banner-see:hover { background: #d97706; }
-        .rem-banner-close {
-            background: none; border: none; color: var(--text-2);
-            font-size: 18px; cursor: pointer; flex-shrink: 0; padding: 0 4px;
+        .rem-bar-cta:hover { background: #B45309; }
+        .rem-bar-close {
+            background: none; border: none; cursor: pointer;
+            color: var(--ink-4); font-size: 16px; line-height: 1; flex-shrink: 0;
         }
 
-        /* ════ LAYOUT ════ */
-        .container {
-            max-width: 1200px; margin: 0 auto;
-            display: grid; grid-template-columns: 1fr 1.1fr; gap: 20px;
+        /* ─── MAIN ─── */
+        .main {
+            flex: 1; padding: 24px;
+            display: grid; grid-template-columns: 380px 1fr; gap: 20px;
+            max-width: 1160px; margin: 0 auto; width: 100%;
         }
-        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+        @media (max-width: 860px) { .main { grid-template-columns: 1fr; } }
 
-        .panel {
-            background: var(--card); border-radius: var(--r); padding: 24px;
-            box-shadow: var(--shadow); border: 1px solid var(--border);
-            display: flex; flex-direction: column;
+        .card {
+            background: var(--card); border: 1px solid var(--line);
+            border-radius: var(--r); padding: 24px;
+            box-shadow: var(--shadow-sm);
         }
-        .panel-title {
-            font-size: 15px; font-weight: 700; margin-bottom: 20px;
-            display: flex; align-items: center; gap: 10px; color: var(--text);
-        }
-        .panel-title-icon {
-            width: 32px; height: 32px; border-radius: 8px;
-            background: var(--primary-light); color: var(--primary);
-            display: flex; align-items: center; justify-content: center; font-size: 14px;
+        .card-title {
+            font-size: 13px; font-weight: 600; color: var(--ink-3);
+            text-transform: uppercase; letter-spacing: .6px;
+            margin-bottom: 18px;
         }
 
-        /* ════ FORM ════ */
-        .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
-        .field-label {
-            font-size: 11px; font-weight: 600; color: var(--text-2);
-            text-transform: uppercase; letter-spacing: .5px;
-            display: flex; align-items: center; gap: 5px;
+        /* ─── FORM ─── */
+        .form-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+        .form-label {
+            font-size: 12px; font-weight: 500; color: var(--ink-3);
         }
-        input[type="text"], input[type="date"], textarea {
-            padding: 10px 12px; border: 1.5px solid var(--border);
-            border-radius: var(--r-sm); font-family: inherit; font-size: 14px;
-            color: var(--text); transition: all .2s; background: white;
+        .form-field input[type="text"],
+        .form-field input[type="date"],
+        .form-field textarea {
+            padding: 9px 12px;
+            border: 1.5px solid var(--line); border-radius: var(--r-sm);
+            font-family: inherit; font-size: 14px; color: var(--ink);
+            background: white; outline: none; transition: border-color .15s, box-shadow .15s;
         }
-        input[type="text"]:focus, input[type="date"]:focus, textarea:focus {
-            outline: none; border-color: var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-light);
+        .form-field input:focus, .form-field textarea:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-tint);
         }
-        textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+        .form-field textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+        .form-field input[type="date"] { color: var(--ink); }
 
-        button { font-family: inherit; }
-        .btn {
-            padding: 11px 18px; border: none; border-radius: var(--r-sm);
-            font-size: 14px; font-weight: 600; cursor: pointer;
-            transition: all .2s; display: inline-flex; align-items: center;
-            justify-content: center; gap: 8px;
+        .reminder-hint {
+            font-size: 11px; color: var(--ink-4); margin-top: 3px;
         }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white; box-shadow: 0 2px 8px rgba(79,126,247,.3); width: 100%;
-        }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(79,126,247,.4); }
-        .btn-secondary { background: transparent; border: 1.5px solid var(--border); color: var(--text-2); }
-        .btn-secondary:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
-        .btn-sm { padding: 5px 9px; font-size: 12px; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-danger:hover { background: #dc2626; }
 
-        /* ════ SEARCH ════ */
-        .search-wrap {
+        .btn-add {
+            width: 100%; padding: 11px; border: none; border-radius: var(--r-sm);
+            background: var(--blue); color: white;
+            font-family: inherit; font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: background .15s, transform .1s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            margin-top: 4px;
+        }
+        .btn-add:hover  { background: var(--blue-hover); }
+        .btn-add:active { transform: scale(.99); }
+
+        /* ─── NOTES PANEL ─── */
+        .search-row {
             display: flex; align-items: center; gap: 10px;
-            background: var(--bg); border: 1.5px solid var(--border);
-            border-radius: var(--r-sm); padding: 10px 14px; margin-bottom: 14px;
-            transition: border-color .2s, box-shadow .2s;
+            background: var(--surface); border: 1.5px solid var(--line);
+            border-radius: var(--r-sm); padding: 9px 12px;
+            margin-bottom: 16px; transition: border-color .15s, box-shadow .15s;
         }
-        .search-wrap:focus-within {
-            border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light);
+        .search-row:focus-within {
+            border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-tint);
         }
-        .search-wrap i { color: var(--text-2); flex-shrink: 0; }
-        .search-wrap input {
-            border: none; background: none; flex: 1; font-size: 14px;
-            color: var(--text); outline: none; font-family: inherit; padding: 0;
+        .search-row i { color: var(--ink-4); font-size: 13px; flex-shrink: 0; }
+        .search-row input {
+            flex: 1; border: none; background: none; outline: none;
+            font-family: inherit; font-size: 14px; color: var(--ink);
         }
-        .search-wrap input::placeholder { color: var(--text-2); }
-        .search-clear {
-            background: none; border: none; color: var(--text-2); cursor: pointer;
-            font-size: 15px; padding: 0; display: none; transition: color .2s;
+        .search-row input::placeholder { color: var(--ink-4); }
+        .search-clr {
+            background: none; border: none; cursor: pointer; color: var(--ink-4);
+            font-size: 15px; line-height: 1; display: none; padding: 0; transition: color .15s;
         }
-        .search-clear.show { display: block; }
-        .search-clear:hover { color: var(--danger); }
-        .search-count { font-size: 11px; color: var(--text-2); font-weight: 600; flex-shrink: 0; }
+        .search-clr.on { display: block; }
+        .search-clr:hover { color: var(--red); }
+        .search-cnt { font-size: 12px; color: var(--ink-4); font-weight: 500; flex-shrink: 0; }
 
-        /* ════ NOTES LIST ════ */
-        .notes-list {
-            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
-            min-height: 200px; max-height: 520px;
-        }
-        .notes-list::-webkit-scrollbar { width: 4px; }
-        .notes-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        .notes-scroll { overflow-y: auto; max-height: 560px; display: flex; flex-direction: column; gap: 2px; }
+        .notes-scroll::-webkit-scrollbar { width: 4px; }
+        .notes-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
 
-        .cat-label {
-            font-size: 10px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 1px; color: var(--text-2); margin-top: 6px;
-            display: flex; align-items: center; gap: 8px;
+        .cat-row {
+            font-size: 11px; font-weight: 600; color: var(--ink-4);
+            text-transform: uppercase; letter-spacing: .8px;
+            padding: 12px 2px 6px; display: flex; align-items: center; gap: 8px;
         }
-        .cat-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        .cat-row::after { content:''; flex:1; height:1px; background: var(--line); }
 
-        .note-card {
-            background: var(--bg); border: 1.5px solid var(--border);
-            border-radius: var(--r-sm); padding: 12px 14px;
-            display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
-            transition: all .2s; cursor: pointer;
+        .note-row {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 11px 12px; border-radius: var(--r-sm);
+            cursor: pointer; transition: background .12s; border: 1px solid transparent;
         }
-        .note-card:hover {
-            border-color: var(--primary); background: white;
-            box-shadow: 0 4px 14px rgba(79,126,247,.12);
-            transform: translateY(-1px);
+        .note-row:hover { background: var(--surface); border-color: var(--line); }
+        .note-row-body { flex: 1; min-width: 0; }
+        .note-row-title {
+            font-size: 14px; font-weight: 600; color: var(--ink);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
         }
-        .note-card-body { flex: 1; min-width: 0; }
-        .note-card-title { font-weight: 600; font-size: 14px; color: var(--text); margin-bottom: 4px; word-break: break-word; }
-        .note-card-preview {
-            font-size: 12px; color: var(--text-2); line-height: 1.4; margin-bottom: 8px;
+        .note-row-preview {
+            font-size: 12px; color: var(--ink-3); line-height: 1.4;
             overflow: hidden; text-overflow: ellipsis;
-            display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;
+            display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical;
+            margin-bottom: 5px;
         }
-        .note-card-foot { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .note-card-date { font-size: 11px; color: var(--text-2); }
+        .note-row-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .note-row-date { font-size: 11px; color: var(--ink-4); }
 
         .rbadge {
+            font-size: 11px; font-weight: 500;
             display: inline-flex; align-items: center; gap: 3px;
-            padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 600;
+            padding: 1px 7px; border-radius: 20px;
         }
-        .rbadge.future  { background: var(--primary-light); color: var(--primary); }
-        .rbadge.today   { background: var(--warning-light); color: var(--warning); animation: pulse 2s infinite; }
-        .rbadge.overdue { background: var(--danger-light);  color: var(--danger); }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.55; } }
+        .rbadge.future  { background: #EFF6FF; color: var(--blue); }
+        .rbadge.today   { background: #FFFBEB; color: var(--amber); animation: blink 2.5s ease infinite; }
+        .rbadge.overdue { background: #FEF2F2; color: var(--red); }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.5} }
 
-        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-2); }
-        .empty-icon  { font-size: 38px; margin-bottom: 12px; opacity: .2; }
-        .empty-state p { font-size: 14px; line-height: 1.6; }
+        .note-del {
+            background: none; border: none; cursor: pointer;
+            color: var(--ink-4); font-size: 13px; padding: 4px;
+            border-radius: 6px; transition: all .15s; flex-shrink: 0;
+            opacity: 0;
+        }
+        .note-row:hover .note-del { opacity: 1; }
+        .note-del:hover { background: var(--red-tint); color: var(--red); }
 
-        /* ════ MODALS ════ */
-        .modal {
+        .empty {
+            text-align: center; padding: 48px 20px; color: var(--ink-4);
+        }
+        .empty svg { width: 40px; height: 40px; margin-bottom: 14px; opacity: .3; }
+        .empty p { font-size: 14px; line-height: 1.6; }
+
+        /* ─── MODALS ─── */
+        .overlay {
             display: none; position: fixed; inset: 0;
-            background: rgba(15,15,30,.5); z-index: 1000;
+            background: rgba(15,23,42,.4); z-index: 200;
             align-items: center; justify-content: center;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(3px);
         }
-        .modal.show { display: flex; }
-        .modal-box {
-            background: var(--card); border-radius: var(--r); padding: 28px;
-            max-width: 580px; width: 90%; max-height: 80vh; overflow-y: auto;
-            box-shadow: var(--shadow-lg); border: 1px solid var(--border);
-            animation: popIn .25s ease;
+        .overlay.show { display: flex; }
+        .modal {
+            background: var(--card); border: 1px solid var(--line);
+            border-radius: var(--r); padding: 28px;
+            width: 90%; max-width: 560px; max-height: 80vh; overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: appear .2s cubic-bezier(.22,1,.36,1);
         }
-        .modal-head {
+        .modal-sm { max-width: 420px; }
+        .modal-hd {
             display: flex; justify-content: space-between; align-items: flex-start;
             gap: 16px; margin-bottom: 16px;
         }
-        .modal-head-title { font-size: 17px; font-weight: 700; }
-        .modal-head-meta  { font-size: 12px; color: var(--text-2); margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .modal-close-btn {
-            background: var(--bg); border: 1px solid var(--border); cursor: pointer;
-            width: 30px; height: 30px; border-radius: 50%; font-size: 16px;
-            color: var(--text-2); display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0; transition: all .2s;
+        .modal-ttl { font-size: 17px; font-weight: 700; color: var(--ink); letter-spacing: -.2px; }
+        .modal-sub { font-size: 12px; color: var(--ink-3); margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .modal-x {
+            width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+            background: var(--surface); border: 1px solid var(--line);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; color: var(--ink-3); cursor: pointer; transition: all .15s;
         }
-        .modal-close-btn:hover { background: var(--danger-light); color: var(--danger); border-color: var(--danger); }
-        .modal-body { font-size: 14px; line-height: 1.8; color: var(--text); white-space: pre-wrap; word-break: break-word; }
-        .modal-foot { margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-x:hover { background: var(--red-tint); color: var(--red); border-color: var(--red); }
+        .modal-body { font-size: 14px; line-height: 1.8; color: var(--ink-2); white-space: pre-wrap; word-break: break-word; }
+        .modal-ft { margin-top: 20px; display: flex; gap: 8px; justify-content: flex-end; }
+        .btn-ghost {
+            padding: 8px 16px; border-radius: var(--r-sm);
+            background: none; border: 1px solid var(--line);
+            font-family: inherit; font-size: 13px; font-weight: 500;
+            color: var(--ink-2); cursor: pointer; transition: all .15s;
+        }
+        .btn-ghost:hover { background: var(--surface); }
+        .btn-del {
+            padding: 8px 16px; border-radius: var(--r-sm);
+            background: var(--red-tint); border: 1px solid rgba(220,38,38,.2);
+            font-family: inherit; font-size: 13px; font-weight: 500;
+            color: var(--red); cursor: pointer; transition: all .15s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .btn-del:hover { background: var(--red); color: white; }
 
-        /* reminder modal items */
+        /* reminder modal */
         .rem-item {
             display: flex; align-items: flex-start; gap: 12px;
-            padding: 12px; border-radius: var(--r-sm); margin-bottom: 8px;
-            border: 1px solid var(--border); cursor: pointer; transition: background .2s;
+            padding: 12px; border-radius: var(--r-sm); margin-bottom: 6px;
+            cursor: pointer; border: 1px solid var(--line); transition: background .12s;
         }
-        .rem-item:hover { background: var(--bg); }
-        .rem-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
-        .rem-item.today   .rem-dot { background: var(--warning); }
-        .rem-item.overdue .rem-dot { background: var(--danger); }
-        .rem-item-title { font-weight: 600; font-size: 14px; }
-        .rem-item-when  { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+        .rem-item:hover { background: var(--surface); }
+        .rem-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+        .rem-item.today   .rem-dot { background: var(--amber); }
+        .rem-item.overdue .rem-dot { background: var(--red); }
+        .rem-item-ttl { font-size: 14px; font-weight: 600; color: var(--ink); }
+        .rem-item-when { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
 
-        mark { background: rgba(79,126,247,.22); color: inherit; border-radius: 2px; padding: 0 1px; }
+        mark { background: rgba(37,99,235,.15); color: inherit; border-radius: 2px; }
     </style>
 </head>
 <body>
@@ -378,115 +418,112 @@
 <!-- ══ Lock screen ══ -->
 <div class="lock-screen show" id="lockScreen">
     <div class="lock-card">
-        <div class="lock-avatar"><i class="fas fa-lock" id="lockIconEl"></i></div>
-        <div class="lock-title"    id="lockTitle">Chargement…</div>
+        <div class="lock-logo"><i class="fas fa-lock" id="lockIconEl"></i></div>
+        <div class="lock-title"    id="lockTitle">Notes</div>
         <div class="lock-subtitle" id="lockSubtitle"></div>
-        <div class="lock-input-wrap">
-            <input id="lockInput" maxlength="128" placeholder="••••••••"
+
+        <div class="lock-field">
+            <input id="lockInput" maxlength="128"
                    onkeydown="if(event.key==='Enter') handleLock()" />
             <button class="eye-btn" id="eyeBtn" type="button" onclick="togglePwd()" tabindex="-1">
                 <i class="fas fa-eye" id="eyeIcon"></i>
             </button>
         </div>
+
         <div class="lock-error"    id="lockError"></div>
-        <button id="lockBtn" onclick="handleLock()">
-            <i class="fas fa-unlock-alt"></i> Déverrouiller
-        </button>
-        <div class="lock-info">
-            <i class="fas fa-shield-alt"></i>
-            Données chiffrées AES-256-GCM — illisibles sans mot de passe
-        </div>
         <div class="lock-attempts" id="lockAttempts"></div>
-        <button class="lock-link" id="changePwdLink" onclick="startChangePwd()">
-            Changer de mot de passe
-        </button>
+
+        <button class="lock-btn" id="lockBtn" onclick="handleLock()">Continuer</button>
+
+        <div class="lock-footer">
+            <button class="lock-link" id="changePwdLink" onclick="startChangePwd()">
+                Changer de mot de passe
+            </button>
+        </div>
     </div>
 </div>
 
 <!-- ══ App ══ -->
-<div id="appContent" style="display:none">
-    <div class="app-header">
-        <div class="app-brand">
-            <div class="app-brand-icon"><i class="fas fa-shield-alt"></i></div>
-            <div id="greetingDisplay" class="app-greeting">
-                Bonjour, <span id="appUserName"></span> 👋
-                <button class="btn-edit-name" onclick="startEditName()" title="Modifier le prénom">
+<div class="app" id="appContent">
+
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-icon"><i class="fas fa-lock"></i></div>
+            <div id="greetingDisplay" class="topbar-greeting">
+                <span id="appUserName"></span>
+                <button class="btn-rename" onclick="startRename()" title="Modifier le prénom">
                     <i class="fas fa-pencil-alt"></i>
                 </button>
             </div>
-            <div class="name-edit-wrap" id="nameEditWrap">
-                <input type="text" id="nameEditInput" placeholder="Votre prénom"
-                       maxlength="30" onkeydown="if(event.key==='Enter') saveNameEdit(); if(event.key==='Escape') cancelNameEdit()" />
-                <button class="name-save-btn"   onclick="saveNameEdit()"><i class="fas fa-check"></i></button>
-                <button class="name-cancel-btn" onclick="cancelNameEdit()"><i class="fas fa-times"></i></button>
+            <div class="name-inline-edit" id="nameEdit">
+                <input type="text" id="nameInput" maxlength="30" placeholder="Prénom"
+                       onkeydown="if(event.key==='Enter') saveRename(); if(event.key==='Escape') cancelRename()" />
+                <button class="ni-save"   onclick="saveRename()"><i class="fas fa-check"></i></button>
+                <button class="ni-cancel" onclick="cancelRename()"><i class="fas fa-times"></i></button>
             </div>
         </div>
-        <button class="btn-header" onclick="lockApp()">
-            <i class="fas fa-lock"></i> Verrouiller
-        </button>
+        <div class="topbar-right">
+            <button class="btn-tb" onclick="lockApp()">
+                <i class="fas fa-lock"></i> Verrouiller
+            </button>
+        </div>
+    </header>
+
+    <div class="rem-bar" id="remBar">
+        <i class="fas fa-bell rem-bar-icon"></i>
+        <div class="rem-bar-msg" id="remBarMsg"></div>
+        <button class="rem-bar-cta" onclick="openRemModal()">Afficher</button>
+        <button class="rem-bar-close" onclick="$('remBar').classList.remove('show')">&times;</button>
     </div>
 
-    <!-- Reminder banner -->
-    <div class="rem-banner" id="remBanner">
-        <i class="fas fa-bell bell"></i>
-        <div class="rem-banner-text" id="remBannerText"></div>
-        <button class="rem-banner-see" onclick="openRemModal()">Voir</button>
-        <button class="rem-banner-close" onclick="closeRemBanner()">&times;</button>
-    </div>
+    <div class="main">
 
-    <div class="container">
+        <!-- New note -->
+        <div class="card">
+            <div class="card-title">Nouvelle note</div>
 
-        <!-- Left: new note -->
-        <div class="panel">
-            <div class="panel-title">
-                <div class="panel-title-icon"><i class="fas fa-pen-fancy"></i></div>
-                Nouvelle note
+            <div class="form-field">
+                <label class="form-label">Titre</label>
+                <input type="text" id="title" placeholder="Titre de la note" />
             </div>
-
-            <div class="field">
-                <label class="field-label">Titre</label>
-                <input type="text" id="title" placeholder="Titre (optionnel)" />
+            <div class="form-field">
+                <label class="form-label">Catégorie</label>
+                <input type="text" id="category" placeholder="Travail, Personnel, Études…" />
             </div>
-            <div class="field">
-                <label class="field-label">Catégorie</label>
-                <input type="text" id="category" placeholder="Travail, Personnel, Étude…" />
+            <div class="form-field">
+                <label class="form-label">Contenu</label>
+                <textarea id="noteText" placeholder="Commencez à écrire…"></textarea>
             </div>
-            <div class="field">
-                <label class="field-label">Note</label>
-                <textarea id="noteText" placeholder="Tapez votre note ici…"></textarea>
-            </div>
-            <div class="field">
-                <label class="field-label">
-                    <i class="fas fa-bell" style="color:var(--warning)"></i>
-                    Rappel (optionnel)
-                </label>
+            <div class="form-field">
+                <label class="form-label">Rappel</label>
                 <input type="date" id="reminderDate" />
+                <span class="reminder-hint">Vous serez averti à l'ouverture de l'application.</span>
             </div>
 
-            <button class="btn btn-primary" onclick="addNote()">
-                <i class="fas fa-plus"></i> Ajouter la note
+            <button class="btn-add" onclick="addNote()">
+                <i class="fas fa-plus"></i> Ajouter
             </button>
         </div>
 
-        <!-- Right: notes list -->
-        <div class="panel">
-            <div class="panel-title">
-                <div class="panel-title-icon"><i class="fas fa-layer-group"></i></div>
-                Mes notes
-            </div>
+        <!-- Notes list -->
+        <div class="card">
+            <div class="card-title">Mes notes</div>
 
-            <div class="search-wrap">
+            <div class="search-row">
                 <i class="fas fa-search"></i>
                 <input type="text" id="searchInput" placeholder="Rechercher…"
                        oninput="filterNotes()" autocomplete="off" />
-                <button class="search-clear" id="searchClear" onclick="clearSearch()">&times;</button>
-                <span id="searchCount" class="search-count"></span>
+                <button class="search-clr" id="searchClr" onclick="clearSearch()">&times;</button>
+                <span id="searchCnt" class="search-cnt"></span>
             </div>
 
-            <div class="notes-list" id="notesList">
-                <div class="empty-state">
-                    <div class="empty-icon"><i class="fas fa-inbox"></i></div>
-                    <p>Aucune note pour l'instant.<br>Commencez à en ajouter !</p>
+            <div class="notes-scroll" id="notesList">
+                <div class="empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    <p>Aucune note pour l'instant.<br>Créez votre première note.</p>
                 </div>
             </div>
         </div>
@@ -494,38 +531,36 @@
     </div>
 </div>
 
-<!-- Note detail modal -->
-<div class="modal" id="noteModal">
-    <div class="modal-box">
-        <div class="modal-head">
+<!-- Note detail overlay -->
+<div class="overlay" id="noteOverlay">
+    <div class="modal">
+        <div class="modal-hd">
             <div>
-                <div class="modal-head-title" id="modalTitle"></div>
-                <div class="modal-head-meta"  id="modalMeta"></div>
+                <div class="modal-ttl" id="modalTitle"></div>
+                <div class="modal-sub" id="modalSub"></div>
             </div>
-            <button class="modal-close-btn" onclick="closeModal()">&times;</button>
+            <button class="modal-x" onclick="closeNote()">&times;</button>
         </div>
         <div class="modal-body" id="modalBody"></div>
-        <div class="modal-foot">
-            <button class="btn btn-danger btn-sm" onclick="deleteNoteFromModal()">
+        <div class="modal-ft">
+            <button class="btn-del" onclick="deleteFromModal()">
                 <i class="fas fa-trash"></i> Supprimer
             </button>
-            <button class="btn btn-secondary btn-sm" onclick="closeModal()">Fermer</button>
+            <button class="btn-ghost" onclick="closeNote()">Fermer</button>
         </div>
     </div>
 </div>
 
-<!-- Reminders modal -->
-<div class="modal" id="remModal">
-    <div class="modal-box" style="max-width:460px">
-        <div class="modal-head">
-            <div class="modal-head-title">
-                <i class="fas fa-bell" style="color:var(--warning);margin-right:8px"></i>Rappels
-            </div>
-            <button class="modal-close-btn" onclick="closeRemModal()">&times;</button>
+<!-- Reminders overlay -->
+<div class="overlay" id="remOverlay">
+    <div class="modal modal-sm">
+        <div class="modal-hd">
+            <div class="modal-ttl">Rappels</div>
+            <button class="modal-x" onclick="closeRemModal()">&times;</button>
         </div>
         <div id="remList"></div>
-        <div class="modal-foot">
-            <button class="btn btn-secondary btn-sm" onclick="closeRemModal()">Fermer</button>
+        <div class="modal-ft">
+            <button class="btn-ghost" onclick="closeRemModal()">Fermer</button>
         </div>
     </div>
 </div>
@@ -533,9 +568,7 @@
 <script>
 'use strict';
 
-/* ════════════════════════════════════════════════════
-   CRYPTOGRAPHIE — AES-256-GCM + PBKDF2-SHA-256
-════════════════════════════════════════════════════ */
+/* ── Crypto constants ── */
 const LS_SALT = 'ns_salt_v3';
 const LS_DATA = 'ns_data_v4';
 const LS_NAME = 'ns_name';
@@ -544,155 +577,118 @@ const LOCK_TIMEOUT = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 const BLOCK_MS     = 2 * 60 * 1000;
 
-let encKey         = null;
-let notes          = [];
-let userName       = '';
-let lockTimer      = null;
-let failedAttempts = 0;
-let blockedUntil   = 0;
-let lockState      = 'unlock';
-let tempPwd        = null;
-let tempName       = null;
+let encKey = null, notes = [], userName = '';
+let lockTimer, failedAttempts = 0, blockedUntil = 0;
+let lockState = 'unlock', tempPwd = null, tempName = null;
 
+/* ── Binary utils ── */
 const enc = t => new TextEncoder().encode(t);
 const dec = b => new TextDecoder().decode(b);
-function toB64(buf) {
-    return btoa(String.fromCharCode(...new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer)));
-}
-function fromB64(s) {
-    return Uint8Array.from(atob(s), c => c.charCodeAt(0));
-}
+const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer)));
+const fromB64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 
-async function deriveKey(password, salt) {
-    const raw = await crypto.subtle.importKey('raw', enc(password), { name: 'PBKDF2' }, false, ['deriveKey']);
+async function deriveKey(pw, salt) {
+    const raw = await crypto.subtle.importKey('raw', enc(pw), { name:'PBKDF2' }, false, ['deriveKey']);
     return crypto.subtle.deriveKey(
-        { name: 'PBKDF2', salt, iterations: PBKDF2_ITER, hash: 'SHA-256' },
-        raw, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+        { name:'PBKDF2', salt, iterations:PBKDF2_ITER, hash:'SHA-256' },
+        raw, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
     );
 }
-
 async function encryptData(data, key) {
-    const iv  = crypto.getRandomValues(new Uint8Array(12));
-    const ct  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc(JSON.stringify(data)));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, enc(JSON.stringify(data)));
     const out = new Uint8Array(12 + ct.byteLength);
     out.set(iv); out.set(new Uint8Array(ct), 12);
     return toB64(out);
 }
-
 async function decryptData(b64, key) {
     const buf = fromB64(b64);
-    const pt  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0,12) }, key, buf.slice(12));
+    const pt  = await crypto.subtle.decrypt({ name:'AES-GCM', iv:buf.slice(0,12) }, key, buf.slice(12));
     return JSON.parse(dec(pt));
 }
 
-async function tryUnlock(password) {
+async function tryUnlock(pw) {
     const saltB64 = localStorage.getItem(LS_SALT);
     if (!saltB64) return null;
     try {
-        const key  = await deriveKey(password, fromB64(saltB64));
-        // Try new key first, fall back to old key for migration
-        for (const lsKey of [LS_DATA, 'ns_data_v3']) {
-            const blob = localStorage.getItem(lsKey);
+        const key = await deriveKey(pw, fromB64(saltB64));
+        for (const k of [LS_DATA, 'ns_data_v3']) {
+            const blob = localStorage.getItem(k);
             if (!blob) continue;
-            const raw  = await decryptData(blob, key);
-            const n    = Array.isArray(raw) ? raw : (raw.notes || []);
-            const u    = Array.isArray(raw) ? '' : (raw.userName || '');
-            return { key, notes: n, userName: u };
+            const raw = await decryptData(blob, key);
+            return { key, notes: Array.isArray(raw) ? raw : (raw.notes || []), userName: Array.isArray(raw) ? '' : (raw.userName || '') };
         }
         return { key, notes: [], userName: '' };
-    } catch {
-        return null;
-    }
+    } catch { return null; }
 }
 
-async function createAccount(password, name) {
+async function createAccount(pw, name) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     localStorage.setItem(LS_SALT, toB64(salt));
-    const key  = await deriveKey(password, salt);
-    localStorage.setItem(LS_DATA, await encryptData({ notes: [], userName: name }, key));
+    const key = await deriveKey(pw, salt);
+    localStorage.setItem(LS_DATA, await encryptData({ notes:[], userName:name }, key));
     localStorage.setItem(LS_NAME, name);
-    localStorage.removeItem('notes');
-    localStorage.removeItem('notes_pwd_hash_v2');
-    localStorage.removeItem('ns_data_v3');
+    ['notes','notes_pwd_hash_v2','ns_data_v3'].forEach(k => localStorage.removeItem(k));
     return key;
 }
 
-async function reencryptWithNewPassword(newPwd) {
+async function reencrypt(pw) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     localStorage.setItem(LS_SALT, toB64(salt));
-    encKey = await deriveKey(newPwd, salt);
+    encKey = await deriveKey(pw, salt);
     localStorage.setItem(LS_DATA, await encryptData({ notes, userName }, encKey));
 }
 
-async function saveData() {
+async function save() {
     if (!encKey) return;
     localStorage.setItem(LS_DATA, await encryptData({ notes, userName }, encKey));
     localStorage.removeItem('notes');
 }
 
-
-/* ════════════════════════════════════════════════════
-   LOCK SCREEN — machine d'états
-════════════════════════════════════════════════════ */
+/* ── Lock screen ── */
 const $ = id => document.getElementById(id);
 
-function setLockUI({ icon='fa-lock', title, subtitle, btnText, error='', attempts='', showChange=false, textMode=false }) {
-    $('lockIconEl').className        = `fas ${icon}`;
-    $('lockTitle').textContent       = title;
-    $('lockSubtitle').textContent    = subtitle;
-    $('lockBtn').innerHTML           = btnText;
-    $('lockError').textContent       = error;
-    $('lockAttempts').textContent    = attempts;
-    $('changePwdLink').style.display = showChange ? 'inline-block' : 'none';
-    $('lockInput').type              = textMode ? 'text' : 'password';
-    $('lockInput').classList.toggle('text-mode', textMode);
-    $('lockInput').placeholder       = textMode ? 'Votre prénom' : '••••••••';
-    $('lockInput').autocomplete      = textMode ? 'given-name' : 'current-password';
-    $('lockInput').value             = '';
-    $('lockBtn').disabled            = false;
-    $('lockInput').disabled          = false;
-    // Œil : visible uniquement en mode mot de passe
-    $('eyeBtn').classList.toggle('show', !textMode);
-    $('eyeIcon').className = 'fas fa-eye';
-    setTimeout(() => $('lockInput').focus(), 80);
-}
-
-function togglePwd() {
-    const input = $('lockInput');
-    const isHidden = input.type === 'password';
-    input.type = isHidden ? 'text' : 'password';
-    $('eyeIcon').className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+function setUI({ icon='fa-lock', title, sub, btn, err='', att='', showChange=false, textMode=false }) {
+    $('lockIconEl').className         = `fas ${icon}`;
+    $('lockTitle').textContent        = title;
+    $('lockSubtitle').textContent     = sub;
+    $('lockBtn').textContent          = btn;
+    $('lockError').textContent        = err;
+    $('lockAttempts').textContent     = att;
+    $('changePwdLink').style.display  = showChange ? 'inline' : 'none';
+    $('lockInput').type               = textMode ? 'text' : 'password';
+    $('lockInput').className          = textMode ? '' : 'pw';
+    $('lockInput').placeholder        = textMode ? 'Votre prénom' : '';
+    $('lockInput').autocomplete       = textMode ? 'given-name' : 'current-password';
+    $('lockInput').value              = '';
+    $('lockBtn').disabled             = false;
+    $('lockInput').disabled           = false;
+    $('eyeBtn').classList.toggle('visible', !textMode);
+    $('eyeIcon').className            = 'fas fa-eye';
+    setTimeout(() => $('lockInput').focus(), 60);
 }
 
 function showLockScreen() {
     $('lockScreen').classList.add('show');
-    $('appContent').style.display = 'none';
+    $('appContent').classList.remove('show');
     clearTimeout(lockTimer);
-
     const isNew = !localStorage.getItem(LS_SALT);
     const name  = localStorage.getItem(LS_NAME);
-
     if (isNew) {
         lockState = 'setup_name';
-        setLockUI({ icon: 'fa-user-plus', title: 'Bienvenue !', subtitle: 'Commençons par votre prénom.', btnText: '<i class="fas fa-arrow-right"></i> Continuer', textMode: true });
+        setUI({ icon:'fa-user', title:'Bienvenue', sub:'Comment vous appelez-vous ?', btn:'Continuer', textMode:true });
     } else {
         lockState = 'unlock';
-        setLockUI({
-            icon: 'fa-lock',
-            title: name ? `Bonjour, ${name} 👋` : 'Application verrouillée',
-            subtitle: 'Entrez votre mot de passe pour déchiffrer vos notes.',
-            btnText: '<i class="fas fa-unlock-alt"></i> Déverrouiller',
-            showChange: true
-        });
+        setUI({ icon:'fa-lock', title: name ? `Bon retour, ${name}` : 'Notes', sub:'Entrez votre mot de passe.', btn:'Déverrouiller', showChange:true });
     }
 }
 
 function hideLockScreen() {
     $('lockScreen').classList.remove('show');
-    $('appContent').style.display = 'block';
-    $('appUserName').textContent  = userName || 'vous';
-    resetLockTimer();
-    renderNotes();
+    $('appContent').classList.add('show');
+    $('appUserName').textContent = userName || 'Mes notes';
+    resetTimer();
+    render();
     checkReminders();
 }
 
@@ -700,62 +696,61 @@ function lockApp() {
     encKey = null; notes = []; userName = '';
     clearTimeout(lockTimer);
     $('notesList').innerHTML = '';
-    $('remBanner').classList.remove('show');
-    if ($('searchInput')) { $('searchInput').value = ''; $('searchCount').textContent = ''; }
-    if ($('searchClear'))   $('searchClear').classList.remove('show');
-    closeModal(); closeRemModal();
+    $('remBar').classList.remove('show');
+    if ($('searchInput')) { $('searchInput').value = ''; $('searchCnt').textContent = ''; }
+    $('searchClr')?.classList.remove('on');
+    closeNote(); closeRemModal();
     showLockScreen();
 }
 
-function resetLockTimer() {
+function resetTimer() {
     clearTimeout(lockTimer);
     lockTimer = setTimeout(lockApp, LOCK_TIMEOUT);
 }
 
-function setLoading(on) {
+function setBusy(on) {
     $('lockBtn').disabled   = on;
     $('lockInput').disabled = on;
-    if (on) $('lockBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chiffrement…';
+    if (on) $('lockBtn').textContent = 'Chargement…';
 }
 
 async function handleLock() {
     const now = Date.now();
     if (now < blockedUntil) {
-        $('lockError').textContent = `Accès bloqué. Réessayez dans ${Math.ceil((blockedUntil-now)/1000)}s.`;
+        $('lockError').textContent = `Trop de tentatives. Réessayez dans ${Math.ceil((blockedUntil-now)/1000)} s.`;
         return;
     }
     const val = $('lockInput').value;
-    if (!val) { $('lockError').textContent = 'Ce champ est requis.'; return; }
-    setLoading(true);
-    try { await dispatch(val); } finally { setLoading(false); }
+    if (!val.trim()) { $('lockError').textContent = 'Ce champ est requis.'; return; }
+    setBusy(true);
+    try { await dispatch(val); } finally { setBusy(false); }
 }
 
 async function dispatch(val) {
     switch (lockState) {
-        case 'setup_name': {
+        case 'setup_name':
             if (!val.trim()) { $('lockError').textContent = 'Veuillez entrer votre prénom.'; return; }
-            tempName  = val.trim();
-            lockState = 'setup_1';
-            setLockUI({ icon: 'fa-key', title: `Enchanté, ${tempName} !`, subtitle: 'Créez un mot de passe pour chiffrer vos notes (min. 4 caractères).', btnText: '<i class="fas fa-key"></i> Continuer' });
+            tempName = val.trim(); lockState = 'setup_1';
+            setUI({ icon:'fa-key', title:`Bonjour, ${tempName}`, sub:'Créez un mot de passe pour protéger vos notes (min. 4 caractères).', btn:'Continuer' });
             break;
-        }
-        case 'setup_1': {
-            if (val.length < 4) { $('lockError').textContent = 'Minimum 4 caractères requis.'; return; }
+
+        case 'setup_1':
+            if (val.length < 4) { $('lockError').textContent = 'Minimum 4 caractères.'; return; }
             tempPwd = val; lockState = 'setup_2';
-            setLockUI({ icon: 'fa-key', title: 'Confirmez le mot de passe', subtitle: 'Saisissez à nouveau votre mot de passe.', btnText: '<i class="fas fa-check"></i> Créer le compte' });
+            setUI({ icon:'fa-key', title:'Confirmez', sub:'Saisissez à nouveau votre mot de passe.', btn:'Créer mon espace' });
             break;
-        }
-        case 'setup_2': {
+
+        case 'setup_2':
             if (val !== tempPwd) {
                 tempPwd = null; lockState = 'setup_1';
-                setLockUI({ icon: 'fa-key', title: `Enchanté, ${tempName} !`, subtitle: 'Les mots de passe ne correspondent pas. Recommencez.', btnText: '<i class="fas fa-key"></i> Continuer', error: 'Mots de passe différents.' });
+                setUI({ icon:'fa-key', title:`Bonjour, ${tempName}`, sub:'Les mots de passe ne correspondent pas. Réessayez.', btn:'Continuer', err:'Mots de passe différents.' });
                 return;
             }
             encKey = await createAccount(tempPwd, tempName);
             notes = []; userName = tempName; tempPwd = tempName = null;
             hideLockScreen();
             break;
-        }
+
         case 'unlock': {
             const r = await tryUnlock(val);
             if (r) {
@@ -769,275 +764,233 @@ async function dispatch(val) {
                 $('lockInput').value = '';
                 if (failedAttempts >= MAX_ATTEMPTS) {
                     blockedUntil = Date.now() + BLOCK_MS; failedAttempts = 0;
-                    $('lockError').textContent    = 'Trop de tentatives. Accès bloqué 2 minutes.';
-                    $('lockAttempts').textContent = '';
+                    $('lockError').textContent = 'Accès temporairement bloqué (2 minutes).';
                 } else {
                     const left = MAX_ATTEMPTS - failedAttempts;
-                    $('lockError').textContent    = 'Mot de passe incorrect.';
-                    $('lockAttempts').textContent = `${left} tentative${left>1?'s':''} restante${left>1?'s':''}.`;
+                    $('lockError').textContent = 'Mot de passe incorrect.';
+                    $('lockAttempts').textContent = `${left} essai${left>1?'s':''} restant${left>1?'s':''}.`;
                 }
             }
             break;
         }
+
         case 'change_0': {
             const r = await tryUnlock(val);
             if (!r) { $('lockError').textContent = 'Mot de passe actuel incorrect.'; $('lockInput').value=''; return; }
             notes = r.notes; lockState = 'change_1';
-            setLockUI({ icon: 'fa-key', title: 'Nouveau mot de passe', subtitle: 'Choisissez votre nouveau mot de passe (min. 4 caractères).', btnText: '<i class="fas fa-key"></i> Continuer' });
+            setUI({ icon:'fa-key', title:'Nouveau mot de passe', sub:'Choisissez un nouveau mot de passe (min. 4 caractères).', btn:'Continuer' });
             break;
         }
-        case 'change_1': {
-            if (val.length < 4) { $('lockError').textContent = 'Minimum 4 caractères requis.'; return; }
+        case 'change_1':
+            if (val.length < 4) { $('lockError').textContent = 'Minimum 4 caractères.'; return; }
             tempPwd = val; lockState = 'change_2';
-            setLockUI({ icon: 'fa-key', title: 'Confirmer le nouveau mot de passe', subtitle: 'Saisissez à nouveau le nouveau mot de passe.', btnText: '<i class="fas fa-check"></i> Confirmer' });
+            setUI({ icon:'fa-key', title:'Confirmez', sub:'Saisissez à nouveau le nouveau mot de passe.', btn:'Enregistrer' });
             break;
-        }
-        case 'change_2': {
+
+        case 'change_2':
             if (val !== tempPwd) {
                 tempPwd = null; lockState = 'change_1';
-                setLockUI({ icon: 'fa-key', title: 'Nouveau mot de passe', subtitle: 'Mots de passe différents. Recommencez.', btnText: '<i class="fas fa-key"></i> Continuer', error: 'Mots de passe différents.' });
+                setUI({ icon:'fa-key', title:'Nouveau mot de passe', sub:'Mots de passe différents. Réessayez.', btn:'Continuer', err:'Mots de passe différents.' });
                 return;
             }
-            await reencryptWithNewPassword(tempPwd); tempPwd = null;
+            await reencrypt(tempPwd); tempPwd = null;
             hideLockScreen();
             break;
-        }
     }
 }
 
 function startChangePwd() {
     lockState = 'change_0';
-    setLockUI({ icon: 'fa-key', title: 'Vérification', subtitle: 'Entrez votre mot de passe actuel pour continuer.', btnText: '<i class="fas fa-arrow-right"></i> Continuer' });
+    setUI({ icon:'fa-key', title:'Vérification', sub:'Entrez votre mot de passe actuel.', btn:'Vérifier' });
+}
+
+function togglePwd() {
+    const i = $('lockInput'), hidden = i.type === 'password';
+    i.type = hidden ? 'text' : 'password';
+    i.classList.toggle('pw', !hidden);
+    $('eyeIcon').className = hidden ? 'fas fa-eye-slash' : 'fas fa-eye';
 }
 
 document.addEventListener('visibilitychange', () => { if (document.hidden) lockApp(); });
-['click','keydown','mousemove','touchstart'].forEach(ev =>
-    document.addEventListener(ev, () => {
-        if ($('appContent').style.display !== 'none') resetLockTimer();
-    }, { passive: true })
+['click','keydown','mousemove','touchstart'].forEach(e =>
+    document.addEventListener(e, () => { if ($('appContent').classList.contains('show')) resetTimer(); }, { passive:true })
 );
-
 showLockScreen();
 
+/* ── Notes ── */
+let openNoteId = null;
 
-/* ════════════════════════════════════════════════════
-   GESTION DES NOTES
-════════════════════════════════════════════════════ */
-let currentModalId = null;
-
-function escapeHtml(t) {
-    const d = document.createElement('div');
-    d.textContent = t; return d.innerHTML;
-}
+const esc = t => { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; };
 
 function fmtDate(iso) {
     if (!iso) return '';
-    if (iso.includes('-')) { const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
+    if (iso.includes('-')) { const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
     return iso;
 }
-
-function remStatus(iso) {
+function rStatus(iso) {
     if (!iso) return null;
-    const today = new Date().toISOString().split('T')[0];
-    return iso < today ? 'overdue' : iso === today ? 'today' : 'future';
+    const t = new Date().toISOString().split('T')[0];
+    return iso < t ? 'overdue' : iso === t ? 'today' : 'future';
 }
-
-function remLabel(s) {
-    return s === 'overdue' ? 'En retard' : s === 'today' ? "Aujourd'hui" : 'À venir';
-}
+function rLabel(s) { return s==='overdue' ? 'En retard' : s==='today' ? "Aujourd'hui" : 'À venir'; }
 
 async function addNote() {
     const title    = $('title').value.trim();
     const cat      = $('category').value.trim() || 'Général';
     const text     = $('noteText').value.trim();
     const reminder = $('reminderDate').value || null;
-    if (!text) { alert('Veuillez entrer du texte.'); return; }
-
+    if (!text) { $('noteText').focus(); return; }
     notes.push({
         id:           Date.now(),
-        title:        title || text.split('\n')[0].substring(0, 50) || 'Sans titre',
-        category:     cat,
-        text,
+        title:        title || text.split('\n')[0].substring(0,50) || 'Sans titre',
+        category:     cat, text,
         created:      new Date().toISOString().split('T')[0],
         reminderDate: reminder
     });
-    await saveData();
-    $('title').value = $('category').value = $('noteText').value = $('reminderDate').value = '';
-    renderNotes($('searchInput').value.trim().toLowerCase());
+    await save();
+    ['title','category','noteText','reminderDate'].forEach(id => $(id).value='');
+    filterNotes();
     $('noteText').focus();
 }
 
 async function deleteNote(id) {
     if (!confirm('Supprimer cette note ?')) return;
     notes = notes.filter(n => n.id !== id);
-    await saveData();
+    await save();
     filterNotes();
 }
 
-async function deleteNoteFromModal() {
-    await deleteNote(currentModalId);
-    closeModal();
+async function deleteFromModal() {
+    await deleteNote(openNoteId);
+    closeNote();
 }
 
 function openNote(id) {
-    const note = notes.find(n => n.id === id);
-    if (!note) return;
-    currentModalId = id;
-    $('modalTitle').textContent = note.title;
-    const rs = remStatus(note.reminderDate);
-    const badge = rs ? `<span class="rbadge ${rs}"><i class="fas fa-bell"></i> ${fmtDate(note.reminderDate)} — ${remLabel(rs)}</span>` : '';
-    $('modalMeta').innerHTML = `📁 ${escapeHtml(note.category)} &nbsp;•&nbsp; ${fmtDate(note.created)}${badge ? ' &nbsp;' + badge : ''}`;
-    $('modalBody').textContent = note.text;
-    $('noteModal').classList.add('show');
+    const n = notes.find(n => n.id === id);
+    if (!n) return;
+    openNoteId = id;
+    $('modalTitle').textContent = n.title;
+    const rs = rStatus(n.reminderDate);
+    const badge = rs ? `<span class="rbadge ${rs}"><i class="fas fa-bell"></i> ${fmtDate(n.reminderDate)} — ${rLabel(rs)}</span>` : '';
+    $('modalSub').innerHTML = `<span>${esc(n.category)}</span><span>·</span><span>${fmtDate(n.created)}</span>${badge ? '<span>·</span>'+badge : ''}`;
+    $('modalBody').textContent = n.text;
+    $('noteOverlay').classList.add('show');
 }
 
-function closeModal() {
-    $('noteModal').classList.remove('show');
-    currentModalId = null;
-}
+function closeNote() { $('noteOverlay').classList.remove('show'); openNoteId=null; }
 
-
-/* ════════════════════════════════════════════════════
-   RAPPELS
-════════════════════════════════════════════════════ */
+/* ── Reminders ── */
 function checkReminders() {
-    const today   = new Date().toISOString().split('T')[0];
-    const due     = notes.filter(n => n.reminderDate && n.reminderDate <= today);
+    const t = new Date().toISOString().split('T')[0];
+    const due = notes.filter(n => n.reminderDate && n.reminderDate <= t);
     if (!due.length) return;
-
-    const todayCnt   = due.filter(n => n.reminderDate === today).length;
-    const overdueCnt = due.filter(n => n.reminderDate <  today).length;
-    let msg = '';
-    if (todayCnt && overdueCnt)
-        msg = `${todayCnt} rappel${todayCnt>1?'s':''} aujourd'hui &nbsp;·&nbsp; ${overdueCnt} en retard`;
-    else if (todayCnt)
-        msg = `${todayCnt} rappel${todayCnt>1?'s':''} pour aujourd'hui`;
-    else
-        msg = `${overdueCnt} rappel${overdueCnt>1?'s':''} en retard`;
-
-    $('remBannerText').innerHTML = `<strong>Rappels :</strong> ${msg}`;
-    $('remBanner').classList.add('show');
+    const today   = due.filter(n => n.reminderDate === t).length;
+    const overdue = due.filter(n => n.reminderDate <  t).length;
+    let msg = today && overdue
+        ? `<strong>${today}</strong> aujourd'hui · <strong>${overdue}</strong> en retard`
+        : today
+        ? `<strong>${today}</strong> rappel${today>1?'s':''} pour aujourd'hui`
+        : `<strong>${overdue}</strong> rappel${overdue>1?'s':''} en retard`;
+    $('remBarMsg').innerHTML = msg;
+    $('remBar').classList.add('show');
 }
-
-function closeRemBanner() { $('remBanner').classList.remove('show'); }
 
 function openRemModal() {
-    const today = new Date().toISOString().split('T')[0];
-    const due   = notes.filter(n => n.reminderDate && n.reminderDate <= today);
+    const t = new Date().toISOString().split('T')[0];
+    const due = notes.filter(n => n.reminderDate && n.reminderDate <= t);
     $('remList').innerHTML = due.map(n => {
-        const s = remStatus(n.reminderDate);
+        const s = rStatus(n.reminderDate);
         return `<div class="rem-item ${s}" onclick="closeRemModal(); openNote(${n.id})">
             <div class="rem-dot"></div>
             <div>
-                <div class="rem-item-title">${escapeHtml(n.title)}</div>
-                <div class="rem-item-when">${s==='today' ? "Aujourd'hui" : 'En retard — ' + fmtDate(n.reminderDate)}</div>
+                <div class="rem-item-ttl">${esc(n.title)}</div>
+                <div class="rem-item-when">${s==='today' ? "Aujourd'hui" : 'En retard — '+fmtDate(n.reminderDate)}</div>
             </div>
         </div>`;
     }).join('');
-    $('remModal').classList.add('show');
-    closeRemBanner();
+    $('remOverlay').classList.add('show');
+    $('remBar').classList.remove('show');
 }
+function closeRemModal() { $('remOverlay').classList.remove('show'); }
 
-function closeRemModal() { $('remModal').classList.remove('show'); }
-
-
-/* ════════════════════════════════════════════════════
-   RECHERCHE LOCALE + RENDU
-════════════════════════════════════════════════════ */
+/* ── Search + render ── */
 function filterNotes() {
     const q = $('searchInput').value.trim().toLowerCase();
-    $('searchClear').classList.toggle('show', q.length > 0);
-    renderNotes(q);
+    $('searchClr').classList.toggle('on', q.length > 0);
+    render(q);
 }
+function clearSearch() { $('searchInput').value=''; filterNotes(); }
 
-function clearSearch() {
-    $('searchInput').value = ''; filterNotes();
-}
-
-function highlight(html, q) {
+function hl(html, q) {
     if (!q) return html;
-    const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return html.replace(re, '<mark>$1</mark>');
+    return html.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>');
 }
 
-function renderNotes(filter = '') {
+function render(q='') {
     const list = $('notesList');
-    const items = filter
-        ? notes.filter(n =>
-            n.title.toLowerCase().includes(filter) ||
-            n.text.toLowerCase().includes(filter)  ||
-            n.category.toLowerCase().includes(filter))
-        : notes;
+    const items = q ? notes.filter(n =>
+        n.title.toLowerCase().includes(q) ||
+        n.text.toLowerCase().includes(q)  ||
+        n.category.toLowerCase().includes(q)) : notes;
 
-    $('searchCount').textContent = filter && items.length !== notes.length
-        ? `${items.length} / ${notes.length}` : '';
+    $('searchCnt').textContent = q && items.length!==notes.length ? `${items.length} / ${notes.length}` : '';
 
     if (!items.length) {
-        list.innerHTML = filter
-            ? `<div class="empty-state"><div class="empty-icon"><i class="fas fa-search"></i></div><p>Aucun résultat pour « ${escapeHtml(filter)} »</p></div>`
-            : `<div class="empty-state"><div class="empty-icon"><i class="fas fa-inbox"></i></div><p>Aucune note pour l'instant.<br>Commencez à en ajouter !</p></div>`;
+        list.innerHTML = q
+            ? `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg><p>Aucun résultat pour « ${esc(q)} »</p></div>`
+            : `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg><p>Aucune note pour l'instant.<br>Créez votre première note.</p></div>`;
         return;
     }
 
     const grouped = {};
-    items.forEach(n => { (grouped[n.category] ??= []).push(n); });
+    items.forEach(n => { (grouped[n.category]??=[]).push(n); });
 
     list.innerHTML = Object.entries(grouped).map(([cat, arr]) => `
-        <div>
-            <div class="cat-label">${escapeHtml(cat)}</div>
-            ${arr.map(n => {
-                const rs    = remStatus(n.reminderDate);
-                const badge = rs
-                    ? `<span class="rbadge ${rs}"><i class="fas fa-bell"></i> ${fmtDate(n.reminderDate)}</span>`
-                    : '';
-                return `
-                <div class="note-card" onclick="openNote(${n.id})">
-                    <div class="note-card-body">
-                        <div class="note-card-title">${highlight(escapeHtml(n.title), filter)}</div>
-                        <div class="note-card-preview">${highlight(escapeHtml(n.text.substring(0,100)), filter)}</div>
-                        <div class="note-card-foot">
-                            <span class="note-card-date">${fmtDate(n.created)}</span>
-                            ${badge}
-                        </div>
+        <div class="cat-row">${esc(cat)}</div>
+        ${arr.map(n => {
+            const rs = rStatus(n.reminderDate);
+            const badge = rs ? `<span class="rbadge ${rs}"><i class="fas fa-bell"></i> ${fmtDate(n.reminderDate)}</span>` : '';
+            return `<div class="note-row" onclick="openNote(${n.id})">
+                <div class="note-row-body">
+                    <div class="note-row-title">${hl(esc(n.title), q)}</div>
+                    <div class="note-row-preview">${hl(esc(n.text.substring(0,80)), q)}</div>
+                    <div class="note-row-meta">
+                        <span class="note-row-date">${fmtDate(n.created)}</span>
+                        ${badge}
                     </div>
-                    <div>
-                        <button class="btn btn-secondary btn-sm"
-                            onclick="event.stopPropagation(); deleteNote(${n.id})"
-                            title="Supprimer">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>`;
-            }).join('')}
-        </div>`).join('');
+                </div>
+                <button class="note-del" onclick="event.stopPropagation(); deleteNote(${n.id})" title="Supprimer">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>`;
+        }).join('')}
+    `).join('');
 }
 
-$('noteModal').addEventListener('click', e => { if (e.target === $('noteModal')) closeModal(); });
-$('remModal').addEventListener('click',  e => { if (e.target === $('remModal'))  closeRemModal(); });
-
-/* Modification du prénom */
-function startEditName() {
-    $('nameEditInput').value = userName;
+/* ── Rename ── */
+function startRename() {
+    $('nameInput').value = userName;
     $('greetingDisplay').style.display = 'none';
-    $('nameEditWrap').classList.add('show');
-    $('nameEditInput').focus();
-    $('nameEditInput').select();
+    $('nameEdit').classList.add('open');
+    $('nameInput').focus(); $('nameInput').select();
 }
-
-function cancelNameEdit() {
-    $('nameEditWrap').classList.remove('show');
+function cancelRename() {
+    $('nameEdit').classList.remove('open');
     $('greetingDisplay').style.display = '';
 }
-
-async function saveNameEdit() {
-    const newName = $('nameEditInput').value.trim();
-    if (!newName) { $('nameEditInput').focus(); return; }
-    userName = newName;
-    localStorage.setItem(LS_NAME, userName);
-    await saveData();
-    $('appUserName').textContent = userName;
-    cancelNameEdit();
+async function saveRename() {
+    const v = $('nameInput').value.trim();
+    if (!v) return;
+    userName = v;
+    localStorage.setItem(LS_NAME, v);
+    await save();
+    $('appUserName').textContent = v;
+    cancelRename();
 }
+
+/* ── Close on backdrop click ── */
+$('noteOverlay').addEventListener('click', e => { if(e.target===$('noteOverlay')) closeNote(); });
+$('remOverlay').addEventListener('click',  e => { if(e.target===$('remOverlay'))  closeRemModal(); });
 </script>
 </body>
 </html>
