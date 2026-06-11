@@ -161,26 +161,6 @@
             display: flex; align-items: center; gap: 6px;
         }
         .topbar-greeting span { color: var(--ink-2); }
-        .btn-rename {
-            background: none; border: none; cursor: pointer; color: var(--ink-4);
-            font-size: 12px; padding: 3px 5px; transition: color .15s; line-height: 1;
-        }
-        .btn-rename:hover { color: var(--blue); }
-        .name-inline-edit { display: none; align-items: center; gap: 6px; }
-        .name-inline-edit.open { display: flex; }
-        .name-inline-edit input {
-            padding: 5px 10px; font-size: 13px; font-weight: 600;
-            border: 1.5px solid var(--blue); border-radius: var(--r-sm);
-            outline: none; background: white; color: var(--ink);
-            box-shadow: 0 0 0 3px var(--blue-tint); width: 140px; font-family: inherit;
-        }
-        .name-inline-edit button {
-            border: none; cursor: pointer; border-radius: 6px;
-            padding: 5px 10px; font-size: 13px; font-family: inherit; transition: background .15s;
-        }
-        .ni-save   { background: var(--blue); color: white; }
-        .ni-save:hover { background: var(--blue-hover); }
-        .ni-cancel { background: var(--surface); color: var(--ink-3); border: 1px solid var(--line) !important; }
 
         .topbar-right { display: flex; gap: 8px; }
         .btn-tb {
@@ -449,18 +429,7 @@
     <header class="topbar">
         <div class="topbar-left">
             <div class="topbar-icon"><i class="fas fa-lock"></i></div>
-            <div id="greetingDisplay" class="topbar-greeting">
-                <span id="appUserName"></span>
-                <button class="btn-rename" onclick="startRename()" title="Modifier le prénom">
-                    <i class="fas fa-pencil-alt"></i>
-                </button>
-            </div>
-            <div class="name-inline-edit" id="nameEdit">
-                <input type="text" id="nameInput" maxlength="30" placeholder="Prénom"
-                       onkeydown="if(event.key==='Enter') saveRename(); if(event.key==='Escape') cancelRename()" />
-                <button class="ni-save"   onclick="saveRename()"><i class="fas fa-check"></i></button>
-                <button class="ni-cancel" onclick="cancelRename()"><i class="fas fa-times"></i></button>
-            </div>
+            <div class="topbar-greeting">Notes</div>
         </div>
         <div class="topbar-right">
             <button class="btn-tb" onclick="lockApp()">
@@ -571,15 +540,14 @@
 /* ── Crypto constants ── */
 const LS_SALT = 'ns_salt_v3';
 const LS_DATA = 'ns_data_v4';
-const LS_NAME = 'ns_name';
 const PBKDF2_ITER  = 100_000;
 const LOCK_TIMEOUT = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 const BLOCK_MS     = 2 * 60 * 1000;
 
-let encKey = null, notes = [], userName = '';
+let encKey = null, notes = [];
 let lockTimer, failedAttempts = 0, blockedUntil = 0;
-let lockState = 'unlock', tempPwd = null, tempName = null;
+let lockState = 'unlock', tempPwd = null;
 
 /* ── Binary utils ── */
 const enc = t => new TextEncoder().encode(t);
@@ -616,19 +584,18 @@ async function tryUnlock(pw) {
             const blob = localStorage.getItem(k);
             if (!blob) continue;
             const raw = await decryptData(blob, key);
-            return { key, notes: Array.isArray(raw) ? raw : (raw.notes || []), userName: Array.isArray(raw) ? '' : (raw.userName || '') };
+            return { key, notes: Array.isArray(raw) ? raw : (raw.notes || []) };
         }
-        return { key, notes: [], userName: '' };
+        return { key, notes: [] };
     } catch { return null; }
 }
 
-async function createAccount(pw, name) {
+async function createAccount(pw) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     localStorage.setItem(LS_SALT, toB64(salt));
     const key = await deriveKey(pw, salt);
-    localStorage.setItem(LS_DATA, await encryptData({ notes:[], userName:name }, key));
-    localStorage.setItem(LS_NAME, name);
-    ['notes','notes_pwd_hash_v2','ns_data_v3'].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem(LS_DATA, await encryptData([], key));
+    ['notes','notes_pwd_hash_v2','ns_data_v3','ns_name'].forEach(k => localStorage.removeItem(k));
     return key;
 }
 
@@ -636,12 +603,12 @@ async function reencrypt(pw) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     localStorage.setItem(LS_SALT, toB64(salt));
     encKey = await deriveKey(pw, salt);
-    localStorage.setItem(LS_DATA, await encryptData({ notes, userName }, encKey));
+    localStorage.setItem(LS_DATA, await encryptData(notes, encKey));
 }
 
 async function save() {
     if (!encKey) return;
-    localStorage.setItem(LS_DATA, await encryptData({ notes, userName }, encKey));
+    localStorage.setItem(LS_DATA, await encryptData(notes, encKey));
     localStorage.removeItem('notes');
 }
 
@@ -673,27 +640,25 @@ function showLockScreen() {
     $('appContent').classList.remove('show');
     clearTimeout(lockTimer);
     const isNew = !localStorage.getItem(LS_SALT);
-    const name  = localStorage.getItem(LS_NAME);
     if (isNew) {
-        lockState = 'setup_name';
-        setUI({ icon:'fa-user', title:'Bienvenue', sub:'Comment vous appelez-vous ?', btn:'Continuer', textMode:true });
+        lockState = 'setup_1';
+        setUI({ icon:'fa-lock', title:'Notes', sub:'Créez un mot de passe pour protéger vos notes (min. 4 caractères).', btn:'Continuer' });
     } else {
         lockState = 'unlock';
-        setUI({ icon:'fa-lock', title: name ? `Bon retour, ${name}` : 'Notes', sub:'Entrez votre mot de passe.', btn:'Déverrouiller', showChange:true });
+        setUI({ icon:'fa-lock', title:'Notes', sub:'Entrez votre mot de passe.', btn:'Déverrouiller', showChange:true });
     }
 }
 
 function hideLockScreen() {
     $('lockScreen').classList.remove('show');
     $('appContent').classList.add('show');
-    $('appUserName').textContent = userName || 'Mes notes';
     resetTimer();
     render();
     checkReminders();
 }
 
 function lockApp() {
-    encKey = null; notes = []; userName = '';
+    encKey = null; notes = [];
     clearTimeout(lockTimer);
     $('notesList').innerHTML = '';
     $('remBar').classList.remove('show');
@@ -728,12 +693,6 @@ async function handleLock() {
 
 async function dispatch(val) {
     switch (lockState) {
-        case 'setup_name':
-            if (!val.trim()) { $('lockError').textContent = 'Veuillez entrer votre prénom.'; return; }
-            tempName = val.trim(); lockState = 'setup_1';
-            setUI({ icon:'fa-key', title:`Bonjour, ${tempName}`, sub:'Créez un mot de passe pour protéger vos notes (min. 4 caractères).', btn:'Continuer' });
-            break;
-
         case 'setup_1':
             if (val.length < 4) { $('lockError').textContent = 'Minimum 4 caractères.'; return; }
             tempPwd = val; lockState = 'setup_2';
@@ -743,11 +702,11 @@ async function dispatch(val) {
         case 'setup_2':
             if (val !== tempPwd) {
                 tempPwd = null; lockState = 'setup_1';
-                setUI({ icon:'fa-key', title:`Bonjour, ${tempName}`, sub:'Les mots de passe ne correspondent pas. Réessayez.', btn:'Continuer', err:'Mots de passe différents.' });
+                setUI({ icon:'fa-key', title:'Notes', sub:'Les mots de passe ne correspondent pas. Réessayez.', btn:'Continuer', err:'Mots de passe différents.' });
                 return;
             }
-            encKey = await createAccount(tempPwd, tempName);
-            notes = []; userName = tempName; tempPwd = tempName = null;
+            encKey = await createAccount(tempPwd);
+            notes = []; tempPwd = null;
             hideLockScreen();
             break;
 
@@ -756,8 +715,6 @@ async function dispatch(val) {
             if (r) {
                 failedAttempts = 0;
                 encKey = r.key; notes = r.notes;
-                userName = r.userName || localStorage.getItem(LS_NAME) || '';
-                if (userName) localStorage.setItem(LS_NAME, userName);
                 hideLockScreen();
             } else {
                 failedAttempts++;
@@ -965,27 +922,6 @@ function render(q='') {
             </div>`;
         }).join('')}
     `).join('');
-}
-
-/* ── Rename ── */
-function startRename() {
-    $('nameInput').value = userName;
-    $('greetingDisplay').style.display = 'none';
-    $('nameEdit').classList.add('open');
-    $('nameInput').focus(); $('nameInput').select();
-}
-function cancelRename() {
-    $('nameEdit').classList.remove('open');
-    $('greetingDisplay').style.display = '';
-}
-async function saveRename() {
-    const v = $('nameInput').value.trim();
-    if (!v) return;
-    userName = v;
-    localStorage.setItem(LS_NAME, v);
-    await save();
-    $('appUserName').textContent = v;
-    cancelRename();
 }
 
 /* ── Close on backdrop click ── */
