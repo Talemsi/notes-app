@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta name="referrer" content="no-referrer">
     <title>Mon gestionnaire de notes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -31,19 +34,167 @@
             color: var(--text-primary);
         }
 
+        /* ── Écran de verrouillage ── */
+        .lock-screen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lock-screen.show {
+            display: flex;
+        }
+
+        .lock-card {
+            background: white;
+            border-radius: 20px;
+            padding: 44px 40px;
+            max-width: 380px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .lock-icon {
+            width: 72px;
+            height: 72px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 30px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(55, 138, 221, 0.4);
+        }
+
+        .lock-card h2 {
+            font-size: 20px;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .lock-card p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .lock-card input[type="password"] {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 20px;
+            letter-spacing: 6px;
+            text-align: center;
+            margin-bottom: 10px;
+            font-family: inherit;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+
+        .lock-card input[type="password"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.15);
+        }
+
+        .lock-error {
+            color: var(--danger);
+            font-size: 12px;
+            min-height: 20px;
+            margin-bottom: 10px;
+        }
+
+        .lock-card .btn-primary {
+            width: 100%;
+            font-size: 15px;
+            padding: 14px;
+            margin-bottom: 18px;
+        }
+
+        .lock-info {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .lock-info i { color: var(--success); }
+
+        .lock-attempts {
+            margin-top: 14px;
+            font-size: 11px;
+            color: var(--danger);
+            min-height: 16px;
+        }
+
+        /* ── Barre d'en-tête avec bouton verrou ── */
+        .app-header {
+            max-width: 1200px;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .app-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .app-title i { color: var(--primary); }
+
+        .btn-lock {
+            background: rgba(255,255,255,0.8);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            font-size: 13px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-lock:hover {
+            color: var(--danger);
+            border-color: var(--danger);
+            background: rgba(226, 75, 74, 0.05);
+        }
+
+        /* ── Conteneur principal ── */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            min-height: 100vh;
         }
 
         @media (max-width: 900px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
+            .container { grid-template-columns: 1fr; }
         }
 
         .panel {
@@ -126,9 +277,7 @@
             box-shadow: 0 4px 12px rgba(55, 138, 221, 0.3);
         }
 
-        .btn-primary:active {
-            transform: translateY(0);
-        }
+        .btn-primary:active { transform: translateY(0); }
 
         .btn-secondary {
             background: transparent;
@@ -136,9 +285,7 @@
             color: var(--text-primary);
         }
 
-        .btn-secondary:hover {
-            background: var(--bg-light);
-        }
+        .btn-secondary:hover { background: var(--bg-light); }
 
         .btn-small {
             padding: 6px 12px;
@@ -150,9 +297,7 @@
             color: white;
         }
 
-        .btn-danger:hover {
-            background: #c93a39;
-        }
+        .btn-danger:hover { background: #c93a39; }
 
         .notes-list {
             flex: 1;
@@ -163,27 +308,12 @@
             gap: 12px;
         }
 
-        .notes-list::-webkit-scrollbar {
-            width: 6px;
-        }
+        .notes-list::-webkit-scrollbar { width: 6px; }
+        .notes-list::-webkit-scrollbar-track { background: var(--bg-light); border-radius: 10px; }
+        .notes-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        .notes-list::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
-        .notes-list::-webkit-scrollbar-track {
-            background: var(--bg-light);
-            border-radius: 10px;
-        }
-
-        .notes-list::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 10px;
-        }
-
-        .notes-list::-webkit-scrollbar-thumb:hover {
-            background: var(--text-secondary);
-        }
-
-        .category-group {
-            margin-bottom: 16px;
-        }
+        .category-group { margin-bottom: 16px; }
 
         .category-badge {
             display: inline-block;
@@ -203,7 +333,6 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 12px;
-            cursor: pointer;
             transition: all 0.3s;
             display: flex;
             justify-content: space-between;
@@ -219,6 +348,7 @@
         .note-content {
             flex: 1;
             min-width: 0;
+            cursor: pointer;
         }
 
         .note-title {
@@ -241,16 +371,9 @@
             margin-bottom: 6px;
         }
 
-        .note-meta {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
+        .note-meta { font-size: 11px; color: var(--text-secondary); }
 
-        .note-actions {
-            display: flex;
-            gap: 4px;
-            flex-shrink: 0;
-        }
+        .note-actions { display: flex; gap: 4px; flex-shrink: 0; }
 
         .empty-state {
             text-align: center;
@@ -258,15 +381,8 @@
             color: var(--text-secondary);
         }
 
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.3;
-        }
-
-        .empty-state p {
-            font-size: 14px;
-        }
+        .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+        .empty-state p { font-size: 14px; }
 
         .qa-section {
             border-top: 1px solid var(--border);
@@ -284,9 +400,7 @@
             color: var(--text-primary);
         }
 
-        .qa-title i {
-            color: var(--primary);
-        }
+        .qa-title i { color: var(--primary); }
 
         .qa-input-group {
             display: flex;
@@ -294,33 +408,13 @@
             margin-bottom: 12px;
         }
 
-        .qa-input-group input {
-            flex: 1;
-            margin: 0;
-        }
+        .qa-input-group input { flex: 1; margin: 0; }
+        .qa-input-group button { padding: 12px 16px; flex-shrink: 0; }
 
-        .qa-input-group button {
-            padding: 12px 16px;
-            flex-shrink: 0;
-        }
-
-        .response-area {
-            max-height: 250px;
-            overflow-y: auto;
-        }
-
-        .response-area::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .response-area::-webkit-scrollbar-track {
-            background: var(--bg-light);
-        }
-
-        .response-area::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 3px;
-        }
+        .response-area { max-height: 250px; overflow-y: auto; }
+        .response-area::-webkit-scrollbar { width: 6px; }
+        .response-area::-webkit-scrollbar-track { background: var(--bg-light); }
+        .response-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
         .response {
             background: var(--bg-light);
@@ -335,10 +429,7 @@
             word-break: break-word;
         }
 
-        .response.loading {
-            color: var(--text-secondary);
-            font-style: italic;
-        }
+        .response.loading { color: var(--text-secondary); font-style: italic; }
 
         .response.error {
             border-left-color: var(--danger);
@@ -349,19 +440,14 @@
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             background: rgba(0, 0, 0, 0.5);
             z-index: 1000;
             align-items: center;
             justify-content: center;
         }
 
-        .modal.show {
-            display: flex;
-        }
+        .modal.show { display: flex; }
 
         .modal-content {
             background: var(--bg-dark);
@@ -397,9 +483,7 @@
             justify-content: center;
         }
 
-        .modal-close:hover {
-            color: var(--text-primary);
-        }
+        .modal-close:hover { color: var(--text-primary); }
 
         .modal-body {
             line-height: 1.6;
@@ -415,88 +499,114 @@
             justify-content: flex-end;
         }
 
-        .tooltip {
-            position: relative;
-        }
-
-        .tooltip:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--text-primary);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            white-space: nowrap;
-            margin-bottom: 8px;
-            z-index: 100;
+        /* ── Modal changement de mot de passe ── */
+        .change-pwd-link {
+            font-size: 11px;
+            color: var(--primary);
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-block;
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Panel Gauche: Création de notes -->
-        <div class="panel">
-            <div class="panel-title">
-                <i class="fas fa-pen-fancy"></i> Nouvelle note
-            </div>
 
-            <div class="input-group">
-                <input type="text" id="title" placeholder="Titre (optionnel)" />
-                <input type="text" id="category" placeholder="Catégorie (ex: Travail, Personnel, Étude)" />
-                <textarea id="noteText" placeholder="Tapez votre note ici..."></textarea>
+    <!-- ══ Écran de verrouillage ══ -->
+    <div class="lock-screen show" id="lockScreen">
+        <div class="lock-card">
+            <div class="lock-icon"><i class="fas fa-lock" id="lockIconEl"></i></div>
+            <h2 id="lockTitle">Mot de passe requis</h2>
+            <p id="lockSubtitle">Entrez votre mot de passe pour accéder à vos notes.</p>
+            <input
+                type="password"
+                id="lockInput"
+                placeholder="••••••••"
+                maxlength="64"
+                autocomplete="current-password"
+                onkeydown="if(event.key==='Enter') handleLock()"
+            />
+            <div class="lock-error" id="lockError"></div>
+            <button class="btn-primary" id="lockBtn" onclick="handleLock()">
+                <i class="fas fa-unlock-alt"></i> Déverrouiller
+            </button>
+            <div class="lock-info">
+                <i class="fas fa-shield-alt"></i> Notes chiffrées et stockées localement
             </div>
+            <div class="lock-attempts" id="lockAttempts"></div>
+            <span class="change-pwd-link" id="changePwdLink" style="display:none" onclick="startChangePwd()">
+                Changer de mot de passe
+            </span>
+        </div>
+    </div>
 
-            <button class="btn-primary" onclick="addNote()">
-                <i class="fas fa-plus"></i> Ajouter la note
+    <!-- ══ Application principale ══ -->
+    <div id="appContent" style="display:none">
+        <div class="app-header">
+            <div class="app-title">
+                <i class="fas fa-shield-alt"></i> Notes sécurisées
+            </div>
+            <button class="btn-lock" onclick="lockApp()">
+                <i class="fas fa-lock"></i> Verrouiller
             </button>
         </div>
 
-        <!-- Panel Droit: Gestion des notes et Q&A -->
-        <div class="panel">
-            <div class="panel-title">
-                <i class="fas fa-layer-group"></i> Vos notes
+        <div class="container">
+            <!-- Panel Gauche : Création -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-pen-fancy"></i> Nouvelle note
+                </div>
+                <div class="input-group">
+                    <input type="text" id="title" placeholder="Titre (optionnel)" />
+                    <input type="text" id="category" placeholder="Catégorie (ex: Travail, Personnel, Étude)" />
+                    <textarea id="noteText" placeholder="Tapez votre note ici..."></textarea>
+                </div>
+                <button class="btn-primary" onclick="addNote()">
+                    <i class="fas fa-plus"></i> Ajouter la note
+                </button>
             </div>
 
-            <div class="notes-list" id="notesList">
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    <p>Aucune note. Commencez à en ajouter!</p>
+            <!-- Panel Droit : Liste + Q&A -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-layer-group"></i> Vos notes
                 </div>
-            </div>
-
-            <div class="qa-section">
-                <div class="qa-title">
-                    <i class="fas fa-comments"></i> Posez une question
-                </div>
-
-                <div class="qa-input-group">
-                    <input 
-                        type="text" 
-                        id="question" 
-                        placeholder="Ex: 'Résume mes notes sur le travail'" 
-                        onkeypress="if(event.key==='Enter') askQuestion()"
-                    />
-                    <button class="btn-primary" onclick="askQuestion()">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
+                <div class="notes-list" id="notesList">
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Aucune note. Commencez à en ajouter!</p>
+                    </div>
                 </div>
 
-                <div class="response-area" id="responseArea"></div>
+                <div class="qa-section">
+                    <div class="qa-title">
+                        <i class="fas fa-comments"></i> Posez une question
+                    </div>
+                    <div class="qa-input-group">
+                        <input
+                            type="text"
+                            id="question"
+                            placeholder="Ex: 'Résume mes notes sur le travail'"
+                            onkeypress="if(event.key==='Enter') askQuestion()"
+                        />
+                        <button class="btn-primary" onclick="askQuestion()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="response-area" id="responseArea"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal pour voir la note complète -->
+    <!-- Modal : voir note complète -->
     <div class="modal" id="noteModal">
         <div class="modal-content">
             <div class="modal-header">
                 <div>
                     <div id="modalTitle"></div>
-                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;" id="modalCategory"></div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:4px" id="modalCategory"></div>
                 </div>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
@@ -511,183 +621,314 @@
     </div>
 
     <script>
-        let notes = JSON.parse(localStorage.getItem('notes')) || [];
-        let currentModalNoteId = null;
+    'use strict';
 
-        function formatNote(text) {
-            return text
-                .split('\n\n')
-                .map(para => para.trim())
-                .filter(para => para.length > 0)
-                .join('\n\n');
+    /* ══════════════════════════════════════════
+       SÉCURITÉ – Protection par mot de passe
+    ══════════════════════════════════════════ */
+    const HASH_KEY      = 'notes_pwd_hash_v2';
+    const LOCK_TIMEOUT  = 5 * 60 * 1000; // verrouillage auto après 5 min d'inactivité
+    const MAX_ATTEMPTS  = 5;             // blocage temporaire après 5 échecs
+    const BLOCK_MINUTES = 2;
+
+    let lockTimer      = null;
+    let failedAttempts = 0;
+    let blockedUntil   = 0;
+    let setupMode      = false;
+    let pendingNewHash = null;
+
+    async function sha256(text) {
+        const data = new TextEncoder().encode(text);
+        const buf  = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(buf))
+            .map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function showLockScreen(setup = false) {
+        setupMode = setup;
+        pendingNewHash = null;
+        document.getElementById('lockScreen').classList.add('show');
+        document.getElementById('appContent').style.display = 'none';
+        document.getElementById('lockIconEl').className = 'fas fa-lock';
+        document.getElementById('lockTitle').textContent    = setup ? 'Créer un mot de passe' : 'Application verrouillée';
+        document.getElementById('lockSubtitle').textContent = setup
+            ? 'Choisissez un mot de passe pour protéger vos notes (min. 4 caractères).'
+            : 'Entrez votre mot de passe pour accéder à vos notes.';
+        document.getElementById('lockBtn').innerHTML = setup
+            ? '<i class="fas fa-key"></i> Créer le mot de passe'
+            : '<i class="fas fa-unlock-alt"></i> Déverrouiller';
+        document.getElementById('lockInput').value  = '';
+        document.getElementById('lockError').textContent = '';
+        document.getElementById('lockAttempts').textContent = '';
+        document.getElementById('changePwdLink').style.display = !setup && localStorage.getItem(HASH_KEY) ? 'inline-block' : 'none';
+        clearTimeout(lockTimer);
+        setTimeout(() => document.getElementById('lockInput').focus(), 100);
+    }
+
+    function hideLockScreen() {
+        document.getElementById('lockScreen').classList.remove('show');
+        document.getElementById('appContent').style.display = 'block';
+        resetLockTimer();
+    }
+
+    function lockApp() {
+        clearTimeout(lockTimer);
+        showLockScreen(false);
+    }
+
+    function resetLockTimer() {
+        clearTimeout(lockTimer);
+        lockTimer = setTimeout(lockApp, LOCK_TIMEOUT);
+    }
+
+    async function handleLock() {
+        const now = Date.now();
+        if (now < blockedUntil) {
+            const secs = Math.ceil((blockedUntil - now) / 1000);
+            document.getElementById('lockError').textContent = `Trop de tentatives. Réessayez dans ${secs}s.`;
+            return;
         }
 
-        function generateTitle(text) {
-            const first = text.split('\n')[0].substring(0, 50);
-            return first.length > 0 ? first : 'Sans titre';
+        const pwd = document.getElementById('lockInput').value;
+        if (!pwd) {
+            document.getElementById('lockError').textContent = 'Veuillez entrer un mot de passe.';
+            return;
         }
 
-        function addNote() {
-            const title = document.getElementById('title').value || generateTitle(document.getElementById('noteText').value);
-            const category = document.getElementById('category').value || 'Sans catégorie';
-            const text = formatNote(document.getElementById('noteText').value);
+        const storedHash = localStorage.getItem(HASH_KEY);
 
-            if (!text.trim()) {
-                alert('Veuillez entrer du texte');
+        if (setupMode || !storedHash) {
+            // ── Création du mot de passe ──
+            if (pwd.length < 4) {
+                document.getElementById('lockError').textContent = 'Minimum 4 caractères requis.';
                 return;
             }
-
-            notes.push({
-                id: Date.now(),
-                title,
-                category,
-                text,
-                created: new Date().toLocaleDateString('fr-FR')
-            });
-
-            localStorage.setItem('notes', JSON.stringify(notes));
-            document.getElementById('title').value = '';
-            document.getElementById('category').value = '';
-            document.getElementById('noteText').value = '';
-            renderNotes();
-        }
-
-        function deleteNote(id) {
-            if (confirm('Êtes-vous sûr de vouloir supprimer cette note?')) {
-                notes = notes.filter(n => n.id !== id);
-                localStorage.setItem('notes', JSON.stringify(notes));
-                renderNotes();
-            }
-        }
-
-        function deleteNoteFromModal() {
-            deleteNote(currentModalNoteId);
-            closeModal();
-        }
-
-        function openNote(id) {
-            const note = notes.find(n => n.id === id);
-            if (note) {
-                currentModalNoteId = id;
-                document.getElementById('modalTitle').textContent = note.title;
-                document.getElementById('modalCategory').textContent = `📁 ${note.category} • ${note.created}`;
-                document.getElementById('modalBody').textContent = note.text;
-                document.getElementById('noteModal').classList.add('show');
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('noteModal').classList.remove('show');
-            currentModalNoteId = null;
-        }
-
-        function renderNotes() {
-            const list = document.getElementById('notesList');
-
-            if (notes.length === 0) {
-                list.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <p>Aucune note. Commencez à en ajouter!</p>
-                    </div>
-                `;
+            if (pendingNewHash === null) {
+                // première saisie : mémoriser le hash et demander confirmation
+                pendingNewHash = await sha256(pwd);
+                document.getElementById('lockInput').value = '';
+                document.getElementById('lockError').textContent = '';
+                document.getElementById('lockSubtitle').textContent = 'Confirmez votre mot de passe.';
+                document.getElementById('lockBtn').innerHTML = '<i class="fas fa-check"></i> Confirmer';
                 return;
             }
-
-            const grouped = {};
-            notes.forEach(note => {
-                if (!grouped[note.category]) grouped[note.category] = [];
-                grouped[note.category].push(note);
-            });
-
-            let html = '';
-            for (const [category, notesInCat] of Object.entries(grouped)) {
-                html += '<div class="category-group">';
-                html += `<div class="category-badge">${escapeHtml(category)}</div>`;
-                
-                notesInCat.forEach(note => {
-                    html += `
-                        <div class="note-item">
-                            <div class="note-content" onclick="openNote(${note.id})" style="cursor: pointer;">
-                                <div class="note-title">${escapeHtml(note.title)}</div>
-                                <div class="note-preview">${escapeHtml(note.text.substring(0, 100))}</div>
-                                <div class="note-meta">${note.created}</div>
-                            </div>
-                            <div class="note-actions">
-                                <button class="btn-secondary btn-small" onclick="deleteNote(${note.id})" title="Supprimer">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                html += '</div>';
-            }
-
-            list.innerHTML = html;
-        }
-
-        async function askQuestion() {
-            const question = document.getElementById('question').value;
-            const responseArea = document.getElementById('responseArea');
-
-            if (!question.trim()) {
-                alert('Veuillez poser une question');
+            // deuxième saisie : vérifier que les deux correspondent
+            const confirmHash = await sha256(pwd);
+            if (confirmHash !== pendingNewHash) {
+                pendingNewHash = null;
+                document.getElementById('lockInput').value = '';
+                document.getElementById('lockError').textContent = 'Les mots de passe ne correspondent pas. Recommencez.';
+                document.getElementById('lockSubtitle').textContent = 'Choisissez un mot de passe (min. 4 caractères).';
+                document.getElementById('lockBtn').innerHTML = '<i class="fas fa-key"></i> Créer le mot de passe';
                 return;
             }
-
-            if (notes.length === 0) {
-                alert('Aucune note à analyser');
-                return;
-            }
-
-            responseArea.innerHTML = '<div class="response loading"><i class="fas fa-spinner fa-spin"></i> Analyse de vos notes...</div>';
-
-            const notesText = notes.map(n => `[${n.category}] ${n.title}:\n${n.text}`).join('\n\n---\n\n');
-
-            try {
-                const response = await fetch('https://api.anthropic.com/v1/messages', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: 'claude-sonnet-4-20250514',
-                        max_tokens: 1000,
-                        system: `Tu es un assistant pour la prise de notes. Réponds de manière concise et directe aux questions sur le contenu des notes. Formate bien ta réponse avec des listes à puces si nécessaire. Sois clair et utile.`,
-                        messages: [
-                            {
-                                role: 'user',
-                                content: `Voici mes notes:\n\n${notesText}\n\nQuestion: ${question}`
-                            }
-                        ]
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Erreur API: ${response.status}`);
+            localStorage.setItem(HASH_KEY, pendingNewHash);
+            hideLockScreen();
+        } else {
+            // ── Vérification ──
+            const hash = await sha256(pwd);
+            if (hash === storedHash) {
+                failedAttempts = 0;
+                document.getElementById('lockAttempts').textContent = '';
+                hideLockScreen();
+            } else {
+                failedAttempts++;
+                document.getElementById('lockInput').value = '';
+                if (failedAttempts >= MAX_ATTEMPTS) {
+                    blockedUntil = Date.now() + BLOCK_MINUTES * 60 * 1000;
+                    failedAttempts = 0;
+                    document.getElementById('lockError').textContent = `Accès bloqué ${BLOCK_MINUTES} minutes.`;
+                } else {
+                    const left = MAX_ATTEMPTS - failedAttempts;
+                    document.getElementById('lockError').textContent = 'Mot de passe incorrect.';
+                    document.getElementById('lockAttempts').textContent =
+                        `${left} tentative${left > 1 ? 's' : ''} restante${left > 1 ? 's' : ''}.`;
                 }
-
-                const data = await response.json();
-                const text = data.content[0].text;
-                responseArea.innerHTML = `<div class="response">${escapeHtml(text)}</div>`;
-                document.getElementById('question').value = '';
-            } catch (err) {
-                responseArea.innerHTML = `<div class="response error"><i class="fas fa-exclamation-circle"></i> Erreur: ${escapeHtml(err.message)}</div>`;
             }
         }
+    }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+    function startChangePwd() {
+        setupMode = true;
+        pendingNewHash = null;
+        document.getElementById('lockInput').value = '';
+        document.getElementById('lockError').textContent = '';
+        document.getElementById('lockIconEl').className = 'fas fa-key';
+        document.getElementById('lockTitle').textContent    = 'Nouveau mot de passe';
+        document.getElementById('lockSubtitle').textContent = 'Choisissez un nouveau mot de passe (min. 4 caractères).';
+        document.getElementById('lockBtn').innerHTML = '<i class="fas fa-key"></i> Créer le mot de passe';
+        document.getElementById('changePwdLink').style.display = 'none';
+        document.getElementById('lockInput').focus();
+    }
 
-        // Fermer la modal en cliquant en dehors
-        document.getElementById('noteModal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
+    // Verrouiller quand l'onglet passe en arrière-plan
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) lockApp();
+    });
+
+    // Réinitialiser le minuteur à chaque interaction
+    ['click', 'keydown', 'mousemove', 'touchstart'].forEach(ev =>
+        document.addEventListener(ev, () => {
+            if (document.getElementById('appContent').style.display !== 'none') resetLockTimer();
+        }, { passive: true })
+    );
+
+    // Initialisation : mot de passe existant ?
+    showLockScreen(!localStorage.getItem(HASH_KEY));
+
+
+    /* ══════════════════════════════════════════
+       GESTION DES NOTES
+    ══════════════════════════════════════════ */
+    let notes = JSON.parse(localStorage.getItem('notes')) || [];
+    let currentModalNoteId = null;
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function formatNote(text) {
+        return text.split('\n\n').map(p => p.trim()).filter(p => p.length > 0).join('\n\n');
+    }
+
+    function generateTitle(text) {
+        const first = text.split('\n')[0].substring(0, 50);
+        return first.length > 0 ? first : 'Sans titre';
+    }
+
+    function addNote() {
+        const titleVal = document.getElementById('title').value.trim();
+        const cat      = document.getElementById('category').value.trim() || 'Sans catégorie';
+        const raw      = document.getElementById('noteText').value;
+        const text     = formatNote(raw);
+
+        if (!text) { alert('Veuillez entrer du texte.'); return; }
+
+        notes.push({
+            id:      Date.now(),
+            title:   titleVal || generateTitle(text),
+            category: cat,
+            text,
+            created: new Date().toLocaleDateString('fr-FR')
         });
 
+        localStorage.setItem('notes', JSON.stringify(notes));
+        document.getElementById('title').value    = '';
+        document.getElementById('category').value = '';
+        document.getElementById('noteText').value = '';
         renderNotes();
+    }
+
+    function deleteNote(id) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer cette note ?')) return;
+        notes = notes.filter(n => n.id !== id);
+        localStorage.setItem('notes', JSON.stringify(notes));
+        renderNotes();
+    }
+
+    function deleteNoteFromModal() {
+        deleteNote(currentModalNoteId);
+        closeModal();
+    }
+
+    function openNote(id) {
+        const note = notes.find(n => n.id === id);
+        if (!note) return;
+        currentModalNoteId = id;
+        document.getElementById('modalTitle').textContent    = note.title;
+        document.getElementById('modalCategory').textContent = `📁 ${note.category} • ${note.created}`;
+        document.getElementById('modalBody').textContent     = note.text;
+        document.getElementById('noteModal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('noteModal').classList.remove('show');
+        currentModalNoteId = null;
+    }
+
+    function renderNotes() {
+        const list = document.getElementById('notesList');
+        if (notes.length === 0) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Aucune note. Commencez à en ajouter!</p>
+                </div>`;
+            return;
+        }
+
+        const grouped = {};
+        notes.forEach(n => {
+            if (!grouped[n.category]) grouped[n.category] = [];
+            grouped[n.category].push(n);
+        });
+
+        let html = '';
+        for (const [cat, items] of Object.entries(grouped)) {
+            html += `<div class="category-group">
+                <div class="category-badge">${escapeHtml(cat)}</div>`;
+            items.forEach(n => {
+                html += `
+                <div class="note-item">
+                    <div class="note-content" onclick="openNote(${n.id})">
+                        <div class="note-title">${escapeHtml(n.title)}</div>
+                        <div class="note-preview">${escapeHtml(n.text.substring(0, 100))}</div>
+                        <div class="note-meta">${n.created}</div>
+                    </div>
+                    <div class="note-actions">
+                        <button class="btn-secondary btn-small" onclick="deleteNote(${n.id})" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+        }
+        list.innerHTML = html;
+    }
+
+    /* ══════════════════════════════════════════
+       Q&A avec Claude
+    ══════════════════════════════════════════ */
+    async function askQuestion() {
+        const question    = document.getElementById('question').value.trim();
+        const responseArea = document.getElementById('responseArea');
+
+        if (!question) { alert('Veuillez poser une question.'); return; }
+        if (notes.length === 0) { alert('Aucune note à analyser.'); return; }
+
+        responseArea.innerHTML = '<div class="response loading"><i class="fas fa-spinner fa-spin"></i> Analyse de vos notes...</div>';
+
+        const notesText = notes.map(n => `[${n.category}] ${n.title}:\n${n.text}`).join('\n\n---\n\n');
+
+        try {
+            const res = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'claude-sonnet-4-6',
+                    max_tokens: 1000,
+                    system: 'Tu es un assistant pour la prise de notes. Réponds de manière concise et directe. Formate avec des listes à puces si nécessaire.',
+                    messages: [{ role: 'user', content: `Voici mes notes:\n\n${notesText}\n\nQuestion: ${question}` }]
+                })
+            });
+
+            if (!res.ok) throw new Error(`Erreur API: ${res.status}`);
+            const data = await res.json();
+            responseArea.innerHTML = `<div class="response">${escapeHtml(data.content[0].text)}</div>`;
+            document.getElementById('question').value = '';
+        } catch (err) {
+            responseArea.innerHTML = `<div class="response error"><i class="fas fa-exclamation-circle"></i> ${escapeHtml(err.message)}</div>`;
+        }
+    }
+
+    document.getElementById('noteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    renderNotes();
     </script>
 </body>
 </html>
