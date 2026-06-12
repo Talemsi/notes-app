@@ -7,7 +7,7 @@
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta name="referrer" content="no-referrer">
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://cdnjs.cloudflare.com; font-src https://cdnjs.cloudflare.com; connect-src https://api.openai.com; base-uri 'none'; object-src 'none'; form-action 'none'; frame-ancestors 'none';">
+          content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://cdnjs.cloudflare.com; font-src https://cdnjs.cloudflare.com; connect-src https://api.groq.com; base-uri 'none'; object-src 'none'; form-action 'none'; frame-ancestors 'none';">
     <title>Notes</title>
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -956,7 +956,7 @@
                     <i class="fas fa-wand-magic-sparkles"></i> Prompt Claude
                 </button>
                 <button class="ctab" id="tabIA" onclick="switchCompileTab('ia')">
-                    <i class="fas fa-comment-dots"></i> ChatGPT
+                    <i class="fas fa-bolt"></i> Groq IA
                 </button>
             </div>
             <select class="compile-scope" id="compileScope" onchange="refreshCompiler()">
@@ -994,25 +994,20 @@
         <div id="viewIA" style="display:none">
             <div class="ia-key-row">
                 <i class="fas fa-key" style="color:var(--ink-4);font-size:11px;flex-shrink:0"></i>
-                <input type="password" id="iaApiKey" placeholder="sk-proj-…" autocomplete="off" spellcheck="false">
+                <input type="password" id="iaApiKey" placeholder="gsk_…" autocomplete="off" spellcheck="false">
                 <button class="ia-key-save" id="iaKeySaveBtn" onclick="saveApiKey()">Sauvegarder</button>
             </div>
             <div class="ia-config-inner">
                 <div class="prompt-config-label">Modèle</div>
                 <select class="ia-model-sel" id="iaModel">
-                    <option value="gpt-4o-mini">GPT-4o mini — rapide &amp; économique</option>
-                    <option value="gpt-4o">GPT-4o — meilleure qualité</option>
+                    <option value="llama-3.1-8b-instant">Llama 3.1 8B — rapide &amp; gratuit</option>
+                    <option value="llama-3.3-70b-versatile">Llama 3.3 70B — meilleure qualité</option>
                 </select>
                 <div class="prompt-config-label">Votre demande</div>
                 <textarea class="prompt-user-ta" id="iaInstruction"
                     placeholder="Ex : synthétise les actions à suivre, rédige un email, compare avec les bonnes pratiques…"></textarea>
                 <div class="prompt-web-row">
-                    <label class="prompt-web-label">
-                        <input type="checkbox" id="iaWebSearch">
-                        <i class="fas fa-globe" style="color:var(--blue);font-size:11px"></i>
-                        Rechercher sur le web
-                    </label>
-                    <span id="iaUsage" class="ia-usage"></span>
+                    <span id="iaUsage" class="ia-usage" style="margin-left:0"></span>
                 </div>
             </div>
             <div class="ia-result" id="iaResult">
@@ -1042,7 +1037,7 @@
 const LS_SALT      = 'ns_salt_v3';   // legacy (migration only)
 const LS_DATA      = 'ns_data_v4';   // legacy (migration only)
 const LS_USERS      = 'ns_users_v1';
-const openaiKey = () => `ns_ok_${currentUserId}`;
+const groqKey = () => `ns_gk_${currentUserId}`;
 const PBKDF2_ITER  = 100_000;
 const LOCK_TIMEOUT = 5 * 60 * 1000;
 const MAX_ATT      = 5;
@@ -1218,7 +1213,7 @@ async function deleteUser(id) {
     const user = getUsers().find(u => u.id === id);
     if (!user || !confirm(`Supprimer le profil « ${user.name} » et toutes ses notes ?`)) return;
     saveUsers(getUsers().filter(u => u.id !== id));
-    [saltKey(id), dataKey(id), blockKey(id), `ns_ck_${id}`, `ns_ok_${id}`].forEach(k => localStorage.removeItem(k));
+    [saltKey(id), dataKey(id), blockKey(id), `ns_ck_${id}`, `ns_ok_${id}`, `ns_gk_${id}`].forEach(k => localStorage.removeItem(k));
     sessionStorage.removeItem(failsKey(id));
     showSelectUser();
 }
@@ -1720,16 +1715,16 @@ function refreshCompiler() {
     }
 }
 
-/* ── ChatGPT API ── */
+/* ── Groq API ── */
 function initApiKeyUI() {
-    const saved = localStorage.getItem(openaiKey());
+    const saved = localStorage.getItem(groqKey());
     if (saved) $('iaApiKey').value = saved;
 }
 
 function saveApiKey() {
     const key = $('iaApiKey').value.trim();
     if (!key) return;
-    localStorage.setItem(openaiKey(), key);
+    localStorage.setItem(groqKey(), key);
     const btn = $('iaKeySaveBtn');
     btn.textContent = 'Sauvegardé !';
     btn.classList.add('saved');
@@ -1760,23 +1755,22 @@ function buildClaudePrompt() {
 }
 
 async function generateWithOpenAI() {
-    const apiKey = $('iaApiKey').value.trim() || localStorage.getItem(openaiKey()) || '';
+    const apiKey = $('iaApiKey').value.trim() || localStorage.getItem(groqKey()) || '';
     if (!apiKey) {
-        $('iaResult').innerHTML = '<div class="ia-result-empty" style="color:var(--red)">Clé API manquante — entrez votre clé sk-proj-… puis sauvegardez.</div>';
+        $('iaResult').innerHTML = '<div class="ia-result-empty" style="color:var(--red)">Clé API manquante — entrez votre clé gsk_… puis sauvegardez.</div>';
         return;
     }
 
     const genBtn = $('iaGenBtn');
     genBtn.disabled = true;
     genBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Génération…';
-    $('iaResult').innerHTML = '<div class="ia-result-empty"><i class="fas fa-circle-notch fa-spin" style="font-size:20px;color:var(--blue);display:block;margin-bottom:8px"></i>Interrogation de ChatGPT…</div>';
+    $('iaResult').innerHTML = '<div class="ia-result-empty"><i class="fas fa-circle-notch fa-spin" style="font-size:20px;color:var(--blue);display:block;margin-bottom:8px"></i>Interrogation de Groq…</div>';
     $('iaUsage').textContent = '';
 
-    const useSearch = $('iaWebSearch').checked;
-    const model     = useSearch ? 'gpt-4o-search-preview' : $('iaModel').value;
+    const model = $('iaModel').value;
 
     try {
-        const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
