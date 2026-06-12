@@ -347,6 +347,14 @@
             font-size: 13px; font-weight: 550; color: var(--ink-2);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
+        .sb-icon-btn {
+            width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+            color: var(--ink-4); font-size: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .15s;
+        }
+        .sb-icon-btn:hover { background: rgba(124,92,252,0.15); color: #A78BFA; border-color: rgba(124,92,252,0.25); }
         .btn-lock {
             width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0;
             background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.15);
@@ -355,6 +363,35 @@
             transition: all .15s;
         }
         .btn-lock:hover { background: rgba(239,68,68,0.18); color: var(--red); border-color: rgba(239,68,68,0.3); }
+
+        /* Settings modal */
+        .settings-section-title {
+            font-size: 11px; font-weight: 600; color: var(--ink-4);
+            text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px;
+        }
+        .settings-hint {
+            font-size: 12.5px; color: var(--ink-4); margin-bottom: 14px; line-height: 1.5;
+        }
+        .settings-key-row {
+            display: flex; gap: 8px; align-items: center;
+        }
+        .settings-key-row input {
+            flex: 1; padding: 9px 12px;
+            background: var(--card-2); border: 1.5px solid var(--line);
+            border-radius: var(--r-sm); color: var(--ink);
+            font-family: inherit; font-size: 13px; outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            caret-color: #7C5CFC;
+        }
+        .settings-key-row input:focus {
+            border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring);
+        }
+        .settings-status {
+            font-size: 12px; margin-top: 10px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .settings-status.ok  { color: var(--green); }
+        .settings-status.none { color: var(--ink-4); }
 
         /* ── App main area ── */
         .app-main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-y: auto; }
@@ -1147,6 +1184,9 @@
                 <div class="sb-avatar" id="sbAvatar">?</div>
                 <span class="sb-uname" id="sbUname">—</span>
             </div>
+            <button class="sb-icon-btn" onclick="openSettings()" title="Paramètres">
+                <i class="fas fa-gear"></i>
+            </button>
             <button class="btn-lock" onclick="lockApp()" title="Verrouiller">
                 <i class="fas fa-lock"></i>
             </button>
@@ -1167,20 +1207,7 @@
 
         <!-- Compose + IA -->
         <div class="panel">
-            <div class="panel-hd">
-                Nouvelle note
-                <button class="btn-key-pill" id="btnKeyPill" onclick="toggleKeyStrip()" title="Clé API Groq">
-                    <i class="fas fa-key"></i> Groq
-                </button>
-            </div>
-
-            <!-- Clé API strip (masqué par défaut) -->
-            <div class="key-strip" id="keyStrip" style="display:none">
-                <label><i class="fas fa-key"></i> Clé Groq</label>
-                <input type="password" id="cfgKey" placeholder="gsk_…" autocomplete="off" spellcheck="false"
-                       onkeydown="if(event.key==='Enter') saveKeyInline()">
-                <button class="btn-key-sv" id="btnKeySv" onclick="saveKeyInline()">Sauvegarder</button>
-            </div>
+            <div class="panel-hd">Nouvelle note</div>
 
             <!-- Bloc IA Groq -->
             <div class="ai-box">
@@ -1262,6 +1289,29 @@
 
     </div>
     </div><!-- /.app-main -->
+</div>
+
+<!-- Settings -->
+<div class="overlay" id="settingsOv">
+    <div class="modal modal-sm">
+        <div class="modal-hd">
+            <div class="modal-ttl"><i class="fas fa-gear" style="color:#A78BFA;margin-right:8px;font-size:14px"></i>Paramètres</div>
+            <button class="modal-x" onclick="closeSettings()">&times;</button>
+        </div>
+        <div class="modal-body" style="padding:22px 24px 24px">
+            <div class="settings-section-title"><i class="fas fa-bolt" style="color:#A78BFA;margin-right:5px"></i>Clé API Groq</div>
+            <div class="settings-hint">
+                Clé stockée chiffrée (AES-256) sur cet appareil uniquement.<br>
+                Obtenez une clé gratuite sur <strong style="color:#A78BFA">console.groq.com</strong>
+            </div>
+            <div class="settings-key-row">
+                <input type="password" id="cfgKey" placeholder="gsk_…" autocomplete="off" spellcheck="false"
+                       onkeydown="if(event.key==='Enter') saveKeyInline()">
+                <button class="btn-key-sv" id="btnKeySv" onclick="saveKeyInline()">Enregistrer</button>
+            </div>
+            <div class="settings-status none" id="keyStatus"></div>
+        </div>
+    </div>
 </div>
 
 <!-- Note detail -->
@@ -1983,6 +2033,7 @@ function render(q='', recentLimit=null, catFilter=null) {
 $('noteOv').addEventListener('click',    e => { if(e.target===$('noteOv'))    closeNote(); });
 $('remOv').addEventListener('click',     e => { if(e.target===$('remOv'))     closeRem(); });
 $('compileOv').addEventListener('click', e => { if(e.target===$('compileOv')) closeCompiler(); });
+$('settingsOv').addEventListener('click',e => { if(e.target===$('settingsOv')) closeSettings(); });
 
 /* ── Compiler ── */
 let compileTab = 'cr';
@@ -2116,54 +2167,71 @@ function refreshCompiler() {
 }
 
 /* ── Groq API ── */
+/* ── Encrypted API key storage ── */
+async function saveGroqKey(rawKey) {
+    if (!rawKey || !encKey) return;
+    const encrypted = await cryptEnc({ k: rawKey }, encKey);
+    localStorage.setItem(groqKey(), encrypted);
+}
+
+async function loadGroqKey() {
+    const stored = localStorage.getItem(groqKey());
+    if (!stored || !encKey) return '';
+    // Migration : ancienne clé en clair (commence par gsk_)
+    if (stored.startsWith('gsk_')) {
+        await saveGroqKey(stored);
+        return stored;
+    }
+    try {
+        const data = await cryptDec(stored, encKey);
+        return data.k || '';
+    } catch { return ''; }
+}
+
+function hasGroqKey() { return !!localStorage.getItem(groqKey()); }
+
 function initApiKeyUI() {
-    const saved = !!localStorage.getItem(groqKey());
-    const pill = $('btnKeyPill');
-    if (pill) pill.classList.toggle('keyset', saved);
-    // Ne jamais pré-remplir les champs avec la clé — elle reste dans localStorage uniquement
     if ($('iaApiKey')) {
         $('iaApiKey').value = '';
-        $('iaApiKey').placeholder = saved ? 'Clé configurée — entrez une nouvelle pour remplacer' : 'gsk_…';
+        $('iaApiKey').placeholder = hasGroqKey()
+            ? 'Clé configurée — entrez une nouvelle pour remplacer' : 'gsk_…';
     }
 }
 
-function toggleKeyStrip() {
-    const strip = $('keyStrip');
-    const open  = strip.style.display !== 'none';
-    strip.style.display = open ? 'none' : '';
-    if (!open) {
-        const saved = !!localStorage.getItem(groqKey());
-        $('cfgKey').value = '';
-        $('cfgKey').placeholder = saved ? 'Clé configurée — entrez une nouvelle pour remplacer' : 'gsk_…';
-        setTimeout(() => $('cfgKey').focus(), 50);
-    }
+function openSettings() {
+    const saved = hasGroqKey();
+    $('cfgKey').value = '';
+    $('cfgKey').placeholder = saved ? 'Clé configurée — entrez une nouvelle pour remplacer' : 'gsk_…';
+    const st = $('keyStatus');
+    st.className = saved ? 'settings-status ok' : 'settings-status none';
+    st.innerHTML  = saved
+        ? '<i class="fas fa-lock-open"></i> Clé chiffrée enregistrée'
+        : '<i class="fas fa-circle-exclamation"></i> Aucune clé configurée';
+    $('settingsOv').classList.add('show');
+    setTimeout(() => $('cfgKey').focus(), 80);
 }
 
-function saveKeyInline() {
+function closeSettings() { $('settingsOv').classList.remove('show'); }
+
+async function saveKeyInline() {
     const key = $('cfgKey').value.trim();
-    if (!key) { $('keyStrip').style.display = 'none'; return; }
-    localStorage.setItem(groqKey(), key);
+    if (!key) { closeSettings(); return; }
+    await saveGroqKey(key);
     $('cfgKey').value = '';
     $('cfgKey').placeholder = 'Clé configurée — entrez une nouvelle pour remplacer';
-    if ($('iaApiKey')) { $('iaApiKey').value = ''; $('iaApiKey').placeholder = 'Clé configurée — entrez une nouvelle pour remplacer'; }
-    $('btnKeyPill').classList.add('keyset');
+    const st = $('keyStatus');
+    st.className = 'settings-status ok';
+    st.innerHTML = '<i class="fas fa-check-circle"></i> Clé chiffrée et enregistrée';
     const btn = $('btnKeySv');
-    btn.textContent = 'Sauvegardé !';
+    const orig = btn.textContent;
+    btn.textContent = 'Enregistré !';
     btn.classList.add('saved');
-    setTimeout(() => {
-        btn.textContent = 'Sauvegarder';
-        btn.classList.remove('saved');
-        $('keyStrip').style.display = 'none';
-    }, 1500);
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('saved'); closeSettings(); }, 1400);
 }
 
 async function generateNoteContent() {
-    const apiKey = localStorage.getItem(groqKey()) || '';
-    if (!apiKey) {
-        $('keyStrip').style.display = '';
-        setTimeout(() => $('cfgKey').focus(), 50);
-        return;
-    }
+    const apiKey = await loadGroqKey();
+    if (!apiKey) { openSettings(); return; }
     const prompt = $('aiPrompt').value.trim();
     if (!prompt) { $('aiPrompt').focus(); return; }
 
@@ -2200,14 +2268,12 @@ async function generateNoteContent() {
     }
 }
 
-function saveApiKey() {
-    const key = $('iaApiKey').value.trim();
+async function saveApiKey() {
+    const key = $('iaApiKey')?.value.trim();
     if (!key) return;
-    localStorage.setItem(groqKey(), key);
+    await saveGroqKey(key);
     const btn = $('iaKeySaveBtn');
-    btn.textContent = 'Sauvegardé !';
-    btn.classList.add('saved');
-    setTimeout(() => { btn.textContent = 'Sauvegarder'; btn.classList.remove('saved'); }, 2000);
+    if (btn) { btn.textContent = 'Sauvegardé !'; btn.classList.add('saved'); setTimeout(() => { btn.textContent = 'Sauvegarder'; btn.classList.remove('saved'); }, 2000); }
 }
 
 function buildClaudePrompt() {
@@ -2234,7 +2300,7 @@ function buildClaudePrompt() {
 }
 
 async function generateWithOpenAI() {
-    const apiKey = $('iaApiKey').value.trim() || localStorage.getItem(groqKey()) || '';
+    const apiKey = $('iaApiKey')?.value.trim() || await loadGroqKey();
     if (!apiKey) {
         $('iaResult').innerHTML = '<div class="ia-result-empty" style="color:var(--red)">Clé API manquante — entrez votre clé gsk_… puis sauvegardez.</div>';
         return;
