@@ -621,6 +621,40 @@
         .btn-copy-compile:active { transform: scale(.98); }
         .btn-copy-compile.copied { background: var(--green); }
 
+        /* ── Prompt config ── */
+        .prompt-config {
+            padding: 12px 14px 10px;
+            border-bottom: 1px solid var(--line);
+            background: var(--card-2);
+            border-radius: var(--r-sm) var(--r-sm) 0 0;
+        }
+        .prompt-config-label {
+            font-size: 10.5px; font-weight: 600; color: var(--ink-3);
+            text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+        }
+        .prompt-user-ta {
+            width: 100%; min-height: 60px; max-height: 110px; resize: vertical;
+            padding: 8px 10px; border: 1.5px solid var(--line);
+            border-radius: var(--r-xs); font: 13px/1.5 inherit;
+            color: var(--ink); background: var(--card); box-sizing: border-box;
+            outline: none; transition: border-color .15s;
+        }
+        .prompt-user-ta:focus { border-color: var(--blue-ring); box-shadow: 0 0 0 2px var(--blue-ring); }
+        .prompt-web-row {
+            display: flex; align-items: center; gap: 8px; margin-top: 8px;
+        }
+        .prompt-web-label {
+            font-size: 12.5px; color: var(--ink-2); cursor: pointer;
+            display: flex; align-items: center; gap: 6px; user-select: none;
+        }
+        .prompt-web-label input { accent-color: var(--blue); cursor: pointer; }
+        .token-est {
+            margin-left: auto; font-size: 11px; color: var(--ink-4);
+            font-variant-numeric: tabular-nums;
+        }
+        .prompt-ta-wrap { position: relative; }
+        .prompt-ta-wrap .prompt-ta { border-radius: 0 0 var(--r-sm) var(--r-sm); border-top: none; }
+
         /* ── User selection grid ── */
         .user-grid {
             display: none;
@@ -857,11 +891,27 @@
         <div class="cr-view" id="viewCR"></div>
 
         <div id="viewPrompt" style="display:none">
-            <div class="prompt-hint">
-                <i class="fas fa-circle-info"></i>
-                <span>Copiez ce prompt et collez-le dans <a href="https://claude.ai" target="_blank" rel="noopener noreferrer">claude.ai</a> pour obtenir un compte rendu enrichi et complété automatiquement.</span>
+            <div class="prompt-config">
+                <div class="prompt-config-label">Votre demande</div>
+                <textarea class="prompt-user-ta" id="userInstruction"
+                    placeholder="Optionnel — ex : focus sur les actions à suivre, prépare un email de synthèse, compare avec les bonnes pratiques du secteur…"
+                    oninput="refreshCompiler()"></textarea>
+                <div class="prompt-web-row">
+                    <label class="prompt-web-label">
+                        <input type="checkbox" id="webSearch" onchange="refreshCompiler()">
+                        <i class="fas fa-globe" style="color:var(--blue);font-size:11px"></i>
+                        Demander à Claude de chercher sur le web
+                    </label>
+                    <span class="token-est" id="tokenEst"></span>
+                </div>
             </div>
-            <textarea class="prompt-ta" id="promptTa" readonly></textarea>
+            <div class="prompt-hint" style="border-radius:0;border-top:none;margin-bottom:0">
+                <i class="fas fa-circle-info"></i>
+                <span>Copiez ce prompt → collez dans <a href="https://claude.ai" target="_blank" rel="noopener noreferrer">claude.ai</a>. Zéro token consommé ici.</span>
+            </div>
+            <div class="prompt-ta-wrap">
+                <textarea class="prompt-ta" id="promptTa" readonly></textarea>
+            </div>
         </div>
 
         <div class="modal-ft">
@@ -1499,7 +1549,17 @@ function refreshCompiler() {
 
     /* ── Prompt Claude (compact, économique) ── */
     const today = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
-    let prompt = `Date : ${today}\n\nMes notes :\n`;
+    const userInstr = ($('userInstruction') ? $('userInstruction').value.trim() : '');
+    const webSearch = ($('webSearch') ? $('webSearch').checked : false);
+
+    let prompt = '';
+
+    // Demande personnalisée en tête — Claude y prête plus d'attention
+    if (userInstr) {
+        prompt += `Demande : ${userInstr}\n\n`;
+    }
+
+    prompt += `Date : ${today}\n\nNotes :\n`;
     for (const [cat, items] of Object.entries(groups)) {
         prompt += `\n[${cat}]\n`;
         items.forEach(note => {
@@ -1507,8 +1567,25 @@ function refreshCompiler() {
             prompt += `• ${note.title}${preview ? ' : ' + preview.replace(/\n/g, ' ') : ''}\n`;
         });
     }
-    prompt += `\nTâche : génère un compte rendu structuré en français. Pour chaque point, ajoute un court complément si utile (conseil, ressource, point de vigilance). Format : sections par thème, points clés, compléments en italique.`;
+
+    if (userInstr) {
+        prompt += `\nRéponds à la demande ci-dessus en te basant sur ces notes, en français.`;
+    } else {
+        prompt += `\nTâche : génère un compte rendu structuré en français. Pour chaque point, ajoute un court complément si utile (conseil, ressource, point de vigilance). Format : sections par thème, points clés, compléments en italique.`;
+    }
+    if (webSearch) {
+        prompt += ` Utilise la recherche web pour enrichir avec des informations récentes si pertinent.`;
+    }
+
     $('promptTa').value = prompt;
+
+    // Estimation tokens (~4 chars/token, approximation GPT/Claude)
+    const tokenEst = $('tokenEst');
+    if (tokenEst) {
+        const est = Math.round(prompt.length / 4);
+        tokenEst.textContent = `~${est} tokens`;
+        tokenEst.style.color = est > 2000 ? 'var(--amber)' : 'var(--ink-4)';
+    }
 }
 
 async function copyCompiled() {
