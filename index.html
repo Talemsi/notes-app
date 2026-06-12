@@ -1166,10 +1166,10 @@ function showSelectUser() {
     $('userGrid').style.display      = 'grid';
 
     $('userGrid').innerHTML = users.map(u =>
-        `<div class="user-card" onclick="selectUser('${u.id}')">
+        `<div class="user-card" onclick="selectUser('${esc(u.id)}')">
             <div class="user-av">${esc(u.name.charAt(0).toUpperCase())}</div>
             <div class="user-nm">${esc(u.name)}</div>
-            <button class="user-del" onclick="event.stopPropagation();deleteUser('${u.id}')" title="Supprimer">×</button>
+            <button class="user-del" onclick="event.stopPropagation();deleteUser('${esc(u.id)}')" title="Supprimer">×</button>
         </div>`
     ).join('') +
         `<div class="user-card" onclick="startNewUser()">
@@ -1187,7 +1187,7 @@ function selectUser(id) {
 
     if (!localStorage.getItem(saltKey(id))) {
         state = 'setup_1';
-        ui({ title: user.name, hint: 'Choisissez un mot de passe (min. 4 caractères).', btn: 'Continuer', showBack: true });
+        ui({ title: user.name, hint: 'Choisissez un mot de passe (min. 8 caractères).', btn: 'Continuer', showBack: true });
     } else {
         state = 'unlock';
         ui({ title: user.name, btn: 'Déverrouiller', showChange: true, showBack: true });
@@ -1203,7 +1203,7 @@ async function deleteUser(id) {
     const user = getUsers().find(u => u.id === id);
     if (!user || !confirm(`Supprimer le profil « ${user.name} » et toutes ses notes ?`)) return;
     saveUsers(getUsers().filter(u => u.id !== id));
-    [saltKey(id), dataKey(id), blockKey(id)].forEach(k => localStorage.removeItem(k));
+    [saltKey(id), dataKey(id), blockKey(id), `ns_ck_${id}`].forEach(k => localStorage.removeItem(k));
     sessionStorage.removeItem(failsKey(id));
     showSelectUser();
 }
@@ -1234,7 +1234,7 @@ function lockApp() {
     $('ribbon').classList.remove('show');
     if ($('searchIn')) { $('searchIn').value = ''; $('searchCt').textContent = ''; }
     $('searchClr')?.classList.remove('on');
-    closeNote(); closeRem();
+    closeNote(); closeRem(); closeCompiler();
     showLock();
 }
 
@@ -1272,12 +1272,12 @@ async function dispatch(v) {
             saveUsers(users);
             currentUserId = id;
             state = 'setup_1';
-            ui({ title: name, hint: 'Choisissez un mot de passe (min. 4 caractères).', btn: 'Continuer', showBack: true });
+            ui({ title: name, hint: 'Choisissez un mot de passe (min. 8 caractères).', btn: 'Continuer', showBack: true });
             break;
         }
 
         case 'setup_1':
-            if (v.length < 4) { $('lockErr').textContent = 'Minimum 4 caractères.'; return; }
+            if (v.length < 8) { $('lockErr').textContent = 'Minimum 8 caractères.'; return; }
             tmpPwd = v; state = 'setup_2';
             ui({ title: getUsers().find(u=>u.id===currentUserId)?.name||'Notes', hint:'Confirmez votre mot de passe.', btn:'Créer', showBack: true });
             break;
@@ -1285,7 +1285,7 @@ async function dispatch(v) {
         case 'setup_2':
             if (v !== tmpPwd) {
                 tmpPwd = null; state = 'setup_1';
-                ui({ hint:'Choisissez un mot de passe (min. 4 caractères).', btn:'Continuer', err:'Les mots de passe ne correspondent pas.', showBack: true });
+                ui({ hint:'Choisissez un mot de passe (min. 8 caractères).', btn:'Continuer', err:'Les mots de passe ne correspondent pas.', showBack: true });
                 return;
             }
             encKey = await createVault(tmpPwd); notes = []; tmpPwd = null;
@@ -1323,11 +1323,11 @@ async function dispatch(v) {
             const r = await tryUnlock(v);
             if (!r) { $('lockErr').textContent = 'Mot de passe actuel incorrect.'; $('lockInput').value=''; return; }
             notes = r.notes; state = 'ch1';
-            ui({ hint:'Nouveau mot de passe (min. 4 caractères).', btn:'Continuer' });
+            ui({ hint:'Nouveau mot de passe (min. 8 caractères).', btn:'Continuer' });
             break;
         }
         case 'ch1':
-            if (v.length < 4) { $('lockErr').textContent = 'Minimum 4 caractères.'; return; }
+            if (v.length < 8) { $('lockErr').textContent = 'Minimum 8 caractères.'; return; }
             tmpPwd = v; state = 'ch2';
             ui({ hint:'Confirmez le nouveau mot de passe.', btn:'Enregistrer' });
             break;
@@ -1335,7 +1335,7 @@ async function dispatch(v) {
         case 'ch2':
             if (v !== tmpPwd) {
                 tmpPwd = null; state = 'ch1';
-                ui({ hint:'Nouveau mot de passe (min. 4 caractères).', btn:'Continuer', err:'Mots de passe différents.' });
+                ui({ hint:'Nouveau mot de passe (min. 8 caractères).', btn:'Continuer', err:'Mots de passe différents.' });
                 return;
             }
             await reencrypt(tmpPwd); tmpPwd = null;
