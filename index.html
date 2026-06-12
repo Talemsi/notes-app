@@ -145,60 +145,92 @@
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
 
-        /* Floating note cards */
-        .lock-cards { position: relative; height: 250px; margin: 0 -8px; flex-shrink: 0; }
-        @keyframes floatCard {
-            0%, 100% { transform: translateY(0); }
-            50%       { transform: translateY(-9px); }
-        }
-        .lock-nc {
-            position: absolute;
-            background: rgba(20,27,45,0.75);
+        /* App window preview */
+        .lock-app-win {
+            flex: 1; min-height: 0;
+            background: rgba(12,17,30,0.72);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 14px; padding: 14px 16px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-            animation: floatCard 6s ease-in-out infinite;
+            border-radius: 14px; overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+            display: flex; flex-direction: column;
+            margin-bottom: 16px;
         }
-        .lock-nc:nth-child(1) { width: 210px; top: 0;    left: 8px;  animation-delay:  0s; }
-        .lock-nc:nth-child(2) { width: 230px; top: 16px; right: 8px; animation-delay: -2s; }
-        .lock-nc:nth-child(3) { width: 195px; bottom: 0; left: 70px; animation-delay: -4s; }
-        .lock-nc:nth-child(4) { width: 175px; bottom: 10px; right: 30px; animation-delay: -1s; }
-        .lock-nc-badge {
-            display: inline-flex; align-items: center; gap: 5px;
-            font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
-            padding: 3px 8px; border-radius: 20px; margin-bottom: 9px;
-            background: rgba(124,92,252,0.18); color: #A78BFA;
-            border: 1px solid rgba(124,92,252,0.28);
+        .lock-aw-hd {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.02);
+            flex-shrink: 0;
         }
-        .lock-nc-title { font-size: 12.5px; font-weight: 600; color: #E2E8F0; margin-bottom: 8px; line-height: 1.3; }
-        .lock-nc-lines { display: flex; flex-direction: column; gap: 5px; }
-        .lock-nc-line { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.07); }
-        .lock-nc-line:nth-child(2) { width: 75%; }
-        .lock-nc-line:nth-child(3) { width: 88%; }
-        .lock-nc-footer { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; }
-        .lock-nc-date { font-size: 10px; color: rgba(255,255,255,0.25); }
+        .lock-aw-dots { display: flex; gap: 5px; flex-shrink: 0; }
+        .lock-aw-dots span { width: 10px; height: 10px; border-radius: 50%; }
+        .lock-aw-dots span:nth-child(1) { background: #FF5F57; }
+        .lock-aw-dots span:nth-child(2) { background: #FFBD2E; }
+        .lock-aw-dots span:nth-child(3) { background: #27C93F; }
+        .lock-aw-search {
+            flex: 1; height: 22px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 6px;
+            display: flex; align-items: center; padding: 0 8px; gap: 5px;
+            font-size: 11px; color: rgba(255,255,255,0.22);
+        }
+        .lock-aw-body { display: flex; flex: 1; min-height: 0; }
+        .lock-aw-sidebar {
+            width: 128px; flex-shrink: 0;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            padding: 8px 0; overflow: hidden;
+        }
+        .lock-aw-cat {
+            display: flex; align-items: center; gap: 7px;
+            padding: 7px 12px;
+            font-size: 11px; color: rgba(255,255,255,0.35);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            transition: background .25s, color .25s;
+        }
+        .lock-aw-cat.on { background: rgba(124,92,252,0.18); color: #C4B5FD; }
+        .lock-aw-cat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .lock-aw-list { flex: 1; overflow: hidden; }
+        .lock-aw-item {
+            padding: 9px 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            transition: background .3s;
+        }
+        .lock-aw-item.on { background: rgba(124,92,252,0.13); }
+        .lock-aw-item-top {
+            display: flex; justify-content: space-between; align-items: baseline; gap: 6px;
+            margin-bottom: 3px;
+        }
+        .lock-aw-item-title {
+            font-size: 12px; font-weight: 600; color: #E2E8F0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .lock-aw-item-date { font-size: 10px; color: rgba(255,255,255,0.2); flex-shrink: 0; }
+        .lock-aw-item-preview { font-size: 11px; color: rgba(255,255,255,0.28); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* Personal stats */
         .lock-pv-stats {
-            display: flex; gap: 28px; margin-top: 20px; padding-top: 18px;
+            display: flex; gap: 20px; padding: 12px 0 4px;
             border-top: 1px solid rgba(255,255,255,0.05);
+            flex-shrink: 0;
         }
-        .lock-pv-stat { display: flex; flex-direction: column; gap: 2px; }
-        .lock-pv-stat-val { font-size: 20px; font-weight: 700; color: #FFF; letter-spacing: -.4px; }
-        .lock-pv-stat-lbl { font-size: 11px; color: rgba(255,255,255,0.32); }
+        .lock-pv-stat { display: flex; flex-direction: column; gap: 1px; }
+        .lock-pv-stat-val { font-size: 18px; font-weight: 700; color: #FFF; letter-spacing: -.3px; }
+        .lock-pv-stat-lbl { font-size: 10.5px; color: rgba(255,255,255,0.3); }
+        .lock-pv-stat--last .lock-pv-stat-val { font-size: 13px; letter-spacing: 0; }
 
         /* Bottom pills */
-        .lock-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+        .lock-pills { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; flex-shrink: 0; }
         .lock-pill {
-            display: flex; align-items: center; gap: 6px;
-            font-size: 11px; color: rgba(255,255,255,0.4);
-            padding: 4px 10px; border-radius: 20px;
+            display: flex; align-items: center; gap: 5px;
+            font-size: 10.5px; color: rgba(255,255,255,0.38);
+            padding: 3px 9px; border-radius: 20px;
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.07);
         }
-        .lock-pill i { color: #22C55E; font-size: 9px; }
-        .lock-copyright { margin-top: 14px; font-size: 10px; color: rgba(255,255,255,0.18); letter-spacing: 0.02em; }
+        .lock-pill i { color: #22C55E; font-size: 8px; }
+        .lock-copyright { margin-top: 10px; font-size: 10px; color: rgba(255,255,255,0.15); letter-spacing: 0.02em; flex-shrink: 0; }
 
         /* Reassurance list (right panel) */
         .lock-assurance {
@@ -1145,31 +1177,47 @@
             </div>
         </div>
 
-        <!-- Floating note cards -->
-        <div class="lock-cards">
-            <div class="lock-nc">
-                <div class="lock-nc-badge"><i class="fas fa-briefcase"></i> Travail</div>
-                <div class="lock-nc-title">Projet SaaS Q3</div>
-                <div class="lock-nc-lines"><div class="lock-nc-line"></div><div class="lock-nc-line"></div><div class="lock-nc-line"></div></div>
-                <div class="lock-nc-footer"><span class="lock-nc-date">Aujourd'hui</span></div>
+        <!-- App window mockup -->
+        <div class="lock-app-win">
+            <div class="lock-aw-hd">
+                <div class="lock-aw-dots"><span></span><span></span><span></span></div>
+                <div class="lock-aw-search"><i class="fas fa-magnifying-glass" style="font-size:9px"></i> Rechercher…</div>
             </div>
-            <div class="lock-nc">
-                <div class="lock-nc-badge" style="background:rgba(34,197,94,0.15);color:#4ade80;border-color:rgba(34,197,94,0.25)"><i class="fas fa-lightbulb"></i> Idées</div>
-                <div class="lock-nc-title">Réunion Marketplace</div>
-                <div class="lock-nc-lines"><div class="lock-nc-line"></div><div class="lock-nc-line"></div></div>
-                <div class="lock-nc-footer"><span class="lock-nc-date">Hier</span></div>
-            </div>
-            <div class="lock-nc">
-                <div class="lock-nc-badge" style="background:rgba(245,158,11,0.15);color:#fbbf24;border-color:rgba(245,158,11,0.25)"><i class="fas fa-star"></i> Priorité</div>
-                <div class="lock-nc-title">Plan Business 2026</div>
-                <div class="lock-nc-lines"><div class="lock-nc-line"></div><div class="lock-nc-line"></div><div class="lock-nc-line"></div></div>
-                <div class="lock-nc-footer"><span class="lock-nc-date">Cette semaine</span></div>
-            </div>
-            <div class="lock-nc">
-                <div class="lock-nc-badge" style="background:rgba(99,102,241,0.15);color:#a5b4fc;border-color:rgba(99,102,241,0.25)"><i class="fas fa-brain"></i> IA</div>
-                <div class="lock-nc-title">Idées Application</div>
-                <div class="lock-nc-lines"><div class="lock-nc-line"></div><div class="lock-nc-line"></div></div>
-                <div class="lock-nc-footer"><span class="lock-nc-date">Lundi</span></div>
+            <div class="lock-aw-body">
+                <div class="lock-aw-sidebar">
+                    <div class="lock-aw-cat on" id="awCat0"><span class="lock-aw-cat-dot" style="background:#7C5CFC"></span>Toutes</div>
+                    <div class="lock-aw-cat" id="awCat1"><span class="lock-aw-cat-dot" style="background:#3B82F6"></span>Travail</div>
+                    <div class="lock-aw-cat" id="awCat2"><span class="lock-aw-cat-dot" style="background:#22C55E"></span>Idées</div>
+                    <div class="lock-aw-cat" id="awCat3"><span class="lock-aw-cat-dot" style="background:#F59E0B"></span>Priorité</div>
+                    <div class="lock-aw-cat" id="awCat4"><span class="lock-aw-cat-dot" style="background:#A78BFA"></span>IA</div>
+                    <div class="lock-aw-cat" id="awCat5"><span class="lock-aw-cat-dot" style="background:#F87171"></span>Personnel</div>
+                </div>
+                <div class="lock-aw-list">
+                    <div class="lock-aw-item on" id="awItem0">
+                        <div class="lock-aw-item-top"><span class="lock-aw-item-title">Projet SaaS Q3</span><span class="lock-aw-item-date">Aujourd'hui</span></div>
+                        <div class="lock-aw-item-preview">Roadmap & objectifs du trimestre…</div>
+                    </div>
+                    <div class="lock-aw-item" id="awItem1">
+                        <div class="lock-aw-item-top"><span class="lock-aw-item-title">Réunion Marketplace</span><span class="lock-aw-item-date">Hier</span></div>
+                        <div class="lock-aw-item-preview">Points clés et décisions prises…</div>
+                    </div>
+                    <div class="lock-aw-item" id="awItem2">
+                        <div class="lock-aw-item-top"><span class="lock-aw-item-title">Plan Business 2026</span><span class="lock-aw-item-date">Lundi</span></div>
+                        <div class="lock-aw-item-preview">Vision produit et go-to-market…</div>
+                    </div>
+                    <div class="lock-aw-item" id="awItem3">
+                        <div class="lock-aw-item-top"><span class="lock-aw-item-title">Idées Application IA</span><span class="lock-aw-item-date">Mercredi</span></div>
+                        <div class="lock-aw-item-preview">Intégration Groq, génération…</div>
+                    </div>
+                    <div class="lock-aw-item" id="awItem4">
+                        <div class="lock-aw-item-top"><span class="lock-aw-item-title">Architecture Technique</span><span class="lock-aw-item-date">Mar.</span></div>
+                        <div class="lock-aw-item-preview">AES-256-GCM, PBKDF2 600k…</div>
+                    </div>
+                    <div class="lock-aw-item" id="awItem5">
+                        <div class="lock-aw-item-top"><span class="lock-aw-item-title">Veille Concurrentielle</span><span class="lock-aw-item-date">Lun.</span></div>
+                        <div class="lock-aw-item-preview">Analyse des solutions du marché…</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1183,7 +1231,7 @@
                 <div class="lock-pv-stat-val" id="pvCatCount">—</div>
                 <div class="lock-pv-stat-lbl">catégories</div>
             </div>
-            <div class="lock-pv-stat">
+            <div class="lock-pv-stat lock-pv-stat--last">
                 <div class="lock-pv-stat-val" id="pvLastLogin">—</div>
                 <div class="lock-pv-stat-lbl">dernière connexion</div>
             </div>
@@ -1572,7 +1620,7 @@ function validateStr(v, maxLen, label) {
     return v.trim();
 }
 
-/* ── Lock screen — rotating text & personal stats ── */
+/* ── Lock screen — rotating text, app window animation & personal stats ── */
 const PV_WORDS = ['vos idées.', 'vos projets.', 'vos connaissances.', 'tout, sécurisé.'];
 let _pvIdx = 0, _pvTimer = null;
 function startPvRotate() {
@@ -1583,6 +1631,26 @@ function startPvRotate() {
         _pvIdx = (_pvIdx + 1) % PV_WORDS.length;
         el.style.transform = `translateY(-${_pvIdx * 40}px)`;
     }, 3000);
+}
+
+let _awTimer = null, _awItemIdx = 0, _awCatIdx = 0;
+const AW_ITEMS = 6, AW_CATS = 6;
+const AW_CAT_SEQ = [0, 1, 0, 2, 0, 3, 0, 4, 0, 1];
+function startAwAnimation() {
+    clearInterval(_awTimer);
+    _awItemIdx = 0; _awCatIdx = 0;
+    _awTimer = setInterval(() => {
+        const prevItem = document.getElementById(`awItem${_awItemIdx}`);
+        const prevCat  = document.getElementById(`awCat${AW_CAT_SEQ[_awCatIdx]}`);
+        if (prevItem) prevItem.classList.remove('on');
+        if (prevCat)  prevCat.classList.remove('on');
+        _awItemIdx = (_awItemIdx + 1) % AW_ITEMS;
+        _awCatIdx  = (_awCatIdx  + 1) % AW_CAT_SEQ.length;
+        const nextItem = document.getElementById(`awItem${_awItemIdx}`);
+        const nextCat  = document.getElementById(`awCat${AW_CAT_SEQ[_awCatIdx]}`);
+        if (nextItem) nextItem.classList.add('on');
+        if (nextCat)  nextCat.classList.add('on');
+    }, 2200);
 }
 
 function saveUserMeta() {
@@ -1604,9 +1672,13 @@ function showUserMeta(id) {
         document.getElementById('pvNoteCount').textContent = m.noteCount ?? '—';
         document.getElementById('pvCatCount').textContent  = m.catCount  ?? '—';
         if (m.lastLogin) {
-            const diff = Math.floor((Date.now() - new Date(m.lastLogin)) / 86400000);
+            const d = new Date(m.lastLogin);
+            const now = new Date();
+            const time = d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+            const isToday = d.toDateString() === now.toDateString();
+            const isYest  = d.toDateString() === new Date(now - 86400000).toDateString();
             document.getElementById('pvLastLogin').textContent =
-                diff === 0 ? "Aujourd'hui" : diff === 1 ? 'Hier' : `il y a ${diff}j`;
+                isToday ? `Aujourd'hui à ${time}` : isYest ? `Hier à ${time}` : `il y a ${Math.floor((Date.now()-d)/86400000)}j`;
         }
         pvStats.style.display = 'flex';
     } catch { pvStats.style.display = 'none'; }
@@ -1780,7 +1852,7 @@ function selectUser(id) {
 
 function startNewUser() {
     state = 'setup_name';
-    ui({ hint: 'Choisissez un nom pour ce profil.', btn: 'Continuer', showBack: true, pwMode: false, placeholder: 'Marouane, Flora…' });
+    ui({ hint: 'Choisissez un nom pour ce profil.', btn: 'Continuer', showBack: true, pwMode: false, placeholder: 'Marouane...' });
 }
 
 async function deleteUser(id) {
@@ -1798,6 +1870,7 @@ function showLock() {
     $('appContent').classList.remove('show');
     clearTimeout(lockTimer);
     startPvRotate();
+    startAwAnimation();
     migrate();
     const storedId = localStorage.getItem(DEVICE_USER_KEY);
     const known    = storedId && getUsers().find(u => u.id === storedId);
@@ -2563,6 +2636,7 @@ async function copyCompiled() {
 </script>
 <script>
 startPvRotate();
+startAwAnimation();
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
 }
