@@ -7,7 +7,7 @@
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta name="referrer" content="no-referrer">
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://cdnjs.cloudflare.com; font-src https://cdnjs.cloudflare.com; base-uri 'none'; object-src 'none'; form-action 'none'; frame-ancestors 'none';">
+          content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://cdnjs.cloudflare.com; font-src https://cdnjs.cloudflare.com; connect-src https://api.anthropic.com; base-uri 'none'; object-src 'none'; form-action 'none'; frame-ancestors 'none';">
     <title>Notes</title>
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -655,6 +655,65 @@
         .prompt-ta-wrap { position: relative; }
         .prompt-ta-wrap .prompt-ta { border-radius: 0 0 var(--r-sm) var(--r-sm); border-top: none; }
 
+        /* ── IA Claude tab ── */
+        .ia-key-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px; border-bottom: 1px solid var(--line);
+            background: var(--card-2); border-radius: var(--r-sm) var(--r-sm) 0 0;
+        }
+        .ia-key-row input {
+            flex: 1; padding: 7px 10px; border: 1.5px solid var(--line);
+            border-radius: var(--r-xs); font: 12px/1.4 inherit; color: var(--ink);
+            background: var(--card); outline: none; transition: border-color .15s;
+        }
+        .ia-key-row input:focus { border-color: var(--blue); }
+        .ia-key-save {
+            padding: 6px 12px; border: none; border-radius: var(--r-xs);
+            background: var(--ink); color: white;
+            font: 12px/1 inherit; font-weight: 500; cursor: pointer;
+            transition: background .15s; white-space: nowrap; flex-shrink: 0;
+        }
+        .ia-key-save:hover { background: var(--ink-2); }
+        .ia-key-save.saved { background: var(--green); }
+        .ia-config-inner {
+            padding: 12px 14px 10px; border-bottom: 1px solid var(--line);
+            background: var(--card-2);
+        }
+        .ia-model-sel {
+            width: 100%; padding: 7px 10px; margin-bottom: 10px;
+            border: 1.5px solid var(--line); border-radius: var(--r-xs);
+            font: 12px/1.4 inherit; color: var(--ink-2);
+            background: var(--card-2); outline: none; cursor: pointer;
+            transition: border-color .15s; box-sizing: border-box;
+        }
+        .ia-model-sel:focus { border-color: var(--blue); }
+        .ia-result {
+            min-height: 80px; max-height: 280px; overflow-y: auto;
+            padding: 12px 14px; border-radius: 0 0 var(--r-sm) var(--r-sm);
+            font-size: 13px; color: var(--ink-2); line-height: 1.65;
+            white-space: pre-wrap; word-break: break-word;
+            background: var(--card-2);
+        }
+        .ia-result::-webkit-scrollbar { width: 3px; }
+        .ia-result::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+        .ia-result-empty {
+            text-align: center; padding: 24px 20px; color: var(--ink-4);
+            font-size: 13px; line-height: 1.7;
+        }
+        .ia-usage {
+            margin-left: auto; font-size: 11px; color: var(--ink-4);
+            font-variant-numeric: tabular-nums;
+        }
+        .btn-ia-gen {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border: none; border-radius: var(--r-sm);
+            background: #4F46E5; color: white;
+            font: 13px/1 inherit; font-weight: 500; cursor: pointer;
+            transition: background .15s; white-space: nowrap;
+        }
+        .btn-ia-gen:hover:not(:disabled) { background: #4338CA; }
+        .btn-ia-gen:disabled { opacity: 0.55; cursor: default; }
+
         /* ── User selection grid ── */
         .user-grid {
             display: none;
@@ -881,6 +940,9 @@
                 <button class="ctab" id="tabPrompt" onclick="switchCompileTab('prompt')">
                     <i class="fas fa-wand-magic-sparkles"></i> Prompt Claude
                 </button>
+                <button class="ctab" id="tabIA" onclick="switchCompileTab('ia')">
+                    <i class="fas fa-robot"></i> IA Claude
+                </button>
             </div>
             <select class="compile-scope" id="compileScope" onchange="refreshCompiler()">
                 <option value="all">Toutes les notes</option>
@@ -914,8 +976,43 @@
             </div>
         </div>
 
+        <div id="viewIA" style="display:none">
+            <div class="ia-key-row">
+                <i class="fas fa-key" style="color:var(--ink-4);font-size:11px;flex-shrink:0"></i>
+                <input type="password" id="iaApiKey" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false">
+                <button class="ia-key-save" id="iaKeySaveBtn" onclick="saveApiKey()">Sauvegarder</button>
+            </div>
+            <div class="ia-config-inner">
+                <div class="prompt-config-label">Modèle</div>
+                <select class="ia-model-sel" id="iaModel">
+                    <option value="claude-haiku-4-5">Claude Haiku 4.5 — rapide &amp; économique</option>
+                    <option value="claude-sonnet-4-6">Claude Sonnet 4.6 — meilleure qualité</option>
+                </select>
+                <div class="prompt-config-label">Votre demande</div>
+                <textarea class="prompt-user-ta" id="iaInstruction"
+                    placeholder="Ex : synthétise les actions à suivre, rédige un email, compare avec les bonnes pratiques…"></textarea>
+                <div class="prompt-web-row">
+                    <label class="prompt-web-label">
+                        <input type="checkbox" id="iaWebSearch">
+                        <i class="fas fa-globe" style="color:var(--blue);font-size:11px"></i>
+                        Rechercher sur le web
+                    </label>
+                    <span id="iaUsage" class="ia-usage"></span>
+                </div>
+            </div>
+            <div class="ia-result" id="iaResult">
+                <div class="ia-result-empty">
+                    <i class="fas fa-robot" style="font-size:22px;display:block;margin-bottom:8px;opacity:.3"></i>
+                    Entrez votre clé API, configurez votre demande, puis cliquez sur Générer.
+                </div>
+            </div>
+        </div>
+
         <div class="modal-ft">
             <button class="btn-ghost" onclick="closeCompiler()">Fermer</button>
+            <button class="btn-ia-gen" id="iaGenBtn" onclick="generateWithClaude()" style="display:none">
+                <i class="fas fa-wand-magic-sparkles"></i> Générer
+            </button>
             <button class="btn-copy-compile" id="copyCompileBtn" onclick="copyCompiled()">
                 <i class="fas fa-copy"></i> Copier le texte
             </button>
@@ -929,7 +1026,8 @@
 /* ── Crypto ── */
 const LS_SALT      = 'ns_salt_v3';   // legacy (migration only)
 const LS_DATA      = 'ns_data_v4';   // legacy (migration only)
-const LS_USERS     = 'ns_users_v1';
+const LS_USERS      = 'ns_users_v1';
+const LS_CLAUDE_KEY = 'ns_ck_v1';
 const PBKDF2_ITER  = 100_000;
 const LOCK_TIMEOUT = 5 * 60 * 1000;
 const MAX_ATT      = 5;
@@ -1476,18 +1574,25 @@ function openCompiler() {
         $('compileOv').classList.add('show');
         $('viewCR').innerHTML = '<div class="cr-empty"><i class="far fa-file-alt" style="font-size:24px;display:block;margin-bottom:10px"></i>Aucune note à compiler.</div>';
         $('viewPrompt').style.display = 'none';
+        $('viewIA').style.display = 'none';
         $('viewCR').style.display = '';
         $('compileMeta').textContent = '';
         $('tabCR').classList.add('active');
         $('tabPrompt').classList.remove('active');
+        $('tabIA').classList.remove('active');
+        $('iaGenBtn').style.display = 'none';
         return;
     }
     $('compileScope').value = 'all';
     compileTab = 'cr';
     $('tabCR').classList.add('active');
     $('tabPrompt').classList.remove('active');
+    $('tabIA').classList.remove('active');
     $('viewCR').style.display = '';
     $('viewPrompt').style.display = 'none';
+    $('viewIA').style.display = 'none';
+    $('iaGenBtn').style.display = 'none';
+    initApiKeyUI();
     refreshCompiler();
     $('compileOv').classList.add('show');
 }
@@ -1498,9 +1603,13 @@ function switchCompileTab(tab) {
     compileTab = tab;
     $('tabCR').classList.toggle('active', tab === 'cr');
     $('tabPrompt').classList.toggle('active', tab === 'prompt');
+    $('tabIA').classList.toggle('active', tab === 'ia');
     $('viewCR').style.display     = tab === 'cr'     ? '' : 'none';
     $('viewPrompt').style.display = tab === 'prompt' ? '' : 'none';
-    $('copyCompileBtn').innerHTML = `<i class="fas fa-copy"></i> ${tab === 'cr' ? 'Copier le texte' : 'Copier le prompt'}`;
+    $('viewIA').style.display     = tab === 'ia'     ? '' : 'none';
+    $('iaGenBtn').style.display   = tab === 'ia'     ? '' : 'none';
+    const labels = { cr: 'Copier le texte', prompt: 'Copier le prompt', ia: 'Copier le résultat' };
+    $('copyCompileBtn').innerHTML = `<i class="fas fa-copy"></i> ${labels[tab] || 'Copier'}`;
     $('copyCompileBtn').classList.remove('copied');
 }
 
@@ -1588,17 +1697,137 @@ function refreshCompiler() {
     }
 }
 
+/* ── Claude API ── */
+function initApiKeyUI() {
+    const saved = localStorage.getItem(LS_CLAUDE_KEY);
+    if (saved) $('iaApiKey').value = saved;
+}
+
+function saveApiKey() {
+    const key = $('iaApiKey').value.trim();
+    if (!key) return;
+    localStorage.setItem(LS_CLAUDE_KEY, key);
+    const btn = $('iaKeySaveBtn');
+    btn.textContent = 'Sauvegardé !';
+    btn.classList.add('saved');
+    setTimeout(() => { btn.textContent = 'Sauvegarder'; btn.classList.remove('saved'); }, 2000);
+}
+
+function buildClaudePrompt() {
+    const list   = getCompileNotes();
+    const groups = groupBy(list);
+    const today  = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+    const instr  = $('iaInstruction').value.trim();
+    let prompt = '';
+    if (instr) prompt += `Demande : ${instr}\n\n`;
+    prompt += `Date : ${today}\n\nNotes :\n`;
+    for (const [cat, items] of Object.entries(groups)) {
+        prompt += `\n[${cat}]\n`;
+        items.forEach(n => {
+            const preview = n.text.length > 300 ? n.text.slice(0, 300) + '…' : n.text;
+            prompt += `• ${n.title}${preview ? ' : ' + preview.replace(/\n/g, ' ') : ''}\n`;
+        });
+    }
+    if (instr) {
+        prompt += `\nRéponds à la demande ci-dessus en te basant sur ces notes, en français.`;
+    } else {
+        prompt += `\nTâche : génère un compte rendu structuré en français. Pour chaque point, ajoute un court complément si utile. Format : sections par thème, points clés.`;
+    }
+    return prompt;
+}
+
+async function generateWithClaude() {
+    const apiKey = $('iaApiKey').value.trim() || localStorage.getItem(LS_CLAUDE_KEY) || '';
+    if (!apiKey) {
+        $('iaResult').innerHTML = '<div class="ia-result-empty" style="color:var(--red)">Clé API manquante — entrez votre clé sk-ant-… puis sauvegardez.</div>';
+        return;
+    }
+
+    const genBtn = $('iaGenBtn');
+    genBtn.disabled = true;
+    genBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Génération…';
+    $('iaResult').innerHTML = '<div class="ia-result-empty"><i class="fas fa-circle-notch fa-spin" style="font-size:20px;color:var(--blue);display:block;margin-bottom:8px"></i>Interrogation de Claude…</div>';
+    $('iaUsage').textContent = '';
+
+    const model      = $('iaModel').value;
+    const useSearch  = $('iaWebSearch').checked;
+    const tools      = useSearch ? [{ type: 'web_search_20260209', name: 'web_search' }] : undefined;
+    let   messages   = [{ role: 'user', content: buildClaudePrompt() }];
+    let   lastData   = null;
+
+    try {
+        for (let i = 0; i < 8; i++) {
+            const resp = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01',
+                    'anthropic-dangerous-direct-browser-access': 'true'
+                },
+                body: JSON.stringify({
+                    model,
+                    max_tokens: 2048,
+                    messages,
+                    ...(tools ? { tools } : {})
+                })
+            });
+
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data.error?.message || `Erreur HTTP ${resp.status}`);
+
+            lastData = data;
+            if (data.stop_reason === 'end_turn') break;
+
+            if (data.stop_reason === 'pause_turn') {
+                messages = [messages[0], { role: 'assistant', content: data.content }];
+                continue;
+            }
+            break;
+        }
+
+        const text = (lastData?.content || [])
+            .filter(b => b.type === 'text')
+            .map(b => b.text)
+            .join('\n\n')
+            .trim();
+
+        if (text) {
+            $('iaResult').textContent = text;
+        } else {
+            $('iaResult').innerHTML = '<div class="ia-result-empty" style="color:var(--amber)">Réponse vide reçue de Claude.</div>';
+        }
+
+        if (lastData?.usage) {
+            const u = lastData.usage;
+            const inp = u.input_tokens + (u.cache_read_input_tokens || 0);
+            $('iaUsage').textContent = `${inp} tokens entrée · ${u.output_tokens} tokens sortie`;
+        }
+    } catch (err) {
+        $('iaResult').innerHTML = `<div class="ia-result-empty" style="color:var(--red)">${esc(err.message)}</div>`;
+    } finally {
+        genBtn.disabled = false;
+        genBtn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Générer';
+    }
+}
+
 async function copyCompiled() {
     const text = compileTab === 'cr'
         ? $('viewCR').innerText.trim()
-        : $('promptTa').value;
+        : compileTab === 'ia'
+            ? $('iaResult').innerText.trim()
+            : $('promptTa').value;
     const btn = $('copyCompileBtn');
     try {
         await navigator.clipboard.writeText(text);
     } catch {
-        $('promptTa').style.display = '';
-        $('promptTa').select();
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+        document.body.appendChild(ta);
+        ta.select();
         document.execCommand('copy');
+        document.body.removeChild(ta);
     }
     const orig = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-check"></i> Copié !';
