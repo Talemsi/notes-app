@@ -1027,7 +1027,7 @@
 const LS_SALT      = 'ns_salt_v3';   // legacy (migration only)
 const LS_DATA      = 'ns_data_v4';   // legacy (migration only)
 const LS_USERS      = 'ns_users_v1';
-const LS_CLAUDE_KEY = 'ns_ck_v1';
+const claudeKey = () => `ns_ck_${currentUserId}`;
 const PBKDF2_ITER  = 100_000;
 const LOCK_TIMEOUT = 5 * 60 * 1000;
 const MAX_ATT      = 5;
@@ -1356,7 +1356,15 @@ function togglePwd() {
     $('eyeIco').className = h ? 'fas fa-eye-slash' : 'fas fa-eye';
 }
 
-document.addEventListener('visibilitychange', () => { if (document.hidden) lockApp(); });
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        hiddenAt = Date.now();
+    } else {
+        if (hiddenAt && Date.now() - hiddenAt >= LOCK_TIMEOUT) lockApp();
+        hiddenAt = 0;
+    }
+});
 ['click','keydown','mousemove','touchstart'].forEach(e =>
     document.addEventListener(e, () => { if ($('appContent').classList.contains('show')) resetTimer(); }, { passive:true })
 );
@@ -1699,14 +1707,14 @@ function refreshCompiler() {
 
 /* ── Claude API ── */
 function initApiKeyUI() {
-    const saved = localStorage.getItem(LS_CLAUDE_KEY);
+    const saved = localStorage.getItem(claudeKey());
     if (saved) $('iaApiKey').value = saved;
 }
 
 function saveApiKey() {
     const key = $('iaApiKey').value.trim();
     if (!key) return;
-    localStorage.setItem(LS_CLAUDE_KEY, key);
+    localStorage.setItem(claudeKey(), key);
     const btn = $('iaKeySaveBtn');
     btn.textContent = 'Sauvegardé !';
     btn.classList.add('saved');
@@ -1737,7 +1745,7 @@ function buildClaudePrompt() {
 }
 
 async function generateWithClaude() {
-    const apiKey = $('iaApiKey').value.trim() || localStorage.getItem(LS_CLAUDE_KEY) || '';
+    const apiKey = $('iaApiKey').value.trim() || localStorage.getItem(claudeKey()) || '';
     if (!apiKey) {
         $('iaResult').innerHTML = '<div class="ia-result-empty" style="color:var(--red)">Clé API manquante — entrez votre clé sk-ant-… puis sauvegardez.</div>';
         return;
