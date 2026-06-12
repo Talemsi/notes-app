@@ -729,6 +729,88 @@
         }
         .ia-prov-btn.active { border-color: var(--blue); color: var(--blue); background: var(--blue-faint); }
 
+        /* ── Inline AI Assist ── */
+        .key-strip {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 10px; margin-bottom: 16px;
+            background: #FFFBEB; border: 1px solid #FDE68A;
+            border-radius: var(--r-sm);
+        }
+        .key-strip label {
+            font-size: 11px; font-weight: 600; color: #92400E;
+            white-space: nowrap;
+        }
+        .key-strip input {
+            flex: 1; padding: 5px 9px; border: 1.5px solid var(--line);
+            border-radius: var(--r-xs); font: 12px/1.4 inherit;
+            color: var(--ink); background: white; outline: none;
+            transition: border-color .15s;
+        }
+        .key-strip input:focus { border-color: var(--blue); }
+        .btn-key-sv {
+            padding: 5px 11px; border: none; border-radius: var(--r-xs);
+            background: var(--ink); color: white;
+            font: 11.5px/1 inherit; font-weight: 500; cursor: pointer;
+            white-space: nowrap; transition: background .15s; flex-shrink: 0;
+        }
+        .btn-key-sv:hover { background: var(--ink-2); }
+        .btn-key-sv.saved { background: var(--green); }
+        .ai-box {
+            border: 1.5px solid rgba(37,99,235,0.22);
+            border-radius: var(--r-sm); overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .ai-box-hd {
+            display: flex; align-items: center; gap: 7px;
+            padding: 9px 13px;
+            background: var(--blue-faint);
+            border-bottom: 1px solid rgba(37,99,235,0.12);
+            font-size: 11px; font-weight: 600; color: var(--blue);
+            text-transform: uppercase; letter-spacing: .06em;
+        }
+        .ai-box-body { padding: 11px 13px; background: #fafcff; }
+        .ai-prompt-ta {
+            width: 100%; min-height: 54px; max-height: 100px; resize: vertical;
+            padding: 8px 10px; border: 1.5px solid rgba(37,99,235,0.2);
+            border-radius: var(--r-xs); font: 13px/1.5 inherit;
+            color: var(--ink); background: white; box-sizing: border-box;
+            outline: none; transition: border-color .15s;
+        }
+        .ai-prompt-ta:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-faint); }
+        .ai-ctrl-row {
+            display: flex; align-items: center; gap: 8px; margin-top: 9px;
+        }
+        .ai-model-sel2 {
+            flex: 1; padding: 6px 8px; border: 1.5px solid var(--line);
+            border-radius: var(--r-xs); font: 12px/1.4 inherit; color: var(--ink-3);
+            background: white; outline: none; cursor: pointer;
+        }
+        .btn-ai-go {
+            display: flex; align-items: center; gap: 5px;
+            padding: 7px 15px; border: none; border-radius: var(--r-xs);
+            background: var(--blue); color: white;
+            font: 12px/1 inherit; font-weight: 600; cursor: pointer;
+            transition: background .15s; white-space: nowrap;
+        }
+        .btn-ai-go:hover:not(:disabled) { background: #1d4ed8; }
+        .btn-ai-go:disabled { opacity: 0.5; cursor: default; }
+        .or-sep {
+            display: flex; align-items: center; gap: 10px;
+            margin: 4px 0 14px; font-size: 11px; color: var(--ink-4);
+            text-transform: uppercase; letter-spacing: .06em;
+        }
+        .or-sep::before, .or-sep::after {
+            content: ''; flex: 1; height: 1px; background: var(--line);
+        }
+        .btn-key-pill {
+            padding: 2px 8px; border: 1px solid var(--line);
+            border-radius: 20px; background: var(--card-2);
+            font: 10.5px/1.5 inherit; color: var(--ink-4); cursor: pointer;
+            transition: all .15s; display: flex; align-items: center; gap: 4px;
+        }
+        .btn-key-pill:hover { border-color: var(--blue); color: var(--blue); }
+        .btn-key-pill.keyset { border-color: var(--green); color: var(--green); background: #f0fdf4; }
+
         /* ── User selection grid ── */
         .user-grid {
             display: none;
@@ -840,12 +922,48 @@
 
     <div class="workspace">
 
-        <!-- Compose -->
+        <!-- Compose + IA -->
         <div class="panel">
-            <div class="panel-hd">Nouvelle note</div>
+            <div class="panel-hd">
+                Nouvelle note
+                <button class="btn-key-pill" id="btnKeyPill" onclick="toggleKeyStrip()" title="Clé API Groq">
+                    <i class="fas fa-key"></i> Groq
+                </button>
+            </div>
+
+            <!-- Clé API strip (masqué par défaut) -->
+            <div class="key-strip" id="keyStrip" style="display:none">
+                <label><i class="fas fa-key"></i> Clé Groq</label>
+                <input type="password" id="cfgKey" placeholder="gsk_…" autocomplete="off" spellcheck="false"
+                       onkeydown="if(event.key==='Enter') saveKeyInline()">
+                <button class="btn-key-sv" id="btnKeySv" onclick="saveKeyInline()">Sauvegarder</button>
+            </div>
+
+            <!-- Bloc IA Groq -->
+            <div class="ai-box">
+                <div class="ai-box-hd">
+                    <i class="fas fa-bolt"></i> Générer avec Groq
+                </div>
+                <div class="ai-box-body">
+                    <textarea class="ai-prompt-ta" id="aiPrompt"
+                        placeholder="Décris ta note… ex : liste d'actions pour lancer un SaaS, résumé de réunion du 12/06, email de relance client…"
+                        onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)) generateNoteContent()"></textarea>
+                    <div class="ai-ctrl-row">
+                        <select class="ai-model-sel2" id="aiModel2">
+                            <option value="llama-3.1-8b-instant">Rapide — Llama 8B</option>
+                            <option value="llama-3.3-70b-versatile">Qualité — Llama 70B</option>
+                        </select>
+                        <button class="btn-ai-go" id="btnAiGo" onclick="generateNoteContent()">
+                            <i class="fas fa-wand-magic-sparkles"></i> Générer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="or-sep">ou rédige manuellement</div>
 
             <div class="field">
-                <label class="field-lbl">Titre</label>
+                <label class="field-lbl">Titre <span style="color:var(--ink-5);font-weight:400">(auto si vide)</span></label>
                 <input type="text" id="fTitle" placeholder="Titre de la note" />
             </div>
             <div class="field">
@@ -854,7 +972,7 @@
             </div>
             <div class="field">
                 <label class="field-lbl">Contenu</label>
-                <textarea id="fText" placeholder="Écrivez votre note…"></textarea>
+                <textarea id="fText" placeholder="Généré par Groq ou rédigé ici…"></textarea>
             </div>
             <div class="field">
                 <label class="field-lbl">Rappel</label>
@@ -866,7 +984,7 @@
             </span>
 
             <button class="btn-add" onclick="addNote()">
-                <i class="fas fa-plus"></i> Ajouter
+                <i class="fas fa-plus"></i> Ajouter la note
             </button>
         </div>
 
@@ -1717,8 +1835,81 @@ function refreshCompiler() {
 
 /* ── Groq API ── */
 function initApiKeyUI() {
-    const saved = localStorage.getItem(groqKey());
-    if (saved) $('iaApiKey').value = saved;
+    const saved = localStorage.getItem(groqKey()) || '';
+    if ($('iaApiKey')) $('iaApiKey').value = saved;
+    if ($('cfgKey'))   $('cfgKey').value   = saved;
+    const pill = $('btnKeyPill');
+    if (pill) pill.classList.toggle('keyset', !!saved);
+}
+
+function toggleKeyStrip() {
+    const strip = $('keyStrip');
+    const open  = strip.style.display !== 'none';
+    strip.style.display = open ? 'none' : '';
+    if (!open) {
+        const saved = localStorage.getItem(groqKey());
+        if (saved) $('cfgKey').value = saved;
+        setTimeout(() => $('cfgKey').focus(), 50);
+    }
+}
+
+function saveKeyInline() {
+    const key = $('cfgKey').value.trim();
+    if (!key) return;
+    localStorage.setItem(groqKey(), key);
+    if ($('iaApiKey')) $('iaApiKey').value = key;
+    $('btnKeyPill').classList.add('keyset');
+    const btn = $('btnKeySv');
+    btn.textContent = 'Sauvegardé !';
+    btn.classList.add('saved');
+    setTimeout(() => {
+        btn.textContent = 'Sauvegarder';
+        btn.classList.remove('saved');
+        $('keyStrip').style.display = 'none';
+    }, 1500);
+}
+
+async function generateNoteContent() {
+    const apiKey = localStorage.getItem(groqKey()) || '';
+    if (!apiKey) {
+        $('keyStrip').style.display = '';
+        setTimeout(() => $('cfgKey').focus(), 50);
+        return;
+    }
+    const prompt = $('aiPrompt').value.trim();
+    if (!prompt) { $('aiPrompt').focus(); return; }
+
+    const btn = $('btnAiGo');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+    const prevPH = $('fText').placeholder;
+    $('fText').value = '';
+    $('fText').placeholder = 'Génération en cours…';
+
+    try {
+        const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            body: JSON.stringify({
+                model: $('aiModel2').value,
+                max_tokens: 1024,
+                messages: [{ role: 'user', content: prompt }]
+            })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error?.message || `Erreur ${resp.status}`);
+        const text = data.choices?.[0]?.message?.content?.trim() || '';
+        $('fText').value = text;
+        $('fText').placeholder = prevPH;
+        if (!$('fTitle').value.trim())
+            $('fTitle').value = prompt.length > 50 ? prompt.slice(0, 50) + '…' : prompt;
+        $('fText').focus();
+    } catch (err) {
+        $('fText').placeholder = `Erreur : ${err.message}`;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Générer';
+    }
 }
 
 function saveApiKey() {
