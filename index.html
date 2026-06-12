@@ -73,111 +73,197 @@
         }
 
         /* ══════════════════════════════
-           LOCK SCREEN
+           LOCK SCREEN — Dark Premium
         ══════════════════════════════ */
         .lock-screen {
             display: none; position: fixed; inset: 0;
-            background: #07070E;
-            background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
-            background-size: 26px 26px;
-            z-index: 9999;
-            align-items: center; justify-content: center;
-        }
-        .lock-screen::before {
-            content: '';
-            position: absolute; inset: 0;
-            background: radial-gradient(ellipse 60% 42% at 50% 0%, rgba(122,104,71,0.22) 0%, transparent 60%);
-            pointer-events: none;
+            background: #0B1020;
+            z-index: 9999; overflow: hidden;
         }
         .lock-screen.show { display: flex; }
 
+        /* Ambient purple glow */
+        .lock-screen::before {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse 55% 60% at 18% 50%, rgba(124,92,252,0.13) 0%, transparent 60%),
+                radial-gradient(ellipse 45% 45% at 80% 15%, rgba(124,92,252,0.07) 0%, transparent 55%);
+        }
+        /* Dot grid */
+        .lock-screen::after {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.028) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+
+        /* ── Split layout ── */
+        .lock-split {
+            display: flex; width: 100%; height: 100%; position: relative; z-index: 1;
+        }
+
+        /* LEFT — Branding */
+        .lock-brand {
+            flex: 1; display: flex; flex-direction: column; justify-content: center;
+            padding: 60px 56px;
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+        .lock-logo-wrap {
+            display: flex; align-items: center; gap: 13px; margin-bottom: 48px;
+        }
+        .lock-logo-icon {
+            width: 46px; height: 46px; border-radius: 13px;
+            background: linear-gradient(135deg, #7C5CFC 0%, #5B3FD4 100%);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 19px;
+            box-shadow: 0 8px 28px rgba(124,92,252,0.38);
+        }
+        .lock-logo-name {
+            font-size: 22px; font-weight: 700; color: #FFFFFF; letter-spacing: -.4px;
+        }
+        .lock-slogan {
+            font-size: 34px; font-weight: 700; color: #FFFFFF; line-height: 1.28;
+            letter-spacing: -.7px; margin-bottom: 52px; max-width: 400px;
+        }
+        .lock-slogan em {
+            font-style: normal;
+            background: linear-gradient(120deg, #9B7EFF, #C4B0FF);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .lock-illustration { margin-bottom: 52px; }
+        .lock-feats { display: flex; flex-direction: column; gap: 16px; }
+        .lock-feat {
+            display: flex; align-items: center; gap: 14px;
+            font-size: 14px; color: #A1A7B8; line-height: 1.4;
+        }
+        .lock-feat-icon {
+            width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+            background: rgba(124,92,252,0.10);
+            border: 1px solid rgba(124,92,252,0.22);
+            display: flex; align-items: center; justify-content: center;
+            color: #A78BFA; font-size: 13px;
+        }
+
+        /* RIGHT — Form panel */
+        .lock-form-side {
+            width: 460px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            padding: 40px 36px;
+        }
+
+        /* Glass card */
         .lock-card {
-            position: relative; z-index: 1;
-            background: var(--card);
-            border-radius: 20px;
-            padding: 52px 48px 44px;
-            width: 100%; max-width: 368px;
-            text-align: center;
-            box-shadow: var(--sh-xl), inset 0 1px 0 rgba(255,255,255,0.9);
+            width: 100%;
+            background: rgba(20,27,45,0.85);
+            backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
             border: 1px solid rgba(255,255,255,0.08);
-            animation: rise .3s cubic-bezier(.22,1,.36,1);
+            border-radius: 24px;
+            padding: 44px 40px 36px;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(124,92,252,0.07);
+            animation: rise .4s cubic-bezier(.22,1,.36,1);
         }
         @keyframes rise {
-            from { opacity: 0; transform: translateY(20px) scale(.98); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
+            from { opacity: 0; transform: translateY(22px) scale(.97); }
+            to   { opacity: 1; transform: none; }
         }
 
         .lock-icon-wrap {
-            width: 56px; height: 56px; border-radius: 16px;
-            background: var(--ink);
-            box-shadow: 0 4px 14px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.08);
+            width: 54px; height: 54px; border-radius: 15px;
+            background: linear-gradient(135deg, #7C5CFC 0%, #5B3FD4 100%);
+            box-shadow: 0 8px 22px rgba(124,92,252,0.42);
             display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 22px; color: white; font-size: 20px;
+            margin: 0 auto 20px; color: white; font-size: 19px;
         }
         .lock-title {
-            font-size: 23px; font-weight: 700; letter-spacing: -.5px;
-            color: var(--ink); margin-bottom: 28px;
+            font-size: 21px; font-weight: 700; color: #FFFFFF; letter-spacing: -.4px;
+            margin-bottom: 6px; text-align: center;
         }
         .lock-hint {
-            font-size: 13px; color: var(--ink-3);
-            margin-bottom: 18px; line-height: 1.55;
-            min-height: 20px;
+            font-size: 13.5px; color: #A1A7B8; margin-bottom: 26px;
+            line-height: 1.55; min-height: 20px; text-align: center;
         }
 
-        .lock-field { position: relative; margin-bottom: 10px; }
+        /* Input */
+        .lock-field { position: relative; margin-bottom: 12px; }
         .lock-field input {
-            width: 100%; padding: 12px 42px 12px 15px;
-            border: 1.5px solid var(--line);
-            border-radius: var(--r-sm);
-            font-family: inherit; font-size: 15px; color: var(--ink);
-            background: var(--card-2); outline: none;
-            transition: border-color .15s, box-shadow .15s, background .15s;
+            width: 100%; padding: 13px 46px 13px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1.5px solid rgba(255,255,255,0.09);
+            border-radius: 12px;
+            color: #FFFFFF; font-family: inherit; font-size: 15px; outline: none;
+            transition: border-color .2s, box-shadow .2s, background .2s;
+            caret-color: #7C5CFC;
         }
         .lock-field input.pw { letter-spacing: 5px; }
         .lock-field input.pw::placeholder { letter-spacing: 0; }
         .lock-field input:focus {
-            border-color: var(--khaki);
-            box-shadow: 0 0 0 3px var(--khaki-ring);
-            background: white;
+            border-color: #7C5CFC;
+            background: rgba(124,92,252,0.07);
+            box-shadow: 0 0 0 3px rgba(124,92,252,0.22);
         }
-        .lock-field input::placeholder { color: var(--ink-4); }
-        .lock-field input:disabled { opacity: .45; }
+        .lock-field input::placeholder { color: rgba(255,255,255,0.22); }
+        .lock-field input:disabled { opacity: .35; }
         .lock-eye {
-            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
             background: none; border: none; cursor: pointer;
-            color: var(--ink-4); font-size: 14px; padding: 4px;
+            color: rgba(255,255,255,0.28); font-size: 14px; padding: 4px;
             transition: color .15s; display: none; line-height: 1;
         }
         .lock-eye.on { display: block; }
-        .lock-eye:hover { color: var(--ink-2); }
+        .lock-eye:hover { color: rgba(255,255,255,0.65); }
 
-        .lock-err  { font-size: 12px; font-weight: 500; color: var(--red); min-height: 18px; margin-bottom: 8px; text-align: left; }
-        .lock-att  { font-size: 12px; color: var(--ink-4); min-height: 16px; text-align: left; }
+        .lock-err { font-size: 12.5px; font-weight: 500; color: #F87171; min-height: 18px; margin-bottom: 6px; }
+        .lock-att { font-size: 12px; color: rgba(255,255,255,0.32); min-height: 16px; margin-bottom: 4px; }
 
+        /* Submit */
         .lock-submit {
-            width: 100%; padding: 12.5px; margin-top: 10px; margin-bottom: 24px;
-            background: white; color: var(--khaki);
-            border: 1.5px solid rgba(122,104,71,0.40); border-radius: var(--r-sm);
-            font-family: inherit; font-size: 14px; font-weight: 600;
+            width: 100%; padding: 13.5px; margin-top: 12px; margin-bottom: 20px;
+            background: linear-gradient(135deg, #7C5CFC 0%, #6B4AE8 100%);
+            color: white; border: none; border-radius: 12px;
+            font-family: inherit; font-size: 14.5px; font-weight: 600;
             cursor: pointer; letter-spacing: .1px;
-            transition: background .18s, transform .12s, box-shadow .18s;
-            box-shadow: 0 2px 6px rgba(122,104,71,0.12);
+            transition: opacity .2s, transform .15s, box-shadow .2s;
+            box-shadow: 0 4px 22px rgba(124,92,252,0.42);
         }
         .lock-submit:hover:not(:disabled) {
-            background: var(--khaki-faint);
-            box-shadow: 0 4px 12px rgba(122,104,71,0.20);
+            opacity: .9; transform: translateY(-1px);
+            box-shadow: 0 8px 30px rgba(124,92,252,0.55);
         }
-        .lock-submit:active:not(:disabled) { transform: scale(.985); }
-        .lock-submit:disabled { opacity: .5; cursor: not-allowed; }
+        .lock-submit:active:not(:disabled) { transform: scale(.98); }
+        .lock-submit:disabled { opacity: .35; cursor: not-allowed; }
 
-        .lock-actions { display: flex; justify-content: center; }
-        .lock-text-btn {
-            font-size: 12px; color: var(--ink-4); background: none; border: none;
-            cursor: pointer; font-family: inherit; text-decoration: underline;
-            text-underline-offset: 2px; transition: color .15s; display: none;
-            padding: 0;
+        /* Text actions — stacked, no more side-by-side collision */
+        .lock-actions {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
         }
-        .lock-text-btn:hover { color: var(--ink-2); }
+        .lock-text-btn {
+            font-size: 12.5px; color: rgba(255,255,255,0.35); background: none; border: none;
+            cursor: pointer; font-family: inherit;
+            text-decoration: underline; text-underline-offset: 2px;
+            transition: color .15s; display: none; padding: 0;
+        }
+        .lock-text-btn:hover { color: rgba(255,255,255,0.7); }
+
+        /* User cards — dark overrides */
+        #lockScreen .user-card {
+            background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08);
+        }
+        #lockScreen .user-card:hover {
+            background: rgba(124,92,252,0.12); border-color: rgba(124,92,252,0.30);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        }
+        #lockScreen .user-av { background: linear-gradient(135deg, #7C5CFC, #5B3FD4); }
+        #lockScreen .user-nm { color: #E2E8F0; }
+        #lockScreen .user-nm-new { color: rgba(255,255,255,0.32); }
+        #lockScreen .user-av-new { border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.28); background: transparent; }
+        #lockScreen .user-card:hover .user-av-new { border-color: #7C5CFC; color: #A78BFA; background: rgba(124,92,252,0.12); }
+
+        /* Responsive — tablet/mobile: hide branding, full-width form */
+        @media (max-width: 860px) {
+            .lock-brand { display: none; }
+            .lock-form-side { width: 100%; padding: 24px 20px; }
+            .lock-card { padding: 38px 28px 30px; border-radius: 20px; }
+        }
 
         /* ══════════════════════════════
            APP SHELL
@@ -879,37 +965,102 @@
 
 <!-- Lock screen -->
 <div class="lock-screen show" id="lockScreen">
-    <div class="lock-card">
-        <div class="lock-icon-wrap">
-            <i class="fas fa-lock" id="lockIconEl"></i>
+<div class="lock-split">
+
+    <!-- LEFT — Branding -->
+    <div class="lock-brand">
+        <div class="lock-logo-wrap">
+            <div class="lock-logo-icon"><i class="fas fa-shield-halved"></i></div>
+            <span class="lock-logo-name">Notes</span>
         </div>
-        <div class="lock-title" id="lockTitle">Notes</div>
-        <div class="lock-hint"  id="lockHint"></div>
+        <h1 class="lock-slogan">Vos idées,<br><em>sécurisées</em> et accessibles<br>partout.</h1>
 
-        <div class="user-grid" id="userGrid"></div>
-
-        <div class="lock-field" id="lockField">
-            <input id="lockInput" maxlength="128" placeholder=""
-                   onkeydown="if(event.key==='Enter') handleLock()" />
-            <button class="lock-eye" id="lockEye" type="button" onclick="togglePwd()" tabindex="-1">
-                <i class="fas fa-eye" id="eyeIco"></i>
-            </button>
+        <!-- Illustration SVG -->
+        <div class="lock-illustration">
+            <svg width="320" height="180" viewBox="0 0 320 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Card 1 -->
+                <rect x="20" y="40" width="130" height="90" rx="12" fill="rgba(124,92,252,0.12)" stroke="rgba(124,92,252,0.25)" stroke-width="1.5"/>
+                <rect x="36" y="62" width="70" height="6" rx="3" fill="rgba(255,255,255,0.18)"/>
+                <rect x="36" y="76" width="98" height="4" rx="2" fill="rgba(255,255,255,0.09)"/>
+                <rect x="36" y="87" width="84" height="4" rx="2" fill="rgba(255,255,255,0.09)"/>
+                <rect x="36" y="98" width="60" height="4" rx="2" fill="rgba(255,255,255,0.06)"/>
+                <rect x="36" y="48" width="22" height="7" rx="3.5" fill="rgba(124,92,252,0.5)"/>
+                <!-- Card 2 -->
+                <rect x="170" y="20" width="130" height="90" rx="12" fill="rgba(124,92,252,0.08)" stroke="rgba(124,92,252,0.18)" stroke-width="1.5"/>
+                <rect x="186" y="42" width="55" height="6" rx="3" fill="rgba(255,255,255,0.15)"/>
+                <rect x="186" y="56" width="98" height="4" rx="2" fill="rgba(255,255,255,0.08)"/>
+                <rect x="186" y="67" width="72" height="4" rx="2" fill="rgba(255,255,255,0.08)"/>
+                <rect x="186" y="78" width="88" height="4" rx="2" fill="rgba(255,255,255,0.05)"/>
+                <rect x="186" y="28" width="18" height="7" rx="3.5" fill="rgba(167,139,250,0.45)"/>
+                <!-- Card 3 -->
+                <rect x="90" y="105" width="140" height="65" rx="12" fill="rgba(91,63,212,0.10)" stroke="rgba(124,92,252,0.15)" stroke-width="1.5"/>
+                <rect x="106" y="122" width="65" height="5" rx="2.5" fill="rgba(255,255,255,0.13)"/>
+                <rect x="106" y="134" width="108" height="4" rx="2" fill="rgba(255,255,255,0.07)"/>
+                <rect x="106" y="144" width="80" height="4" rx="2" fill="rgba(255,255,255,0.05)"/>
+                <!-- Lock icon -->
+                <circle cx="274" cy="130" r="20" fill="rgba(124,92,252,0.15)" stroke="rgba(124,92,252,0.3)" stroke-width="1.5"/>
+                <rect x="266" y="131" width="16" height="12" rx="3" fill="rgba(167,139,250,0.7)"/>
+                <path d="M269 131v-4a5 5 0 0 1 10 0v4" stroke="rgba(167,139,250,0.7)" stroke-width="2" stroke-linecap="round" fill="none"/>
+                <!-- Dots -->
+                <circle cx="160" cy="10" r="3" fill="rgba(124,92,252,0.35)"/>
+                <circle cx="310" cy="150" r="2.5" fill="rgba(124,92,252,0.25)"/>
+                <circle cx="8"   cy="150" r="2" fill="rgba(124,92,252,0.2)"/>
+                <circle cx="300" cy="60" r="4" fill="rgba(167,139,250,0.18)"/>
+            </svg>
         </div>
 
-        <div class="lock-err" id="lockErr"></div>
-        <div class="lock-att" id="lockAtt"></div>
-
-        <button class="lock-submit" id="lockBtn" onclick="handleLock()">Continuer</button>
-
-        <div class="lock-actions">
-            <button class="lock-text-btn" id="backLink" onclick="showSelectUser()" style="display:none">
-                Changer de compte
-            </button>
-            <button class="lock-text-btn" id="changePwdLink" onclick="startChangePwd()">
-                Changer de mot de passe
-            </button>
+        <div class="lock-feats">
+            <div class="lock-feat">
+                <div class="lock-feat-icon"><i class="fas fa-lock"></i></div>
+                <span>Chiffrement AES-256-GCM de bout en bout</span>
+            </div>
+            <div class="lock-feat">
+                <div class="lock-feat-icon"><i class="fas fa-mobile-screen"></i></div>
+                <span>Accessible sur tous vos appareils</span>
+            </div>
+            <div class="lock-feat">
+                <div class="lock-feat-icon"><i class="fas fa-wifi"></i></div>
+                <span>Fonctionne hors connexion (PWA)</span>
+            </div>
         </div>
     </div>
+
+    <!-- RIGHT — Form -->
+    <div class="lock-form-side">
+        <div class="lock-card">
+            <div class="lock-icon-wrap">
+                <i class="fas fa-lock" id="lockIconEl"></i>
+            </div>
+            <div class="lock-title" id="lockTitle">Notes</div>
+            <div class="lock-hint"  id="lockHint"></div>
+
+            <div class="user-grid" id="userGrid"></div>
+
+            <div class="lock-field" id="lockField">
+                <input id="lockInput" maxlength="128" placeholder=""
+                       onkeydown="if(event.key==='Enter') handleLock()" />
+                <button class="lock-eye" id="lockEye" type="button" onclick="togglePwd()" tabindex="-1">
+                    <i class="fas fa-eye" id="eyeIco"></i>
+                </button>
+            </div>
+
+            <div class="lock-err" id="lockErr"></div>
+            <div class="lock-att" id="lockAtt"></div>
+
+            <button class="lock-submit" id="lockBtn" onclick="handleLock()">Continuer</button>
+
+            <div class="lock-actions">
+                <button class="lock-text-btn" id="backLink" onclick="showSelectUser()" style="display:none">
+                    Changer de compte
+                </button>
+                <button class="lock-text-btn" id="changePwdLink" onclick="startChangePwd()">
+                    Changer de mot de passe
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
 </div>
 
 <!-- App -->
