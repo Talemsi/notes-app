@@ -110,49 +110,107 @@
             display: flex; width: 100%; height: 100%; position: relative; z-index: 1;
         }
 
-        /* LEFT — Branding */
-        .lock-brand {
-            flex: 1; display: flex; flex-direction: column; justify-content: center;
-            padding: 60px 56px;
+        /* LEFT — Workspace Preview */
+        .lock-preview {
+            flex: 1 1 60%; display: flex; flex-direction: column;
+            padding: 48px 52px 36px;
             border-right: 1px solid rgba(255,255,255,0.05);
+            overflow: hidden; position: relative;
         }
-        .lock-logo-wrap {
-            display: flex; align-items: center; gap: 13px; margin-bottom: 48px;
-        }
-        .lock-logo-icon {
-            width: 46px; height: 46px; border-radius: 13px;
+        .lock-pv-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; }
+        .lock-pv-logo-icon {
+            width: 38px; height: 38px; border-radius: 11px;
             background: linear-gradient(135deg, #7C5CFC 0%, #5B3FD4 100%);
             display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 19px;
-            box-shadow: 0 8px 28px rgba(124,92,252,0.38);
+            color: white; font-size: 16px;
+            box-shadow: 0 6px 20px rgba(124,92,252,0.35);
         }
-        .lock-logo-name {
-            font-size: 22px; font-weight: 700; color: #FFFFFF; letter-spacing: -.4px;
+        .lock-pv-logo-name { font-size: 19px; font-weight: 700; color: #FFF; letter-spacing: -.3px; }
+
+        .lock-pv-tag {
+            font-size: 11px; font-weight: 600; letter-spacing: .12em; color: #7C5CFC;
+            text-transform: uppercase; margin-bottom: 10px;
         }
-        .lock-slogan {
-            font-size: 34px; font-weight: 700; color: #FFFFFF; line-height: 1.28;
-            letter-spacing: -.7px; margin-bottom: 52px; max-width: 400px;
+        .lock-pv-title {
+            font-size: 30px; font-weight: 700; color: #FFF; line-height: 1.2; letter-spacing: -.6px;
         }
-        .lock-slogan em {
-            font-style: normal;
+        .lock-pv-rotate-wrap { height: 40px; overflow: hidden; margin-bottom: 32px; }
+        .lock-pv-rotate {
+            display: flex; flex-direction: column;
+            transition: transform .55s cubic-bezier(.22,1,.36,1);
+        }
+        .lock-pv-rotate span {
+            font-size: 30px; font-weight: 700; line-height: 40px; white-space: nowrap;
             background: linear-gradient(120deg, #9B7EFF, #C4B0FF);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-        .lock-illustration { margin-bottom: 52px; }
-        .lock-feats { display: flex; flex-direction: column; gap: 16px; }
-        .lock-copyright { margin-top: auto; padding-top: 32px; font-size: 11px; color: rgba(255,255,255,0.22); letter-spacing: 0.02em; }
-        .lock-feat {
-            display: flex; align-items: center; gap: 14px;
-            font-size: 14px; color: #A1A7B8; line-height: 1.4;
+
+        /* Floating note cards */
+        .lock-cards { position: relative; height: 250px; margin: 0 -8px; flex-shrink: 0; }
+        @keyframes floatCard {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-9px); }
         }
-        .lock-feat-icon {
-            width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
-            background: rgba(124,92,252,0.10);
-            border: 1px solid rgba(124,92,252,0.22);
-            display: flex; align-items: center; justify-content: center;
-            color: #A78BFA; font-size: 13px;
+        .lock-nc {
+            position: absolute;
+            background: rgba(20,27,45,0.75);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px; padding: 14px 16px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+            animation: floatCard 6s ease-in-out infinite;
         }
+        .lock-nc:nth-child(1) { width: 210px; top: 0;    left: 8px;  animation-delay:  0s; }
+        .lock-nc:nth-child(2) { width: 230px; top: 16px; right: 8px; animation-delay: -2s; }
+        .lock-nc:nth-child(3) { width: 195px; bottom: 0; left: 70px; animation-delay: -4s; }
+        .lock-nc:nth-child(4) { width: 175px; bottom: 10px; right: 30px; animation-delay: -1s; }
+        .lock-nc-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+            padding: 3px 8px; border-radius: 20px; margin-bottom: 9px;
+            background: rgba(124,92,252,0.18); color: #A78BFA;
+            border: 1px solid rgba(124,92,252,0.28);
+        }
+        .lock-nc-title { font-size: 12.5px; font-weight: 600; color: #E2E8F0; margin-bottom: 8px; line-height: 1.3; }
+        .lock-nc-lines { display: flex; flex-direction: column; gap: 5px; }
+        .lock-nc-line { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.07); }
+        .lock-nc-line:nth-child(2) { width: 75%; }
+        .lock-nc-line:nth-child(3) { width: 88%; }
+        .lock-nc-footer { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; }
+        .lock-nc-date { font-size: 10px; color: rgba(255,255,255,0.25); }
+
+        /* Personal stats */
+        .lock-pv-stats {
+            display: flex; gap: 28px; margin-top: 20px; padding-top: 18px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .lock-pv-stat { display: flex; flex-direction: column; gap: 2px; }
+        .lock-pv-stat-val { font-size: 20px; font-weight: 700; color: #FFF; letter-spacing: -.4px; }
+        .lock-pv-stat-lbl { font-size: 11px; color: rgba(255,255,255,0.32); }
+
+        /* Bottom pills */
+        .lock-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+        .lock-pill {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11px; color: rgba(255,255,255,0.4);
+            padding: 4px 10px; border-radius: 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+        .lock-pill i { color: #22C55E; font-size: 9px; }
+        .lock-copyright { margin-top: 14px; font-size: 10px; color: rgba(255,255,255,0.18); letter-spacing: 0.02em; }
+
+        /* Reassurance list (right panel) */
+        .lock-assurance {
+            display: flex; flex-direction: column; gap: 7px;
+            margin-top: 16px; padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .lock-assur-item {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 12px; color: rgba(255,255,255,0.35);
+        }
+        .lock-assur-item i { color: #22C55E; font-size: 10px; width: 12px; text-align: center; }
 
         /* RIGHT — Form panel */
         .lock-form-side {
@@ -270,7 +328,7 @@
 
         /* Responsive — tablet/mobile: hide branding, full-width form */
         @media (max-width: 860px) {
-            .lock-brand { display: none; }
+            .lock-preview { display: none; }
             .lock-form-side { width: 100%; padding: 24px 20px; }
             .lock-card { padding: 38px 28px 30px; border-radius: 20px; }
         }
@@ -1067,57 +1125,74 @@
 <div class="lock-screen show" id="lockScreen">
 <div class="lock-split">
 
-    <!-- LEFT — Branding -->
-    <div class="lock-brand">
-        <div class="lock-logo-wrap">
-            <div class="lock-logo-icon"><i class="fas fa-shield-halved"></i></div>
-            <span class="lock-logo-name">Notes</span>
-        </div>
-        <h1 class="lock-slogan">Vos idées,<br><em>sécurisées</em> et accessibles<br>partout.</h1>
-
-        <!-- Illustration SVG -->
-        <div class="lock-illustration">
-            <svg width="320" height="180" viewBox="0 0 320 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Card 1 -->
-                <rect x="20" y="40" width="130" height="90" rx="12" fill="rgba(124,92,252,0.12)" stroke="rgba(124,92,252,0.25)" stroke-width="1.5"/>
-                <rect x="36" y="62" width="70" height="6" rx="3" fill="rgba(255,255,255,0.18)"/>
-                <rect x="36" y="76" width="98" height="4" rx="2" fill="rgba(255,255,255,0.09)"/>
-                <rect x="36" y="87" width="84" height="4" rx="2" fill="rgba(255,255,255,0.09)"/>
-                <rect x="36" y="98" width="60" height="4" rx="2" fill="rgba(255,255,255,0.06)"/>
-                <rect x="36" y="48" width="22" height="7" rx="3.5" fill="rgba(124,92,252,0.5)"/>
-                <!-- Card 2 -->
-                <rect x="170" y="20" width="130" height="90" rx="12" fill="rgba(124,92,252,0.08)" stroke="rgba(124,92,252,0.18)" stroke-width="1.5"/>
-                <rect x="186" y="42" width="55" height="6" rx="3" fill="rgba(255,255,255,0.15)"/>
-                <rect x="186" y="56" width="98" height="4" rx="2" fill="rgba(255,255,255,0.08)"/>
-                <rect x="186" y="67" width="72" height="4" rx="2" fill="rgba(255,255,255,0.08)"/>
-                <rect x="186" y="78" width="88" height="4" rx="2" fill="rgba(255,255,255,0.05)"/>
-                <rect x="186" y="28" width="18" height="7" rx="3.5" fill="rgba(167,139,250,0.45)"/>
-                <!-- Card 3 -->
-                <rect x="90" y="105" width="140" height="65" rx="12" fill="rgba(91,63,212,0.10)" stroke="rgba(124,92,252,0.15)" stroke-width="1.5"/>
-                <rect x="106" y="122" width="65" height="5" rx="2.5" fill="rgba(255,255,255,0.13)"/>
-                <rect x="106" y="134" width="108" height="4" rx="2" fill="rgba(255,255,255,0.07)"/>
-                <rect x="106" y="144" width="80" height="4" rx="2" fill="rgba(255,255,255,0.05)"/>
-                <!-- Lock icon -->
-                <circle cx="274" cy="130" r="20" fill="rgba(124,92,252,0.15)" stroke="rgba(124,92,252,0.3)" stroke-width="1.5"/>
-                <rect x="266" y="131" width="16" height="12" rx="3" fill="rgba(167,139,250,0.7)"/>
-                <path d="M269 131v-4a5 5 0 0 1 10 0v4" stroke="rgba(167,139,250,0.7)" stroke-width="2" stroke-linecap="round" fill="none"/>
-                <!-- Dots -->
-                <circle cx="160" cy="10" r="3" fill="rgba(124,92,252,0.35)"/>
-                <circle cx="310" cy="150" r="2.5" fill="rgba(124,92,252,0.25)"/>
-                <circle cx="8"   cy="150" r="2" fill="rgba(124,92,252,0.2)"/>
-                <circle cx="300" cy="60" r="4" fill="rgba(167,139,250,0.18)"/>
-            </svg>
+    <!-- LEFT — Workspace Preview -->
+    <div class="lock-preview" id="lockPreview">
+        <div class="lock-pv-logo">
+            <div class="lock-pv-logo-icon"><i class="fas fa-shield-halved"></i></div>
+            <span class="lock-pv-logo-name">Notes</span>
         </div>
 
-        <div class="lock-feats">
-            <div class="lock-feat">
-                <div class="lock-feat-icon"><i class="fas fa-mobile-screen"></i></div>
-                <span>Accessible sur tous vos appareils</span>
+        <div>
+            <div class="lock-pv-tag">Votre espace personnel</div>
+            <div class="lock-pv-title">Retrouvez</div>
+            <div class="lock-pv-rotate-wrap">
+                <div class="lock-pv-rotate" id="pvRotate">
+                    <span>vos idées.</span>
+                    <span>vos projets.</span>
+                    <span>vos connaissances.</span>
+                    <span>tout, sécurisé.</span>
+                </div>
             </div>
-            <div class="lock-feat">
-                <div class="lock-feat-icon"><i class="fas fa-wifi"></i></div>
-                <span>Fonctionne hors connexion (PWA)</span>
+        </div>
+
+        <!-- Floating note cards -->
+        <div class="lock-cards">
+            <div class="lock-nc">
+                <div class="lock-nc-badge"><i class="fas fa-briefcase"></i> Travail</div>
+                <div class="lock-nc-title">Projet SaaS Q3</div>
+                <div class="lock-nc-lines"><div class="lock-nc-line"></div><div class="lock-nc-line"></div><div class="lock-nc-line"></div></div>
+                <div class="lock-nc-footer"><span class="lock-nc-date">Aujourd'hui</span></div>
             </div>
+            <div class="lock-nc">
+                <div class="lock-nc-badge" style="background:rgba(34,197,94,0.15);color:#4ade80;border-color:rgba(34,197,94,0.25)"><i class="fas fa-lightbulb"></i> Idées</div>
+                <div class="lock-nc-title">Réunion Marketplace</div>
+                <div class="lock-nc-lines"><div class="lock-nc-line"></div><div class="lock-nc-line"></div></div>
+                <div class="lock-nc-footer"><span class="lock-nc-date">Hier</span></div>
+            </div>
+            <div class="lock-nc">
+                <div class="lock-nc-badge" style="background:rgba(245,158,11,0.15);color:#fbbf24;border-color:rgba(245,158,11,0.25)"><i class="fas fa-star"></i> Priorité</div>
+                <div class="lock-nc-title">Plan Business 2026</div>
+                <div class="lock-nc-lines"><div class="lock-nc-line"></div><div class="lock-nc-line"></div><div class="lock-nc-line"></div></div>
+                <div class="lock-nc-footer"><span class="lock-nc-date">Cette semaine</span></div>
+            </div>
+            <div class="lock-nc">
+                <div class="lock-nc-badge" style="background:rgba(99,102,241,0.15);color:#a5b4fc;border-color:rgba(99,102,241,0.25)"><i class="fas fa-brain"></i> IA</div>
+                <div class="lock-nc-title">Idées Application</div>
+                <div class="lock-nc-lines"><div class="lock-nc-line"></div><div class="lock-nc-line"></div></div>
+                <div class="lock-nc-footer"><span class="lock-nc-date">Lundi</span></div>
+            </div>
+        </div>
+
+        <!-- Personal stats — shown when user is known -->
+        <div class="lock-pv-stats" id="pvStats" style="display:none">
+            <div class="lock-pv-stat">
+                <div class="lock-pv-stat-val" id="pvNoteCount">—</div>
+                <div class="lock-pv-stat-lbl">notes</div>
+            </div>
+            <div class="lock-pv-stat">
+                <div class="lock-pv-stat-val" id="pvCatCount">—</div>
+                <div class="lock-pv-stat-lbl">catégories</div>
+            </div>
+            <div class="lock-pv-stat">
+                <div class="lock-pv-stat-val" id="pvLastLogin">—</div>
+                <div class="lock-pv-stat-lbl">dernière connexion</div>
+            </div>
+        </div>
+
+        <div class="lock-pills">
+            <div class="lock-pill"><i class="fas fa-check"></i> Chiffrement local</div>
+            <div class="lock-pill"><i class="fas fa-check"></i> Hors connexion</div>
+            <div class="lock-pill"><i class="fas fa-check"></i> IA intégrée</div>
         </div>
         <div class="lock-copyright">© 2026 Talemsi — Tous droits réservés</div>
     </div>
@@ -1153,6 +1228,13 @@
                 <button class="lock-text-btn" id="changePwdLink" onclick="startChangePwd()">
                     Changer de mot de passe
                 </button>
+            </div>
+
+            <div class="lock-assurance">
+                <div class="lock-assur-item"><i class="fas fa-check-circle"></i> Chiffrement AES-256 local</div>
+                <div class="lock-assur-item"><i class="fas fa-check-circle"></i> Données jamais envoyées en ligne</div>
+                <div class="lock-assur-item"><i class="fas fa-check-circle"></i> Fonctionne hors connexion</div>
+                <div class="lock-assur-item"><i class="fas fa-check-circle"></i> Sauvegarde automatique</div>
             </div>
         </div>
     </div>
@@ -1474,6 +1556,7 @@ const dataKey       = id => `ns_d4_${id}`;
 const blockKey      = id => `ns_bl_${id}`;
 const failsKey      = id => `ns_fa_${id}`;
 const vaultParamsKey= id => `ns_vp_${id}`;
+const metaKey       = id => `ns_mt_${id}`;
 
 /* ── Security Audit Log (in-memory, cleared on lock) ── */
 const _secLog = [];
@@ -1487,6 +1570,46 @@ function validateStr(v, maxLen, label) {
     if (typeof v !== 'string') throw new Error('Entrée invalide');
     if (v.length > maxLen) throw new Error(`${label} trop long (max ${maxLen} caractères)`);
     return v.trim();
+}
+
+/* ── Lock screen — rotating text & personal stats ── */
+const PV_WORDS = ['vos idées.', 'vos projets.', 'vos connaissances.', 'tout, sécurisé.'];
+let _pvIdx = 0, _pvTimer = null;
+function startPvRotate() {
+    const el = document.getElementById('pvRotate');
+    if (!el) return;
+    clearInterval(_pvTimer);
+    _pvTimer = setInterval(() => {
+        _pvIdx = (_pvIdx + 1) % PV_WORDS.length;
+        el.style.transform = `translateY(-${_pvIdx * 40}px)`;
+    }, 3000);
+}
+
+function saveUserMeta() {
+    if (!currentUserId || !notes) return;
+    const cats = new Set(notes.map(n => n.category).filter(Boolean));
+    localStorage.setItem(metaKey(currentUserId), JSON.stringify({
+        lastLogin: new Date().toISOString(),
+        noteCount: notes.length,
+        catCount:  cats.size
+    }));
+}
+
+function showUserMeta(id) {
+    const pvStats = document.getElementById('pvStats');
+    if (!pvStats) return;
+    try {
+        const m = JSON.parse(localStorage.getItem(metaKey(id)) || 'null');
+        if (!m) { pvStats.style.display = 'none'; return; }
+        document.getElementById('pvNoteCount').textContent = m.noteCount ?? '—';
+        document.getElementById('pvCatCount').textContent  = m.catCount  ?? '—';
+        if (m.lastLogin) {
+            const diff = Math.floor((Date.now() - new Date(m.lastLogin)) / 86400000);
+            document.getElementById('pvLastLogin').textContent =
+                diff === 0 ? "Aujourd'hui" : diff === 1 ? 'Hier' : `il y a ${diff}j`;
+        }
+        pvStats.style.display = 'flex';
+    } catch { pvStats.style.display = 'none'; }
 }
 
 function getUsers() { try { return JSON.parse(localStorage.getItem(LS_USERS) || '[]'); } catch { return []; } }
@@ -1610,6 +1733,8 @@ function showSelectUser() {
     state = 'select';
     currentUserId = null;
     fails = 0; blockedUntil = 0;
+    const pvStats = document.getElementById('pvStats');
+    if (pvStats) pvStats.style.display = 'none';
     const users = getUsers();
 
     $('lockIconEl').className        = 'fas fa-lock';
@@ -1642,6 +1767,7 @@ function selectUser(id) {
     currentUserId = id;
     fails        = parseInt(sessionStorage.getItem(failsKey(id)) || '0', 10);
     blockedUntil = parseInt(localStorage.getItem(blockKey(id))   || '0', 10);
+    showUserMeta(id);
 
     if (!localStorage.getItem(saltKey(id))) {
         state = 'setup_1';
@@ -1661,7 +1787,7 @@ async function deleteUser(id) {
     const user = getUsers().find(u => u.id === id);
     if (!user || !confirm(`Supprimer le profil « ${user.name} » et toutes ses notes ?`)) return;
     saveUsers(getUsers().filter(u => u.id !== id));
-    [saltKey(id), dataKey(id), blockKey(id), vaultParamsKey(id), `ns_ck_${id}`, `ns_ok_${id}`, `ns_gk_${id}`].forEach(k => localStorage.removeItem(k));
+    [saltKey(id), dataKey(id), blockKey(id), vaultParamsKey(id), metaKey(id), `ns_ck_${id}`, `ns_ok_${id}`, `ns_gk_${id}`].forEach(k => localStorage.removeItem(k));
     sessionStorage.removeItem(failsKey(id));
     if (localStorage.getItem(DEVICE_USER_KEY) === id) localStorage.removeItem(DEVICE_USER_KEY);
     showSelectUser();
@@ -1671,6 +1797,7 @@ function showLock() {
     $('lockScreen').classList.add('show');
     $('appContent').classList.remove('show');
     clearTimeout(lockTimer);
+    startPvRotate();
     migrate();
     const storedId = localStorage.getItem(DEVICE_USER_KEY);
     const known    = storedId && getUsers().find(u => u.id === storedId);
@@ -1721,6 +1848,7 @@ function showApp() {
 
 function lockApp() {
     secAudit('LOCK', currentUserId || '');
+    saveUserMeta();
     /* Zeroize sensitive in-memory state */
     encKey = null; notes = []; tmpPwd = null; currentUserId = null;
     _secLog.length = 0;
@@ -2434,6 +2562,7 @@ async function copyCompiled() {
 }
 </script>
 <script>
+startPvRotate();
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
 }
