@@ -7,8 +7,14 @@
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta name="referrer" content="no-referrer">
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://cdnjs.cloudflare.com; font-src https://cdnjs.cloudflare.com; connect-src https://api.groq.com; base-uri 'none'; object-src 'none'; form-action 'none'; frame-ancestors 'none';">
+          content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://cdnjs.cloudflare.com; font-src https://cdnjs.cloudflare.com; connect-src https://api.groq.com; worker-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; frame-ancestors 'none';">
     <title>Notes</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#7A6847">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Notes">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
           integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
@@ -2030,6 +2036,11 @@ async function copyCompiled() {
     btn.innerHTML = '<i class="fas fa-check"></i> Copié !';
     btn.classList.add('copied');
     setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2200);
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 </script>
 </body>
