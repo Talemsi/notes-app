@@ -1450,16 +1450,35 @@ const LS_SALT      = 'ns_salt_v3';   // legacy (migration only)
 const LS_DATA      = 'ns_data_v4';   // legacy (migration only)
 const LS_USERS      = 'ns_users_v1';
 const groqKey = () => `ns_gk_${currentUserId}`;
-const PBKDF2_ITER    = 100_000;
-const LOCK_TIMEOUT   = 5 * 60 * 1000;
-const MAX_ATT        = 5;
-const BLOCK_MS       = 2 * 60 * 1000;
+const LOCK_TIMEOUT    = 5 * 60 * 1000;
+const MAX_ATT         = 5;
+const BLOCK_MS        = 2 * 60 * 1000;
 const DEVICE_USER_KEY = 'ns_dv';
 
-const saltKey  = id => `ns_s3_${id}`;
-const dataKey  = id => `ns_d4_${id}`;
-const blockKey = id => `ns_bl_${id}`;
-const failsKey = id => `ns_fa_${id}`;
+/* Vault params for new vaults — 600k iterations + SHA-512 (OWASP 2024) */
+const NEW_VAULT_PARAMS = { iter: 600_000, hash: 'SHA-512' };
+/* Legacy default for vaults created before this version */
+const LEGACY_PARAMS    = { iter: 100_000, hash: 'SHA-256' };
+
+const saltKey       = id => `ns_s3_${id}`;
+const dataKey       = id => `ns_d4_${id}`;
+const blockKey      = id => `ns_bl_${id}`;
+const failsKey      = id => `ns_fa_${id}`;
+const vaultParamsKey= id => `ns_vp_${id}`;
+
+/* ── Security Audit Log (in-memory, cleared on lock) ── */
+const _secLog = [];
+function secAudit(event, detail = '') {
+    _secLog.push({ ts: new Date().toISOString(), ev: event, d: String(detail).slice(0, 120) });
+    if (_secLog.length > 500) _secLog.shift();
+}
+
+/* ── Input Validation ── */
+function validateStr(v, maxLen, label) {
+    if (typeof v !== 'string') throw new Error('Entrée invalide');
+    if (v.length > maxLen) throw new Error(`${label} trop long (max ${maxLen} caractères)`);
+    return v.trim();
+}
 
 function getUsers() { try { return JSON.parse(localStorage.getItem(LS_USERS) || '[]'); } catch { return []; } }
 function saveUsers(u) { localStorage.setItem(LS_USERS, JSON.stringify(u)); }
@@ -1495,10 +1514,10 @@ function toB64(buf) {
 }
 const fromB64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 
-async function deriveKey(pw, salt) {
+async function deriveKey(pw, salt, params = LEGACY_PARAMS) {
     const raw = await crypto.subtle.importKey('raw', enc(pw), { name:'PBKDF2' }, false, ['deriveKey']);
     return crypto.subtle.deriveKey(
-        { name:'PBKDF2', salt, iterations:PBKDF2_ITER, hash:'SHA-256' },
+        { name:'PBKDF2', salt, iterations: params.iter, hash: params.hash },
         raw, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
     );
 }
@@ -1518,7 +1537,12 @@ async function tryUnlock(pw) {
     const sb = localStorage.getItem(saltKey(currentUserId));
     if (!sb) return null;
     try {
-        const key = await deriveKey(pw, fromB64(sb));
+        let params = LEGACY_PARAMS;
+        try {
+            const vp = JSON.parse(localStorage.getItem(vaultParamsKey(currentUserId)) || 'null');
+            if (vp?.iter && vp?.hash) params = vp;
+        } catch {}
+        const key = await deriveKey(pw, fromB64(sb), params);
         const blob = localStorage.getItem(dataKey(currentUserId));
         if (!blob) return { key, notes: [] };
         const raw = await cryptDec(blob, key);
@@ -1528,14 +1552,16 @@ async function tryUnlock(pw) {
 async function createVault(pw) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     localStorage.setItem(saltKey(currentUserId), toB64(salt));
-    const key = await deriveKey(pw, salt);
+    localStorage.setItem(vaultParamsKey(currentUserId), JSON.stringify(NEW_VAULT_PARAMS));
+    const key = await deriveKey(pw, salt, NEW_VAULT_PARAMS);
     localStorage.setItem(dataKey(currentUserId), await cryptEnc([], key));
     return key;
 }
 async function reencrypt(pw) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     localStorage.setItem(saltKey(currentUserId), toB64(salt));
-    encKey = await deriveKey(pw, salt);
+    localStorage.setItem(vaultParamsKey(currentUserId), JSON.stringify(NEW_VAULT_PARAMS));
+    encKey = await deriveKey(pw, salt, NEW_VAULT_PARAMS);
     localStorage.setItem(dataKey(currentUserId), await cryptEnc(notes, encKey));
 }
 async function persist() {
@@ -1626,7 +1652,7 @@ async function deleteUser(id) {
     const user = getUsers().find(u => u.id === id);
     if (!user || !confirm(`Supprimer le profil « ${user.name} » et toutes ses notes ?`)) return;
     saveUsers(getUsers().filter(u => u.id !== id));
-    [saltKey(id), dataKey(id), blockKey(id), `ns_ck_${id}`, `ns_ok_${id}`, `ns_gk_${id}`].forEach(k => localStorage.removeItem(k));
+    [saltKey(id), dataKey(id), blockKey(id), vaultParamsKey(id), `ns_ck_${id}`, `ns_ok_${id}`, `ns_gk_${id}`].forEach(k => localStorage.removeItem(k));
     sessionStorage.removeItem(failsKey(id));
     if (localStorage.getItem(DEVICE_USER_KEY) === id) localStorage.removeItem(DEVICE_USER_KEY);
     showSelectUser();
@@ -1673,6 +1699,7 @@ function sbFilter(filter, el) {
 }
 
 function showApp() {
+    secAudit('LOGIN', currentUserId);
     localStorage.setItem(DEVICE_USER_KEY, currentUserId);
     $('lockScreen').classList.remove('show');
     $('appContent').classList.add('show');
@@ -1684,7 +1711,10 @@ function showApp() {
 }
 
 function lockApp() {
-    encKey = null; notes = []; currentUserId = null;
+    secAudit('LOCK', currentUserId || '');
+    /* Zeroize sensitive in-memory state */
+    encKey = null; notes = []; tmpPwd = null; currentUserId = null;
+    _secLog.length = 0;
     clearTimeout(lockTimer);
     $('nlist').innerHTML = '';
     selectMode = false; selected.clear();
@@ -1692,6 +1722,8 @@ function lockApp() {
     $('ribbon').classList.remove('show');
     if ($('searchIn')) { $('searchIn').value = ''; $('searchCt').textContent = ''; }
     $('searchClr')?.classList.remove('on');
+    /* Clear any sensitive form fields */
+    if ($('cfgKey')) $('cfgKey').value = '';
     closeNote(); closeRem(); closeCompiler();
     showLock();
 }
@@ -1760,6 +1792,7 @@ async function dispatch(v) {
                 showApp();
             } else {
                 fails++;
+                secAudit('LOGIN_FAIL', `attempt ${fails}/${MAX_ATT}`);
                 sessionStorage.setItem(failsKey(currentUserId), String(fails));
                 $('lockInput').value = '';
                 if (fails >= MAX_ATT) {
@@ -1767,6 +1800,7 @@ async function dispatch(v) {
                     localStorage.setItem(blockKey(currentUserId), String(blockedUntil));
                     fails = 0;
                     sessionStorage.removeItem(failsKey(currentUserId));
+                    secAudit('ACCOUNT_BLOCKED', '2 min');
                     $('lockErr').textContent = 'Accès bloqué 2 minutes.';
                 } else {
                     const left = MAX_ATT - fails;
@@ -1846,16 +1880,18 @@ function rSt(iso) {
 function rLbl(s) { return s==='overdue' ? 'En retard' : s==='today' ? "Aujourd'hui" : 'À venir'; }
 
 async function addNote() {
-    const title    = $('fTitle').value.trim();
-    const cat      = $('fCat').value.trim() || 'Général';
-    const text     = $('fText').value.trim();
+    let title, cat, text;
+    try {
+        title = validateStr($('fTitle').value, 200, 'Titre');
+        cat   = validateStr($('fCat').value, 100, 'Catégorie') || 'Général';
+        text  = validateStr($('fText').value, 50_000, 'Contenu');
+    } catch (e) { alert(e.message); return; }
     const reminder = $('fDate').value || null;
     if (!text) { $('fText').focus(); return; }
 
-    // Validation : date ne peut pas être dans le passé
     if (reminder) {
         const today = new Date().toISOString().split('T')[0];
-        if (reminder < today) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(reminder) || reminder < today) {
             $('dateErr').style.display = 'block';
             $('fDate').focus();
             return;
@@ -1865,20 +1901,22 @@ async function addNote() {
 
     notes.push({
         id:   Date.now(),
-        title: title || text.split('\n')[0].substring(0,50) || 'Note',
+        title: title || text.split('\n')[0].substring(0, 50) || 'Note',
         category: cat, text,
         created:  new Date().toISOString().split('T')[0],
         reminderDate: reminder
     });
+    secAudit('NOTE_CREATE');
     await persist();
-    ['fTitle','fCat','fText','fDate'].forEach(id => $(id).value='');
+    ['fTitle','fCat','fText','fDate'].forEach(id => $(id).value = '');
     onSearch();
     $('fText').focus();
 }
 
 async function delNote(id) {
     if (!confirm('Supprimer cette note ?')) return;
-    notes = notes.filter(n => n.id!==id);
+    notes = notes.filter(n => n.id !== id);
+    secAudit('NOTE_DELETE');
     await persist();
     onSearch();
 }
@@ -2229,10 +2267,18 @@ async function saveKeyInline() {
     setTimeout(() => { btn.textContent = orig; btn.classList.remove('saved'); closeSettings(); }, 1400);
 }
 
+function _groqErrMsg(status) {
+    if (status === 401) return 'Clé API invalide — vérifiez vos paramètres.';
+    if (status === 429) return 'Quota Groq dépassé — réessayez dans quelques instants.';
+    if (status >= 500) return 'Erreur temporaire du service IA — réessayez.';
+    return 'Génération impossible — vérifiez votre clé API.';
+}
+
 async function generateNoteContent() {
     const apiKey = await loadGroqKey();
     if (!apiKey) { openSettings(); return; }
-    const prompt = $('aiPrompt').value.trim();
+    let prompt;
+    try { prompt = validateStr($('aiPrompt').value, 4000, 'Prompt'); } catch (e) { alert(e.message); return; }
     if (!prompt) { $('aiPrompt').focus(); return; }
 
     const btn = $('btnAiGo');
@@ -2253,15 +2299,17 @@ async function generateNoteContent() {
             })
         });
         const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error?.message || `Erreur ${resp.status}`);
-        const text = data.choices?.[0]?.message?.content?.trim() || '';
-        $('fText').value = text;
+        if (!resp.ok) throw new Error(_groqErrMsg(resp.status));
+        /* Validate response structure before using */
+        const text = data?.choices?.[0]?.message?.content;
+        if (typeof text !== 'string') throw new Error('Réponse inattendue du service IA.');
+        $('fText').value = text.trim();
         $('fText').placeholder = prevPH;
         if (!$('fTitle').value.trim())
             $('fTitle').value = prompt.length > 50 ? prompt.slice(0, 50) + '…' : prompt;
         $('fText').focus();
     } catch (err) {
-        $('fText').placeholder = `Erreur : ${err.message}`;
+        $('fText').placeholder = err.message;
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Générer';
@@ -2329,16 +2377,18 @@ async function generateWithOpenAI() {
         });
 
         const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error?.message || `Erreur HTTP ${resp.status}`);
+        if (!resp.ok) throw new Error(_groqErrMsg(resp.status));
 
-        const text = data.choices?.[0]?.message?.content?.trim() || '';
-        if (text) {
-            $('iaResult').textContent = text;
+        /* Validate response structure before using */
+        const text = data?.choices?.[0]?.message?.content;
+        if (typeof text !== 'string') throw new Error('Réponse inattendue du service IA.');
+        if (text.trim()) {
+            $('iaResult').textContent = text.trim();
         } else {
             $('iaResult').innerHTML = '<div class="ia-result-empty" style="color:var(--amber)">Réponse vide reçue.</div>';
         }
 
-        if (data.usage) {
+        if (data.usage?.prompt_tokens != null) {
             $('iaUsage').textContent = `${data.usage.prompt_tokens} tokens entrée · ${data.usage.completion_tokens} tokens sortie`;
         }
     } catch (err) {
