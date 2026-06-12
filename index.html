@@ -150,16 +150,16 @@
 
         .lock-submit {
             width: 100%; padding: 12.5px; margin-top: 10px; margin-bottom: 24px;
-            background: var(--khaki); color: white;
-            border: none; border-radius: var(--r-sm);
+            background: white; color: var(--khaki);
+            border: 1.5px solid rgba(122,104,71,0.40); border-radius: var(--r-sm);
             font-family: inherit; font-size: 14px; font-weight: 600;
             cursor: pointer; letter-spacing: .1px;
             transition: background .18s, transform .12s, box-shadow .18s;
-            box-shadow: 0 2px 6px rgba(122,104,71,0.28);
+            box-shadow: 0 2px 6px rgba(122,104,71,0.12);
         }
         .lock-submit:hover:not(:disabled) {
-            background: var(--khaki-h);
-            box-shadow: 0 4px 12px rgba(122,104,71,0.35);
+            background: var(--khaki-faint);
+            box-shadow: 0 4px 12px rgba(122,104,71,0.20);
         }
         .lock-submit:active:not(:disabled) { transform: scale(.985); }
         .lock-submit:disabled { opacity: .5; cursor: not-allowed; }
@@ -295,17 +295,17 @@
 
         .btn-add {
             width: 100%; padding: 10.5px; margin-top: 6px;
-            background: var(--khaki); color: white;
-            border: none; border-radius: var(--r-sm);
+            background: white; color: var(--khaki);
+            border: 1.5px solid rgba(122,104,71,0.40); border-radius: var(--r-sm);
             font-family: inherit; font-size: 13px; font-weight: 600;
             cursor: pointer; letter-spacing: .1px;
             transition: background .18s, transform .12s, box-shadow .18s;
             display: flex; align-items: center; justify-content: center; gap: 7px;
-            box-shadow: 0 2px 5px rgba(122,104,71,0.25);
+            box-shadow: 0 2px 5px rgba(122,104,71,0.10);
         }
         .btn-add:hover  {
-            background: var(--khaki-h);
-            box-shadow: 0 4px 10px rgba(122,104,71,0.32);
+            background: var(--khaki-faint);
+            box-shadow: 0 4px 10px rgba(122,104,71,0.18);
         }
         .btn-add:active { transform: scale(.99); }
 
@@ -754,12 +754,12 @@
         }
         .key-strip input:focus { border-color: var(--khaki); }
         .btn-key-sv {
-            padding: 5px 11px; border: none; border-radius: var(--r-xs);
-            background: var(--khaki); color: white;
+            padding: 5px 11px; border: 1px solid rgba(122,104,71,0.40); border-radius: var(--r-xs);
+            background: white; color: var(--khaki);
             font: 11.5px/1 inherit; font-weight: 500; cursor: pointer;
             white-space: nowrap; transition: background .15s; flex-shrink: 0;
         }
-        .btn-key-sv:hover { background: var(--khaki-h); }
+        .btn-key-sv:hover { background: var(--khaki-faint); }
         .btn-key-sv.saved { background: var(--green); }
         .ai-box {
             border: 1.5px solid rgba(122,104,71,0.22);
@@ -793,12 +793,12 @@
         }
         .btn-ai-go {
             display: flex; align-items: center; gap: 5px;
-            padding: 7px 15px; border: none; border-radius: var(--r-xs);
-            background: var(--khaki); color: white;
+            padding: 7px 15px; border: 1px solid rgba(122,104,71,0.40); border-radius: var(--r-xs);
+            background: white; color: var(--khaki);
             font: 12px/1 inherit; font-weight: 600; cursor: pointer;
             transition: background .15s; white-space: nowrap;
         }
-        .btn-ai-go:hover:not(:disabled) { background: var(--khaki-h); }
+        .btn-ai-go:hover:not(:disabled) { background: var(--khaki-faint); }
         .btn-ai-go:disabled { opacity: 0.5; cursor: default; }
         .or-sep {
             display: flex; align-items: center; gap: 10px;
