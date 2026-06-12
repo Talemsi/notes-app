@@ -1835,11 +1835,14 @@ function refreshCompiler() {
 
 /* ── Groq API ── */
 function initApiKeyUI() {
-    const saved = localStorage.getItem(groqKey()) || '';
-    if ($('iaApiKey')) $('iaApiKey').value = saved;
-    if ($('cfgKey'))   $('cfgKey').value   = saved;
+    const saved = !!localStorage.getItem(groqKey());
     const pill = $('btnKeyPill');
-    if (pill) pill.classList.toggle('keyset', !!saved);
+    if (pill) pill.classList.toggle('keyset', saved);
+    // Ne jamais pré-remplir les champs avec la clé — elle reste dans localStorage uniquement
+    if ($('iaApiKey')) {
+        $('iaApiKey').value = '';
+        $('iaApiKey').placeholder = saved ? 'Clé configurée — entrez une nouvelle pour remplacer' : 'gsk_…';
+    }
 }
 
 function toggleKeyStrip() {
@@ -1847,17 +1850,20 @@ function toggleKeyStrip() {
     const open  = strip.style.display !== 'none';
     strip.style.display = open ? 'none' : '';
     if (!open) {
-        const saved = localStorage.getItem(groqKey());
-        if (saved) $('cfgKey').value = saved;
+        const saved = !!localStorage.getItem(groqKey());
+        $('cfgKey').value = '';
+        $('cfgKey').placeholder = saved ? 'Clé configurée — entrez une nouvelle pour remplacer' : 'gsk_…';
         setTimeout(() => $('cfgKey').focus(), 50);
     }
 }
 
 function saveKeyInline() {
     const key = $('cfgKey').value.trim();
-    if (!key) return;
+    if (!key) { $('keyStrip').style.display = 'none'; return; }
     localStorage.setItem(groqKey(), key);
-    if ($('iaApiKey')) $('iaApiKey').value = key;
+    $('cfgKey').value = '';
+    $('cfgKey').placeholder = 'Clé configurée — entrez une nouvelle pour remplacer';
+    if ($('iaApiKey')) { $('iaApiKey').value = ''; $('iaApiKey').placeholder = 'Clé configurée — entrez une nouvelle pour remplacer'; }
     $('btnKeyPill').classList.add('keyset');
     const btn = $('btnKeySv');
     btn.textContent = 'Sauvegardé !';
