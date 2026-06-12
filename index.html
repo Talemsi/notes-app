@@ -903,7 +903,7 @@
 
         <div class="lock-actions">
             <button class="lock-text-btn" id="backLink" onclick="showSelectUser()" style="display:none">
-                ← Retour
+                Changer de compte
             </button>
             <button class="lock-text-btn" id="changePwdLink" onclick="startChangePwd()">
                 Changer de mot de passe
@@ -1168,10 +1168,11 @@ const LS_SALT      = 'ns_salt_v3';   // legacy (migration only)
 const LS_DATA      = 'ns_data_v4';   // legacy (migration only)
 const LS_USERS      = 'ns_users_v1';
 const groqKey = () => `ns_gk_${currentUserId}`;
-const PBKDF2_ITER  = 100_000;
-const LOCK_TIMEOUT = 5 * 60 * 1000;
-const MAX_ATT      = 5;
-const BLOCK_MS     = 2 * 60 * 1000;
+const PBKDF2_ITER    = 100_000;
+const LOCK_TIMEOUT   = 5 * 60 * 1000;
+const MAX_ATT        = 5;
+const BLOCK_MS       = 2 * 60 * 1000;
+const DEVICE_USER_KEY = 'ns_dv';
 
 const saltKey  = id => `ns_s3_${id}`;
 const dataKey  = id => `ns_d4_${id}`;
@@ -1345,6 +1346,7 @@ async function deleteUser(id) {
     saveUsers(getUsers().filter(u => u.id !== id));
     [saltKey(id), dataKey(id), blockKey(id), `ns_ck_${id}`, `ns_ok_${id}`, `ns_gk_${id}`].forEach(k => localStorage.removeItem(k));
     sessionStorage.removeItem(failsKey(id));
+    if (localStorage.getItem(DEVICE_USER_KEY) === id) localStorage.removeItem(DEVICE_USER_KEY);
     showSelectUser();
 }
 
@@ -1353,10 +1355,13 @@ function showLock() {
     $('appContent').classList.remove('show');
     clearTimeout(lockTimer);
     migrate();
-    showSelectUser();
+    const storedId = localStorage.getItem(DEVICE_USER_KEY);
+    const known    = storedId && getUsers().find(u => u.id === storedId);
+    if (known) selectUser(storedId); else showSelectUser();
 }
 
 function showApp() {
+    localStorage.setItem(DEVICE_USER_KEY, currentUserId);
     $('lockScreen').classList.remove('show');
     $('appContent').classList.add('show');
     $('fDate').min = new Date().toISOString().split('T')[0];
