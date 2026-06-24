@@ -1,2 +1,2 @@
 # notes-app
-Mon gestionnaire de notes avec IA
+Gestionnaire de notes avec IA

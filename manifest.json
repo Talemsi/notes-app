@@ -1,0 +1,25 @@
+{
+  "name": "Notes sécurisées",
+  "short_name": "Notes",
+  "description": "Gestionnaire de notes chiffré — AES-256",
+  "start_url": "/notes-app/",
+  "scope": "/notes-app/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#EAE6DA",
+  "theme_color": "#7A6847",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

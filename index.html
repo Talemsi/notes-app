@@ -1,0 +1,2693 @@
+<!--
+  Notics — Gestionnaire de notes chiffré
+  © 2026 Talemsi. Tous droits réservés.
+  Reproduction, modification ou redistribution interdites sans autorisation écrite.
+-->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://cdnjs.cloudflare.com; font-src https://cdnjs.cloudflare.com; connect-src https://api.groq.com; worker-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; frame-ancestors 'none';">
+    <title>Notics</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#5B7FFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Notics">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            /* ── Text ── */
+            --ink:   #0B0B1E;
+            --ink-2: #2A2A45;
+            --ink-3: #6060A0;
+            --ink-4: #9898C0;
+            --ink-5: #C0C0DC;
+
+            /* ── Surfaces ── */
+            --surface: #F0F0FF;
+            --card:    #FFFFFF;
+            --card-2:  #EAEAF8;
+            --line:    rgba(67,97,238,0.12);
+            --line-2:  rgba(67,97,238,0.06);
+
+            /* ── Accent — Électrique ── */
+            --blue:        #4361EE;
+            --blue-h:      #3451DB;
+            --blue-faint:  rgba(67,97,238,0.10);
+            --blue-ring:   rgba(67,97,238,0.25);
+
+            --khaki:       #4361EE;
+            --khaki-h:     #3451DB;
+            --khaki-faint: rgba(67,97,238,0.10);
+            --khaki-ring:  rgba(67,97,238,0.25);
+
+            --accent:      #4361EE;
+            --accent-h:    #3451DB;
+            --accent-faint:rgba(67,97,238,0.10);
+            --accent-ring: rgba(67,97,238,0.25);
+
+            /* ── Status ── */
+            --red:        #EF233C;
+            --red-faint:  rgba(239,35,60,0.10);
+            --amber:      #F8961E;
+            --amber-faint:rgba(248,150,30,0.12);
+            --green:      #06D6A0;
+
+            /* ── Geometry ── */
+            --r:    16px;
+            --r-sm: 12px;
+            --r-xs:  8px;
+
+            /* ── Shadows ── */
+            --sh-xs: 0 1px 4px rgba(67,97,238,0.08);
+            --sh-sm: 0 2px 14px rgba(67,97,238,0.10), 0 0 0 1px rgba(67,97,238,0.06);
+            --sh:    0 6px 28px rgba(67,97,238,0.13), 0 0 0 1px rgba(67,97,238,0.07);
+            --sh-xl: 0 32px 72px rgba(67,97,238,0.20), 0 8px 24px rgba(0,0,0,0.10);
+
+            --sb-w: 252px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--surface);
+            min-height: 100vh;
+            color: var(--ink);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ══════════════════════════════
+           LOCK SCREEN — Dark Premium
+        ══════════════════════════════ */
+        .lock-screen {
+            display: none; position: fixed; inset: 0;
+            background: #0A0E1A;
+            z-index: 9999; overflow: hidden;
+        }
+        .lock-screen.show { display: flex; }
+
+        /* Ambient indigo glow */
+        .lock-screen::before {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse 55% 60% at 18% 50%, rgba(91,127,255,0.11) 0%, transparent 60%),
+                radial-gradient(ellipse 45% 45% at 80% 15%, rgba(91,127,255,0.06) 0%, transparent 55%);
+        }
+        /* Dot grid */
+        .lock-screen::after {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.028) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+
+        /* ── Split layout ── */
+        .lock-split {
+            display: flex; width: 100%; height: 100%; position: relative; z-index: 1;
+        }
+
+        /* LEFT — Workspace Preview */
+        .lock-preview {
+            flex: 1 1 60%; display: flex; flex-direction: column;
+            padding: 48px 52px 36px;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            overflow: hidden; position: relative;
+        }
+        .lock-pv-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; }
+        .lock-pv-logo-icon {
+            width: 40px; height: 40px; border-radius: 12px;
+            background: linear-gradient(135deg, #4361EE 0%, #7B2FFF 100%);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 22px rgba(67,97,238,0.50);
+            flex-shrink: 0;
+        }
+        .lock-pv-logo-name { font-size: 19px; font-weight: 700; color: #FFF; letter-spacing: -.3px; }
+
+        .lock-pv-tag {
+            font-size: 11px; font-weight: 600; letter-spacing: .12em; color: #7B9FFF;
+            text-transform: uppercase; margin-bottom: 10px;
+        }
+        .lock-pv-title {
+            font-size: 30px; font-weight: 700; color: #FFF; line-height: 1.2; letter-spacing: -.6px;
+        }
+        .lock-pv-rotate-wrap { height: 40px; overflow: hidden; margin-bottom: 32px; }
+        .lock-pv-rotate {
+            display: flex; flex-direction: column;
+            transition: transform .55s cubic-bezier(.22,1,.36,1);
+        }
+        .lock-pv-rotate span {
+            font-size: 30px; font-weight: 700; line-height: 40px; white-space: nowrap;
+            background: linear-gradient(120deg, #7BA7FF, #A8CAFF);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        /* App window preview */
+        .lock-app-win {
+            flex: 1; min-height: 0;
+            background: rgba(12,17,30,0.72);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px; overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+            display: flex; flex-direction: column;
+            margin-bottom: 16px;
+        }
+        .lock-aw-hd {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.02);
+            flex-shrink: 0;
+        }
+        .lock-aw-dots { display: flex; gap: 5px; flex-shrink: 0; }
+        .lock-aw-dots span { width: 10px; height: 10px; border-radius: 50%; }
+        .lock-aw-dots span:nth-child(1) { background: #FF5F57; }
+        .lock-aw-dots span:nth-child(2) { background: #FFBD2E; }
+        .lock-aw-dots span:nth-child(3) { background: #27C93F; }
+        .lock-aw-search {
+            flex: 1; height: 22px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 6px;
+            display: flex; align-items: center; padding: 0 8px; gap: 5px;
+            font-size: 11px; color: rgba(255,255,255,0.22);
+        }
+        .lock-aw-body { display: flex; flex: 1; min-height: 0; }
+        .lock-aw-sidebar {
+            width: 128px; flex-shrink: 0;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            padding: 8px 0; overflow: hidden;
+        }
+        .lock-aw-cat {
+            display: flex; align-items: center; gap: 7px;
+            padding: 7px 12px;
+            font-size: 11px; color: rgba(255,255,255,0.35);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            transition: background .25s, color .25s;
+        }
+        .lock-aw-cat.on { background: rgba(124,92,252,0.18); color: #C4B5FD; }
+        .lock-aw-cat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .lock-aw-list { flex: 1; overflow: hidden; }
+        .lock-aw-item {
+            padding: 9px 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            transition: background .3s;
+        }
+        .lock-aw-item.on { background: rgba(124,92,252,0.13); }
+        .lock-aw-item-top {
+            display: flex; justify-content: space-between; align-items: baseline; gap: 6px;
+            margin-bottom: 3px;
+        }
+        .lock-aw-item-title {
+            font-size: 12px; font-weight: 600; color: #E2E8F0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .lock-aw-item-date { font-size: 10px; color: rgba(255,255,255,0.2); flex-shrink: 0; }
+        .lock-aw-item-preview { font-size: 11px; color: rgba(255,255,255,0.28); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Personal stats */
+        .lock-pv-stats {
+            display: flex; gap: 20px; padding: 12px 0 4px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            flex-shrink: 0;
+        }
+        .lock-pv-stat { display: flex; flex-direction: column; gap: 1px; }
+        .lock-pv-stat-val { font-size: 18px; font-weight: 700; color: #FFF; letter-spacing: -.3px; }
+        .lock-pv-stat-lbl { font-size: 10.5px; color: rgba(255,255,255,0.3); }
+        .lock-pv-stat--last .lock-pv-stat-val { font-size: 13px; letter-spacing: 0; }
+
+        /* Bottom pills */
+        .lock-pills { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; flex-shrink: 0; }
+        .lock-pill {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 10.5px; color: rgba(255,255,255,0.38);
+            padding: 3px 9px; border-radius: 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+        .lock-pill i { color: #22C55E; font-size: 8px; }
+        .lock-copyright { margin-top: 10px; font-size: 10px; color: rgba(255,255,255,0.15); letter-spacing: 0.02em; flex-shrink: 0; }
+
+        /* Reassurance list (right panel) */
+        .lock-assurance {
+            display: flex; flex-direction: column; gap: 7px;
+            margin-top: 16px; padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .lock-assur-item {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 12px; color: rgba(255,255,255,0.35);
+        }
+        .lock-assur-item i { color: #22C55E; font-size: 10px; width: 12px; text-align: center; }
+
+        /* RIGHT — Form panel */
+        .lock-form-side {
+            width: 460px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            padding: 40px 36px;
+        }
+
+        /* Glass card */
+        .lock-card {
+            width: 100%;
+            background: rgba(14,20,40,0.82);
+            backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px);
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 26px;
+            padding: 44px 40px 36px;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(91,127,255,0.08);
+            animation: rise .4s cubic-bezier(.22,1,.36,1);
+        }
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(22px) scale(.97); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        .lock-icon-wrap {
+            width: 56px; height: 56px; border-radius: 17px;
+            background: linear-gradient(135deg, #4361EE 0%, #7B2FFF 100%);
+            box-shadow: 0 8px 28px rgba(67,97,238,0.55);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 22px; color: white; font-size: 20px;
+        }
+        .lock-title {
+            font-size: 22px; font-weight: 700; color: #FFFFFF; letter-spacing: -.5px;
+            margin-bottom: 6px; text-align: center;
+        }
+        .lock-hint {
+            font-size: 13.5px; color: rgba(255,255,255,0.45); margin-bottom: 26px;
+            line-height: 1.55; min-height: 20px; text-align: center;
+        }
+
+        /* Input */
+        .lock-field { position: relative; margin-bottom: 12px; }
+        .lock-field input {
+            width: 100%; padding: 13px 46px 13px 16px;
+            background: rgba(255,255,255,0.06);
+            border: 1.5px solid rgba(255,255,255,0.10);
+            border-radius: 13px;
+            color: #FFFFFF; font-family: inherit; font-size: 15px; outline: none;
+            transition: border-color .2s, box-shadow .2s, background .2s;
+            caret-color: #7BA7FF;
+        }
+        .lock-field input.pw { letter-spacing: 5px; }
+        .lock-field input.pw::placeholder { letter-spacing: 0; }
+        .lock-field input:focus {
+            border-color: #5B7FFF;
+            background: rgba(91,127,255,0.08);
+            box-shadow: 0 0 0 3px rgba(91,127,255,0.20);
+        }
+        .lock-field input::placeholder { color: rgba(255,255,255,0.22); }
+        .lock-field input:disabled { opacity: .35; }
+        .lock-eye {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: rgba(255,255,255,0.28); font-size: 14px; padding: 4px;
+            transition: color .15s; display: none; line-height: 1;
+        }
+        .lock-eye.on { display: block; }
+        .lock-eye:hover { color: rgba(255,255,255,0.65); }
+
+        .lock-err { font-size: 12.5px; font-weight: 500; color: #F87171; min-height: 18px; margin-bottom: 6px; }
+        .lock-att { font-size: 12px; color: rgba(255,255,255,0.32); min-height: 16px; margin-bottom: 4px; }
+
+        /* Submit */
+        .lock-submit {
+            width: 100%; padding: 14px; margin-top: 12px; margin-bottom: 20px;
+            background: linear-gradient(135deg, #4361EE 0%, #7B2FFF 100%);
+            color: white; border: none; border-radius: 13px;
+            font-family: inherit; font-size: 15px; font-weight: 700;
+            cursor: pointer; letter-spacing: .2px;
+            transition: opacity .2s, transform .15s, box-shadow .2s;
+            box-shadow: 0 6px 24px rgba(67,97,238,0.50);
+        }
+        .lock-submit:hover:not(:disabled) {
+            opacity: .92; transform: translateY(-2px);
+            box-shadow: 0 12px 36px rgba(67,97,238,0.60);
+        }
+        .lock-submit:active:not(:disabled) { transform: scale(.98); }
+        .lock-submit:disabled { opacity: .35; cursor: not-allowed; }
+
+        /* Text actions — stacked, no more side-by-side collision */
+        .lock-actions {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        .lock-text-btn {
+            font-size: 12.5px; color: rgba(255,255,255,0.35); background: none; border: none;
+            cursor: pointer; font-family: inherit;
+            text-decoration: underline; text-underline-offset: 2px;
+            transition: color .15s; display: none; padding: 0;
+        }
+        .lock-text-btn:hover { color: rgba(255,255,255,0.7); }
+
+        /* User cards — dark overrides */
+        #lockScreen .user-card {
+            background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08);
+        }
+        #lockScreen .user-card:hover {
+            background: rgba(91,127,255,0.12); border-color: rgba(91,127,255,0.28);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        }
+        #lockScreen .user-av { background: linear-gradient(135deg, #6B8FFF, #4A6BE8); }
+        #lockScreen .user-nm { color: #E2E8F0; }
+        #lockScreen .user-nm-new { color: rgba(255,255,255,0.32); }
+        #lockScreen .user-av-new { border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.28); background: transparent; }
+        #lockScreen .user-card:hover .user-av-new { border-color: #5B7FFF; color: #A8C0FF; background: rgba(91,127,255,0.12); }
+
+        /* Responsive — tablet/mobile: hide branding, full-width form */
+        @media (max-width: 860px) {
+            .lock-preview { display: none; }
+            .lock-form-side { width: 100%; padding: 24px 20px; }
+            .lock-card { padding: 38px 28px 30px; border-radius: 20px; }
+        }
+
+        /* ══════════════════════════════
+           APP SHELL + SIDEBAR
+        ══════════════════════════════ */
+        .app { display: none; flex-direction: row; min-height: 100vh; }
+        .app.show { display: flex; }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: var(--sb-w); flex-shrink: 0;
+            background: #13133A;
+            border-right: none;
+            display: flex; flex-direction: column;
+            position: sticky; top: 0; height: 100vh; overflow-y: auto;
+            z-index: 50;
+        }
+        .sb-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 22px 16px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .sb-logo { display: flex; align-items: center; gap: 10px; }
+        .sb-logo-icon {
+            width: 34px; height: 34px; border-radius: 10px;
+            background: linear-gradient(135deg, #4361EE, #7B2FFF);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 16px rgba(67,97,238,0.50);
+            flex-shrink: 0;
+        }
+        .sb-logo-name { font-size: 17px; font-weight: 800; color: #FFFFFF; letter-spacing: -.4px; }
+        .sb-new-btn {
+            width: 30px; height: 30px; border-radius: 9px;
+            background: rgba(67,97,238,0.25); border: 1px solid rgba(67,97,238,0.4);
+            color: #818CF8; font-size: 13px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .15s;
+        }
+        .sb-new-btn:hover { background: #4361EE; color: white; border-color: #4361EE; }
+
+        .sb-nav { padding: 10px 8px; flex: 1; }
+        .sb-section {
+            font-size: 9.5px; font-weight: 700; color: rgba(255,255,255,0.28);
+            text-transform: uppercase; letter-spacing: .12em; padding: 18px 10px 6px;
+        }
+        .sb-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 11px; border-radius: 10px;
+            font-size: 13.5px; color: rgba(255,255,255,0.50); cursor: pointer;
+            transition: all .15s; margin-bottom: 1px; user-select: none;
+        }
+        .sb-item i { width: 16px; text-align: center; font-size: 13px; flex-shrink: 0; }
+        .sb-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+        .sb-item.active {
+            background: rgba(67,97,238,0.22); color: #818CF8;
+            font-weight: 600;
+        }
+        .sb-item.active i { color: #818CF8; }
+        .sb-cat-pill {
+            display: inline-flex; align-items: center;
+            padding: 2px 8px; border-radius: 20px;
+            background: rgba(67,97,238,0.25); color: #818CF8;
+            font-size: 10.5px; font-weight: 600; margin-left: auto;
+        }
+
+        .sb-footer {
+            padding: 12px 14px 16px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .sb-copyright { padding: 0 14px 10px; font-size: 10px; color: rgba(255,255,255,0.18); letter-spacing: 0.03em; }
+        .sb-user { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; }
+        .sb-avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: linear-gradient(135deg, #4361EE, #7B2FFF);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 12px; font-weight: 700; flex-shrink: 0;
+        }
+        .sb-uname {
+            font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.75);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .sb-icon-btn {
+            width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.10);
+            color: rgba(255,255,255,0.45); font-size: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .15s;
+        }
+        .sb-icon-btn:hover { background: rgba(67,97,238,0.30); color: #818CF8; border-color: rgba(67,97,238,0.4); }
+        .btn-lock {
+            width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+            background: rgba(239,35,60,0.12); border: 1px solid rgba(239,35,60,0.20);
+            color: #FF6B7A; font-size: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .15s;
+        }
+        .btn-lock:hover { background: #EF233C; color: white; border-color: #EF233C; }
+
+        /* Settings modal */
+        .settings-section-title {
+            font-size: 11px; font-weight: 600; color: var(--ink-4);
+            text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px;
+        }
+        .settings-hint {
+            font-size: 12.5px; color: var(--ink-4); margin-bottom: 14px; line-height: 1.5;
+        }
+        .settings-key-row {
+            display: flex; gap: 8px; align-items: center;
+        }
+        .settings-key-row input {
+            flex: 1; padding: 9px 12px;
+            background: var(--card-2); border: 1.5px solid var(--line);
+            border-radius: var(--r-sm); color: var(--ink);
+            font-family: inherit; font-size: 13px; outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            caret-color: #7C5CFC;
+        }
+        .settings-key-row input:focus {
+            border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring);
+        }
+        .settings-status {
+            font-size: 12px; margin-top: 10px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .settings-status.ok  { color: var(--green); }
+        .settings-status.none { color: var(--ink-4); }
+
+        /* ── App main area ── */
+        .app-main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-y: auto; }
+
+        /* Reminder ribbon */
+        .ribbon {
+            background: rgba(245,158,11,0.10); border-bottom: 1px solid rgba(245,158,11,0.18);
+            padding: 9px 22px;
+            display: none; align-items: center; gap: 10px;
+        }
+        .ribbon.show { display: flex; }
+        .ribbon-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+        .ribbon-txt { flex: 1; font-size: 13px; color: #FCD34D; }
+        .ribbon-txt b { color: #FDE68A; }
+        .ribbon-btn {
+            padding: 4px 12px; border: none; border-radius: var(--r-xs);
+            background: var(--amber); color: white;
+            font-family: inherit; font-size: 12px; font-weight: 600;
+            cursor: pointer; transition: background .15s; flex-shrink: 0;
+        }
+        .ribbon-btn:hover { background: #D97706; }
+        .ribbon-x {
+            background: none; border: none; cursor: pointer;
+            color: #FCD34D; font-size: 16px; flex-shrink: 0; padding: 0; opacity: .6;
+            transition: opacity .15s;
+        }
+        .ribbon-x:hover { opacity: 1; }
+
+        /* Grid */
+        .workspace {
+            flex: 1; padding: 20px;
+            display: grid; grid-template-columns: 400px 1fr; gap: 16px;
+            align-items: start;
+        }
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .workspace { grid-template-columns: 1fr; }
+        }
+
+        /* Panels */
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--r);
+            padding: 20px;
+            box-shadow: var(--sh-sm);
+        }
+        .panel-hd {
+            font-size: 11px; font-weight: 600; color: var(--ink-4);
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .panel-hd::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(to right, var(--line), transparent);
+        }
+
+        /* Form */
+        .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+        .field-lbl {
+            font-size: 12px; font-weight: 550; color: var(--ink-3);
+            letter-spacing: .1px;
+        }
+        .field select {
+            padding: 9px 12px;
+            border: 1.5px solid var(--line);
+            border-radius: var(--r-sm);
+            font-family: inherit; font-size: 13px; color: var(--ink);
+            background: var(--card-2); outline: none; cursor: pointer;
+            transition: border-color .2s, box-shadow .2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236060A0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+        .field select:focus {
+            border-color: var(--accent);
+            background-color: var(--card);
+            box-shadow: 0 0 0 3px var(--accent-ring);
+        }
+        .field input[type="text"],
+        .field input[type="date"],
+        .field textarea {
+            padding: 9px 12px;
+            border: 1.5px solid var(--line);
+            border-radius: var(--r-sm);
+            font-family: inherit; font-size: 13px; color: var(--ink);
+            background: var(--card-2); outline: none;
+            transition: border-color .2s, box-shadow .2s, background .2s;
+        }
+        .field input:focus, .field textarea:focus {
+            border-color: var(--accent);
+            background: rgba(124,92,252,0.06);
+            box-shadow: 0 0 0 3px var(--accent-ring);
+        }
+        .field input:hover:not(:focus), .field textarea:hover:not(:focus) {
+            border-color: rgba(255,255,255,0.14);
+        }
+        .field textarea { min-height: 108px; line-height: 1.65; resize: vertical; }
+        #fText { min-height: 200px; font-size: 14px; line-height: 1.75; }
+        .field-sub { font-size: 11px; color: var(--ink-4); margin-top: 2px; }
+
+        .btn-add {
+            width: 100%; padding: 12px; margin-top: 8px;
+            background: linear-gradient(135deg, #4361EE 0%, #7B2FFF 100%);
+            color: white; border: none; border-radius: var(--r-sm);
+            font-family: inherit; font-size: 14px; font-weight: 700;
+            cursor: pointer; letter-spacing: .2px;
+            transition: opacity .18s, transform .12s, box-shadow .18s;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            box-shadow: 0 6px 20px rgba(67,97,238,0.40);
+        }
+        .btn-add:hover  { opacity: .90; transform: translateY(-1px); box-shadow: 0 10px 28px rgba(67,97,238,0.52); }
+        .btn-add:active { transform: scale(.99); }
+
+        /* Bulk actions bar */
+        .bulk-bar {
+            display: none; align-items: center; gap: 8px;
+            padding: 9px 12px; margin-bottom: 10px;
+            background: rgba(124,92,252,0.08); border: 1px solid rgba(124,92,252,0.22);
+            border-radius: var(--r-sm);
+        }
+        .bulk-bar.show { display: flex; }
+        .bulk-ct { font-size: 12px; font-weight: 600; color: var(--khaki); flex: 1; }
+        .btn-bulk-del {
+            padding: 5px 12px; border: none; border-radius: var(--r-xs);
+            background: var(--red); color: white;
+            font-family: inherit; font-size: 12px; font-weight: 600;
+            cursor: pointer; transition: background .15s;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .btn-bulk-del:hover { background: #B91C1C; }
+        .btn-bulk-cancel {
+            padding: 5px 10px; border: 1px solid var(--line); border-radius: var(--r-xs);
+            background: var(--card); color: var(--ink-3);
+            font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer;
+            transition: background .15s;
+        }
+        .btn-bulk-cancel:hover { background: var(--card-2); }
+
+        /* Checkbox on note rows */
+        .note-check {
+            width: 16px; height: 16px; border-radius: 4px;
+            cursor: pointer; flex-shrink: 0; margin-top: 3px;
+            accent-color: var(--khaki); display: none;
+        }
+        .select-mode .note-check { display: block; }
+        .select-mode .note-del   { display: none; }
+
+        /* Select-all toggle */
+        .bulk-toggle {
+            font-size: 12px; color: var(--ink-4); cursor: pointer;
+            background: none; border: none; font-family: inherit;
+            display: none; padding: 0 4px; text-decoration: underline;
+            text-underline-offset: 2px; transition: color .15s;
+        }
+        .bulk-toggle:hover { color: var(--khaki); }
+        .bulk-toggle.show { display: inline; }
+
+        /* Search */
+        .search {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 13px; margin-bottom: 14px;
+            background: var(--card-2); border: 1.5px solid transparent;
+            border-radius: var(--r-sm);
+            transition: border-color .15s, box-shadow .15s, background .15s;
+        }
+        .search:focus-within {
+            border-color: var(--accent);
+            background: var(--card);
+            box-shadow: 0 0 0 3px var(--accent-faint);
+        }
+        .search i { color: var(--ink-4); font-size: 12px; flex-shrink: 0; }
+        .search input {
+            flex: 1; border: none; background: none; outline: none;
+            font-family: inherit; font-size: 13px; color: var(--ink);
+        }
+        .search input::placeholder { color: var(--ink-4); }
+        .search-clr {
+            background: none; border: none; cursor: pointer; color: var(--ink-4);
+            font-size: 14px; padding: 0; display: none; transition: color .15s; line-height: 1;
+        }
+        .search-clr.on { display: block; }
+        .search-clr:hover { color: var(--red); }
+        .search-ct { font-size: 11px; color: var(--ink-4); font-weight: 500; flex-shrink: 0; }
+
+        /* Notes list */
+        .nlist { overflow-y: auto; max-height: 572px; padding: 1px 0; }
+        .nlist::-webkit-scrollbar { width: 3px; }
+        .nlist::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+
+        .cat-hd {
+            font-size: 10px; font-weight: 600; color: var(--ink-4);
+            text-transform: uppercase; letter-spacing: 1px;
+            padding: 12px 2px 6px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .cat-hd::before {
+            content: '';
+            width: 5px; height: 5px; border-radius: 50%;
+            background: var(--ink-5); flex-shrink: 0;
+        }
+        .cat-hd::after { content:''; flex:1; height:1px; background: var(--line-2); }
+
+        .note-row {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 12px 12px 12px 14px;
+            border-radius: var(--r-sm);
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all .18s cubic-bezier(.4,0,.2,1);
+            margin-bottom: 3px;
+            position: relative;
+        }
+        .note-row::before {
+            content: '';
+            position: absolute; left: 0; top: 20%; bottom: 20%;
+            width: 2.5px; border-radius: 0 2px 2px 0;
+            background: var(--khaki);
+            opacity: 0;
+            transition: opacity .18s;
+        }
+        .note-row:hover {
+            background: rgba(67,97,238,0.05);
+            border-color: rgba(67,97,238,0.20);
+            box-shadow: 0 3px 14px rgba(67,97,238,0.10);
+            transform: translateY(-1px);
+        }
+        .note-row:hover::before { opacity: 1; }
+
+        .note-body { flex: 1; min-width: 0; }
+        .note-t {
+            font-size: 14px; font-weight: 600; color: var(--ink);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-bottom: 4px; letter-spacing: -.2px; line-height: 1.3;
+        }
+        .note-foot { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .note-date { font-size: 11.5px; color: var(--ink-4); }
+
+        .rbadge {
+            font-size: 10px; font-weight: 550;
+            display: inline-flex; align-items: center; gap: 3px;
+            padding: 2px 7px; border-radius: 20px;
+        }
+        .rbadge.future  { background: rgba(91,127,255,0.10); color: #5B7FFF; }
+        .rbadge.today   { background: #FFFBEB; color: var(--amber); animation: pulse 2.5s ease infinite; }
+        .rbadge.overdue { background: #FEF2F2; color: var(--red); }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+        .note-del {
+            background: none; border: none; cursor: pointer;
+            color: var(--ink-5); font-size: 11px; padding: 5px;
+            border-radius: var(--r-xs); transition: all .15s;
+            flex-shrink: 0; opacity: 0;
+        }
+        .note-row:hover .note-del { opacity: 1; }
+        .note-del:hover { background: var(--red-faint); color: var(--red); }
+
+        /* Empty state */
+        .empty {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; text-align: center;
+            padding: 64px 24px 56px; gap: 14px;
+        }
+        .empty-ico {
+            width: 52px; height: 52px; border-radius: 14px;
+            background: var(--card-2); border: 1px solid var(--line);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--ink-4); font-size: 22px;
+        }
+        .empty p {
+            font-size: 13px; color: var(--ink-3); line-height: 1.6;
+            max-width: 220px;
+        }
+        .empty p strong { color: var(--ink); display: block; margin-bottom: 3px; font-size: 14px; }
+
+        /* Overlays */
+        .overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(20,20,40,.35); z-index: 200;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .overlay.show { display: flex; }
+
+        .modal {
+            background: var(--card); border: 1px solid var(--line);
+            border-radius: 20px; padding: 32px;
+            width: 90%; max-width: 580px; max-height: 84vh; overflow-y: auto;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.05);
+            animation: rise .22s cubic-bezier(.22,1,.36,1);
+        }
+        .modal-sm { max-width: 420px; }
+
+        .modal-hd { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
+        .modal-ttl { font-size: 20px; font-weight: 700; color: var(--ink); letter-spacing: -.4px; line-height: 1.2; }
+        .modal-meta { font-size: 12px; color: var(--ink-4); margin-top: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .modal-x {
+            width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+            background: var(--card-2); border: 1px solid var(--line);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; color: var(--ink-3); cursor: pointer; transition: all .15s;
+        }
+        .modal-x:hover { background: var(--red-faint); color: var(--red); border-color: rgba(255,59,48,0.2); }
+        .modal-body {
+            font-size: 15px; line-height: 1.90; color: var(--ink-2);
+            white-space: pre-wrap; word-break: break-word;
+            border-top: 1px solid var(--line-2); padding-top: 20px;
+        }
+        .modal-ft { margin-top: 24px; display: flex; gap: 8px; justify-content: flex-end; border-top: 1px solid var(--line-2); padding-top: 20px; }
+        .btn-ghost {
+            padding: 8px 16px; border-radius: var(--r-sm);
+            background: none; border: 1px solid var(--line);
+            font-family: inherit; font-size: 13px; font-weight: 500;
+            color: var(--ink-3); cursor: pointer; transition: all .15s;
+        }
+        .btn-ghost:hover { background: var(--card-2); color: var(--ink); }
+        .btn-del {
+            padding: 8px 16px; border-radius: var(--r-sm);
+            background: var(--red-faint); border: 1px solid rgba(220,38,38,0.14);
+            font-family: inherit; font-size: 13px; font-weight: 500;
+            color: var(--red); cursor: pointer; transition: all .18s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .btn-del:hover { background: var(--red); color: white; border-color: var(--red); }
+
+        /* Reminder items */
+        .rem-item {
+            display: flex; gap: 12px; padding: 11px 10px;
+            border-radius: var(--r-sm); margin-bottom: 4px;
+            cursor: pointer; border: 1px solid var(--line-2);
+            background: var(--card-2);
+            transition: all .15s;
+        }
+        .rem-item:hover { background: white; border-color: var(--line); box-shadow: var(--sh-xs); }
+        .rem-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+        .rem-item.today   .rem-dot { background: var(--amber); }
+        .rem-item.overdue .rem-dot { background: var(--red); }
+        .rem-t { font-size: 13px; font-weight: 600; color: var(--ink); }
+        .rem-w { font-size: 11px; color: var(--ink-4); margin-top: 2px; }
+
+        mark { background: rgba(91,127,255,.14); color: inherit; border-radius: 2px; padding: 0 1px; }
+
+        /* ── Compile button ── */
+        .btn-compile {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 9px; border-radius: var(--r-xs);
+            background: var(--card-2); border: 1px solid var(--line);
+            color: var(--ink-3); font-size: 11px; font-weight: 550;
+            cursor: pointer; transition: all .18s; font-family: inherit; flex-shrink: 0;
+        }
+        .btn-compile:hover { background: var(--khaki-faint); color: var(--khaki); border-color: var(--khaki-ring); }
+
+        /* ── Compiler modal ── */
+        .modal-compile { max-width: 680px; }
+        .compile-ctrl {
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            margin-bottom: 16px; flex-wrap: wrap;
+        }
+        .compile-tabs {
+            display: flex; gap: 3px;
+            background: var(--card-2); border: 1px solid var(--line);
+            border-radius: var(--r-sm); padding: 3px;
+        }
+        .ctab {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 13px; border-radius: var(--r-xs);
+            border: none; background: none;
+            font-family: inherit; font-size: 12px; font-weight: 500;
+            color: var(--ink-3); cursor: pointer; transition: all .15s;
+        }
+        .ctab.active { background: white; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .compile-scope {
+            padding: 6px 10px; border: 1.5px solid var(--line);
+            border-radius: var(--r-sm); background: var(--card-2);
+            font-family: inherit; font-size: 12px; color: var(--ink-2); outline: none; cursor: pointer;
+            transition: border-color .15s;
+        }
+        .compile-scope:focus { border-color: var(--khaki); }
+
+        .cr-view { max-height: 400px; overflow-y: auto; }
+        .cr-view::-webkit-scrollbar { width: 3px; }
+        .cr-view::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+        .cr-empty { text-align: center; padding: 40px 20px; color: var(--ink-4); font-size: 13px; }
+        .cr-cat {
+            font-size: 10px; font-weight: 600; color: var(--ink-4);
+            text-transform: uppercase; letter-spacing: 1px;
+            padding: 14px 0 6px; border-top: 1px solid var(--line-2); margin-top: 2px;
+        }
+        .cr-cat:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+        .cr-note {
+            padding: 10px 12px; margin-bottom: 5px;
+            border: 1px solid var(--line-2); border-radius: var(--r-sm);
+            background: var(--card-2);
+        }
+        .cr-note-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+        .cr-note-body { font-size: 13px; color: var(--ink-2); line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+        .cr-note-meta { font-size: 11px; color: var(--ink-4); margin-top: 6px; display: flex; gap: 8px; }
+
+        .prompt-hint {
+            display: flex; align-items: flex-start; gap: 9px;
+            padding: 10px 13px; margin-bottom: 10px;
+            background: #F5F1E8; border: 1px solid #D4C9A8;
+            border-radius: var(--r-sm); font-size: 12px; color: #1E40AF; line-height: 1.55;
+        }
+        .prompt-hint i { margin-top: 1px; flex-shrink: 0; }
+        .prompt-hint a { color: inherit; font-weight: 600; text-decoration: underline; }
+        .prompt-ta {
+            width: 100%; min-height: 220px; max-height: 340px;
+            padding: 12px; border: 1.5px solid var(--line); border-radius: var(--r-sm);
+            background: var(--card-2); font-family: inherit; font-size: 12px;
+            color: var(--ink-2); line-height: 1.65; resize: vertical; outline: none;
+            transition: border-color .15s;
+        }
+        .prompt-ta:focus { border-color: var(--khaki); background: white; }
+        .btn-copy-compile {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: var(--r-sm);
+            background: var(--ink); border: none; color: white;
+            font-family: inherit; font-size: 13px; font-weight: 500;
+            cursor: pointer; transition: background .18s, transform .1s;
+        }
+        .btn-copy-compile:hover { background: var(--ink-2); }
+        .btn-copy-compile:active { transform: scale(.98); }
+        .btn-copy-compile.copied { background: var(--green); }
+
+        /* ── Prompt config ── */
+        .prompt-config {
+            padding: 12px 14px 10px;
+            border-bottom: 1px solid var(--line);
+            background: var(--card-2);
+            border-radius: var(--r-sm) var(--r-sm) 0 0;
+        }
+        .prompt-config-label {
+            font-size: 10.5px; font-weight: 600; color: var(--ink-3);
+            text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+        }
+        .prompt-user-ta {
+            width: 100%; min-height: 60px; max-height: 110px; resize: vertical;
+            padding: 8px 10px; border: 1.5px solid var(--line);
+            border-radius: var(--r-xs); font: 13px/1.5 inherit;
+            color: var(--ink); background: var(--card); box-sizing: border-box;
+            outline: none; transition: border-color .15s;
+        }
+        .prompt-user-ta:focus { border-color: var(--khaki-ring); box-shadow: 0 0 0 2px var(--khaki-ring); }
+        .prompt-web-row {
+            display: flex; align-items: center; gap: 8px; margin-top: 8px;
+        }
+        .prompt-web-label {
+            font-size: 12.5px; color: var(--ink-2); cursor: pointer;
+            display: flex; align-items: center; gap: 6px; user-select: none;
+        }
+        .prompt-web-label input { accent-color: var(--khaki); cursor: pointer; }
+        .token-est {
+            margin-left: auto; font-size: 11px; color: var(--ink-4);
+            font-variant-numeric: tabular-nums;
+        }
+        .prompt-ta-wrap { position: relative; }
+        .prompt-ta-wrap .prompt-ta { border-radius: 0 0 var(--r-sm) var(--r-sm); border-top: none; }
+
+        /* ── IA Claude tab ── */
+        .ia-key-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px; border-bottom: 1px solid var(--line);
+            background: var(--card-2); border-radius: var(--r-sm) var(--r-sm) 0 0;
+        }
+        .ia-key-row input {
+            flex: 1; padding: 7px 10px; border: 1.5px solid var(--line);
+            border-radius: var(--r-xs); font: 12px/1.4 inherit; color: var(--ink);
+            background: var(--card); outline: none; transition: border-color .15s;
+        }
+        .ia-key-row input:focus { border-color: var(--khaki); }
+        .ia-key-save {
+            padding: 6px 12px; border: none; border-radius: var(--r-xs);
+            background: var(--ink); color: white;
+            font: 12px/1 inherit; font-weight: 500; cursor: pointer;
+            transition: background .15s; white-space: nowrap; flex-shrink: 0;
+        }
+        .ia-key-save:hover { background: var(--ink-2); }
+        .ia-key-save.saved { background: var(--green); }
+        .ia-config-inner {
+            padding: 12px 14px 10px; border-bottom: 1px solid var(--line);
+            background: var(--card-2);
+        }
+        .ia-model-sel {
+            width: 100%; padding: 7px 10px; margin-bottom: 10px;
+            border: 1.5px solid var(--line); border-radius: var(--r-xs);
+            font: 12px/1.4 inherit; color: var(--ink-2);
+            background: var(--card-2); outline: none; cursor: pointer;
+            transition: border-color .15s; box-sizing: border-box;
+        }
+        .ia-model-sel:focus { border-color: var(--khaki); }
+        .ia-result {
+            min-height: 80px; max-height: 280px; overflow-y: auto;
+            padding: 12px 14px; border-radius: 0 0 var(--r-sm) var(--r-sm);
+            font-size: 13px; color: var(--ink-2); line-height: 1.65;
+            white-space: pre-wrap; word-break: break-word;
+            background: var(--card-2);
+        }
+        .ia-result::-webkit-scrollbar { width: 3px; }
+        .ia-result::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+        .ia-result-empty {
+            text-align: center; padding: 24px 20px; color: var(--ink-4);
+            font-size: 13px; line-height: 1.7;
+        }
+        .ia-usage {
+            margin-left: auto; font-size: 11px; color: var(--ink-4);
+            font-variant-numeric: tabular-nums;
+        }
+        .btn-ia-gen {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border: none; border-radius: var(--r-sm);
+            background: #4F46E5; color: white;
+            font: 13px/1 inherit; font-weight: 500; cursor: pointer;
+            transition: background .15s; white-space: nowrap;
+        }
+        .btn-ia-gen:hover:not(:disabled) { background: #4338CA; }
+        .btn-ia-gen:disabled { opacity: 0.55; cursor: default; }
+        .ia-provider-row {
+            display: flex; gap: 6px; padding: 10px 14px 0;
+            background: var(--card-2);
+            border-bottom: 1px solid var(--line);
+            border-radius: var(--r-sm) var(--r-sm) 0 0;
+        }
+        .ia-prov-btn {
+            flex: 1; padding: 7px 10px; border: 1.5px solid var(--line);
+            border-radius: var(--r-xs); background: var(--card);
+            font: 12px/1 inherit; font-weight: 500; color: var(--ink-3);
+            cursor: pointer; transition: all .15s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            margin-bottom: 10px;
+        }
+        .ia-prov-btn.active { border-color: var(--khaki); color: var(--khaki); background: var(--khaki-faint); }
+
+        /* ── Inline AI Assist ── */
+        .key-strip {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 10px; margin-bottom: 16px;
+            background: #FFFBEB; border: 1px solid #FDE68A;
+            border-radius: var(--r-sm);
+        }
+        .key-strip label {
+            font-size: 11px; font-weight: 600; color: #92400E;
+            white-space: nowrap;
+        }
+        .key-strip input {
+            flex: 1; padding: 5px 9px; border: 1.5px solid var(--line);
+            border-radius: var(--r-xs); font: 12px/1.4 inherit;
+            color: var(--ink); background: white; outline: none;
+            transition: border-color .15s;
+        }
+        .key-strip input:focus { border-color: var(--khaki); }
+        .btn-key-sv {
+            padding: 5px 11px; border: none; border-radius: var(--r-xs);
+            background: linear-gradient(135deg,#7C5CFC,#6B4AE8); color: white;
+            font: 11.5px/1 inherit; font-weight: 500; cursor: pointer;
+            white-space: nowrap; transition: opacity .15s; flex-shrink: 0;
+        }
+        .btn-key-sv:hover { opacity: .85; }
+        .btn-key-sv.saved { background: var(--green); }
+        .ai-box {
+            border: 1px solid rgba(124,92,252,0.22);
+            border-radius: var(--r-sm); overflow: hidden;
+            margin-bottom: 16px;
+            background: rgba(124,92,252,0.04);
+        }
+        .ai-box-hd {
+            display: flex; align-items: center; gap: 7px;
+            padding: 10px 13px;
+            background: rgba(124,92,252,0.10);
+            border-bottom: 1px solid rgba(124,92,252,0.18);
+            font-size: 11px; font-weight: 600; color: #A78BFA;
+            text-transform: uppercase; letter-spacing: .06em;
+        }
+        .ai-box-body { padding: 14px 16px; }
+        .ai-prompt-ta {
+            width: 100%; min-height: 150px; max-height: 400px; resize: vertical;
+            padding: 12px 14px; border: 1.5px solid rgba(124,92,252,0.2);
+            border-radius: var(--r-xs); font: 14px/1.75 inherit;
+            color: var(--ink); background: var(--card-2); box-sizing: border-box;
+            outline: none; transition: border-color .2s, box-shadow .2s;
+            caret-color: #7C5CFC;
+        }
+        .ai-prompt-ta:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+        .ai-ctrl-row {
+            display: flex; align-items: center; gap: 8px; margin-top: 9px;
+        }
+        .ai-model-sel2 {
+            flex: 1; padding: 6px 8px; border: 1px solid var(--line);
+            border-radius: var(--r-xs); font: 12px/1.4 inherit; color: var(--ink-3);
+            background: var(--card-2); outline: none; cursor: pointer;
+        }
+        .btn-ai-go {
+            display: flex; align-items: center; gap: 5px;
+            padding: 7px 14px; border: none; border-radius: var(--r-xs);
+            background: linear-gradient(135deg,#7C5CFC,#6B4AE8); color: white;
+            font: 12px/1 inherit; font-weight: 600; cursor: pointer;
+            transition: opacity .15s; white-space: nowrap;
+            box-shadow: 0 3px 12px rgba(124,92,252,0.35);
+        }
+        .btn-ai-go:hover:not(:disabled) { opacity: .85; }
+        .btn-ai-go:disabled { opacity: 0.4; cursor: default; }
+        .or-sep {
+            display: flex; align-items: center; gap: 10px;
+            margin: 4px 0 14px; font-size: 11px; color: var(--ink-4);
+            text-transform: uppercase; letter-spacing: .06em;
+        }
+        .or-sep::before, .or-sep::after {
+            content: ''; flex: 1; height: 1px; background: var(--line);
+        }
+        .btn-key-pill {
+            padding: 2px 8px; border: 1px solid var(--line);
+            border-radius: 20px; background: var(--card-2);
+            font: 10.5px/1.5 inherit; color: var(--ink-4); cursor: pointer;
+            transition: all .15s; display: flex; align-items: center; gap: 4px;
+        }
+        .btn-key-pill:hover { border-color: var(--khaki); color: var(--khaki); }
+        .btn-key-pill.keyset { border-color: var(--green); color: var(--green); background: #f0fdf4; }
+
+        /* ── User selection grid ── */
+        .user-grid {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+            gap: 10px; margin-bottom: 20px;
+        }
+        .user-card {
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            padding: 16px 10px 12px;
+            border-radius: var(--r-sm); border: 1.5px solid var(--line);
+            background: var(--card-2); cursor: pointer;
+            transition: all .18s cubic-bezier(.4,0,.2,1);
+            position: relative; overflow: hidden;
+        }
+        .user-card:hover {
+            background: rgba(124,92,252,0.10); border-color: rgba(124,92,252,0.3);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.25); transform: translateY(-1px);
+        }
+        .user-av {
+            width: 46px; height: 46px; border-radius: 50%;
+            background: var(--ink); color: white;
+            font-size: 19px; font-weight: 700; letter-spacing: -.5px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .user-av-new {
+            background: transparent; border: 1.5px dashed var(--ink-5);
+            color: var(--ink-4); font-size: 16px; font-weight: 400;
+            transition: all .18s;
+        }
+        .user-card:hover .user-av-new {
+            border-color: var(--khaki); color: var(--khaki); background: var(--khaki-faint);
+        }
+        .user-nm {
+            font-size: 12px; font-weight: 550; color: var(--ink-2);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            max-width: 82px; text-align: center;
+        }
+        .user-nm-new { color: var(--ink-4); }
+        .user-del {
+            position: absolute; top: 5px; right: 5px;
+            width: 18px; height: 18px; border-radius: 50%;
+            background: var(--red-faint); border: none;
+            color: var(--red); font-size: 11px; font-weight: 700;
+            cursor: pointer; opacity: 0; transition: opacity .15s;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1;
+        }
+        .user-card:hover .user-del { opacity: 1; }
+        .user-del:hover { background: var(--red); color: white; }
+    </style>
+</head>
+<body>
+
+<!-- Lock screen -->
+<div class="lock-screen show" id="lockScreen">
+<div class="lock-split">
+
+    <!-- LEFT — Workspace Preview -->
+    <div class="lock-preview" id="lockPreview">
+        <div class="lock-pv-logo">
+            <div class="lock-pv-logo-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 19V5L12 15L19 5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="15" y="16" width="5" height="5" rx="2.5" fill="white" opacity=".90"/>
+                </svg>
+            </div>
+            <span class="lock-pv-logo-name">Notics</span>
+        </div>
+
+        <div>
+            <div class="lock-pv-tag">Votre espace personnel</div>
+            <div class="lock-pv-title">Retrouvez</div>
+            <div class="lock-pv-rotate-wrap">
+                <div class="lock-pv-rotate" id="pvRotate">
+                    <span>vos idées.</span>
+                    <span>vos projets.</span>
+                    <span>vos connaissances.</span>
+                    <span>tout, sécurisé.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- App window mockup -->
+        <div class="lock-app-win">
+            <div class="lock-aw-hd">
+                <div class="lock-aw-dots"><span></span><span></span><span></span></div>
+                <div class="lock-aw-search"><i class="fas fa-magnifying-glass" style="font-size:9px"></i> Rechercher…</div>
+            </div>
+            <div class="lock-aw-body">
+                <div class="lock-aw-sidebar">
+                    <div class="lock-aw-cat on" id="awCat0"><span class="lock-aw-cat-dot" style="background:#7C5CFC"></span>Toutes</div>
+                    <div class="lock-aw-cat" id="awCat1"><span class="lock-aw-cat-dot" style="background:#3B82F6"></span>Travail</div>
+                    <div class="lock-aw-cat" id="awCat2"><span class="lock-aw-cat-dot" style="background:#22C55E"></span>Idées</div>
+                    <div class="lock-aw-cat" id="awCat3"><span class="lock-aw-cat-dot" style="background:#F59E0B"></span>Priorité</div>
+                    <div class="lock-aw-cat" id="awCat4"><span class="lock-aw-cat-dot" style="background:#A78BFA"></span>IA</div>
+                    <div class="lock-aw-cat" id="awCat5"><span class="lock-aw-cat-dot" style="background:#F87171"></span>Personnel</div>
+                </div>
+                <div class="lock-aw-list">
+                    <div class="lock-aw-item on" id="awItem0">
+                        <div class="lock-aw-item-top"><span class="lock-aw-item-title">Projet SaaS Q3</span><span class="lock-aw-item-date">Aujourd'hui</span></div>
+                        <div class="lock-aw-item-preview">Roadmap & objectifs du trimestre…</div>
+                    </div>
+                    <div class="lock-aw-item" id="awItem1">
+                        <div class="lock-aw-item-top"><span class="lock-aw-item-title">Réunion Marketplace</span><span class="lock-aw-item-date">Hier</span></div>
+                        <div class="lock-aw-item-preview">Points clés et décisions prises…</div>
+                    </div>
+                    <div class="lock-aw-item" id="awItem2">
+                        <div class="lock-aw-item-top"><span class="lock-aw-item-title">Plan Business 2026</span><span class="lock-aw-item-date">Lundi</span></div>
+                        <div class="lock-aw-item-preview">Vision produit et go-to-market…</div>
+                    </div>
+                    <div class="lock-aw-item" id="awItem3">
+                        <div class="lock-aw-item-top"><span class="lock-aw-item-title">Idées Application IA</span><span class="lock-aw-item-date">Mercredi</span></div>
+                        <div class="lock-aw-item-preview">Intégration Groq, génération…</div>
+                    </div>
+                    <div class="lock-aw-item" id="awItem4">
+                        <div class="lock-aw-item-top"><span class="lock-aw-item-title">Architecture Technique</span><span class="lock-aw-item-date">Mar.</span></div>
+                        <div class="lock-aw-item-preview">AES-256-GCM, PBKDF2 600k…</div>
+                    </div>
+                    <div class="lock-aw-item" id="awItem5">
+                        <div class="lock-aw-item-top"><span class="lock-aw-item-title">Veille Concurrentielle</span><span class="lock-aw-item-date">Lun.</span></div>
+                        <div class="lock-aw-item-preview">Analyse des solutions du marché…</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal stats — shown when user is known -->
+        <div class="lock-pv-stats" id="pvStats" style="display:none">
+            <div class="lock-pv-stat">
+                <div class="lock-pv-stat-val" id="pvNoteCount">—</div>
+                <div class="lock-pv-stat-lbl">notes</div>
+            </div>
+            <div class="lock-pv-stat">
+                <div class="lock-pv-stat-val" id="pvCatCount">—</div>
+                <div class="lock-pv-stat-lbl">catégories</div>
+            </div>
+            <div class="lock-pv-stat lock-pv-stat--last">
+                <div class="lock-pv-stat-val" id="pvLastLogin">—</div>
+                <div class="lock-pv-stat-lbl">dernière connexion</div>
+            </div>
+        </div>
+
+        <div class="lock-pills">
+            <div class="lock-pill"><i class="fas fa-check"></i> Chiffrement local</div>
+            <div class="lock-pill"><i class="fas fa-check"></i> Hors connexion</div>
+            <div class="lock-pill"><i class="fas fa-check"></i> IA intégrée</div>
+        </div>
+        <div class="lock-copyright">© 2026 Talemsi — Tous droits réservés</div>
+    </div>
+
+    <!-- RIGHT — Form -->
+    <div class="lock-form-side">
+        <div class="lock-card">
+            <div class="lock-icon-wrap">
+                <i class="fas fa-lock" id="lockIconEl"></i>
+            </div>
+            <div class="lock-title" id="lockTitle">Notes</div>
+            <div class="lock-hint"  id="lockHint"></div>
+
+            <div class="user-grid" id="userGrid"></div>
+
+            <div class="lock-field" id="lockField">
+                <input id="lockInput" maxlength="128" placeholder=""
+                       onkeydown="if(event.key==='Enter') handleLock()" />
+                <button class="lock-eye" id="lockEye" type="button" onclick="togglePwd()" tabindex="-1">
+                    <i class="fas fa-eye" id="eyeIco"></i>
+                </button>
+            </div>
+
+            <div class="lock-err" id="lockErr"></div>
+            <div class="lock-att" id="lockAtt"></div>
+
+            <button class="lock-submit" id="lockBtn" onclick="handleLock()">Continuer</button>
+
+            <div class="lock-actions">
+                <button class="lock-text-btn" id="backLink" onclick="showSelectUser()" style="display:none">
+                    Changer de compte
+                </button>
+                <button class="lock-text-btn" id="changePwdLink" onclick="startChangePwd()">
+                    Changer de mot de passe
+                </button>
+            </div>
+
+            <div class="lock-assurance">
+                <div class="lock-assur-item"><i class="fas fa-check-circle"></i> Chiffrement AES-256 local</div>
+                <div class="lock-assur-item"><i class="fas fa-check-circle"></i> Données jamais envoyées en ligne</div>
+                <div class="lock-assur-item"><i class="fas fa-check-circle"></i> Fonctionne hors connexion</div>
+                <div class="lock-assur-item"><i class="fas fa-check-circle"></i> Sauvegarde automatique</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<!-- App -->
+<div class="app" id="appContent">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+        <div class="sb-header">
+            <div class="sb-logo">
+                <div class="sb-logo-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 19V5L12 15L19 5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="15" y="16" width="5" height="5" rx="2.5" fill="white" opacity=".90"/>
+                    </svg>
+                </div>
+                <span class="sb-logo-name">Notics</span>
+            </div>
+            <button class="sb-new-btn" onclick="document.getElementById('fTitle').focus()" title="Nouvelle note">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <div class="sb-nav">
+            <div class="sb-item active" id="sbAll" onclick="sbFilter(null,this)">
+                <i class="fas fa-layer-group"></i> Toutes les notes
+                <span class="sb-cat-pill" id="sbAllCt">0</span>
+            </div>
+            <div class="sb-item" id="sbRecent" onclick="sbFilter('recent',this)">
+                <i class="fas fa-clock-rotate-left"></i> Récentes
+            </div>
+            <div class="sb-section">Catégories</div>
+            <div id="sbCats"></div>
+        </div>
+
+        <div class="sb-footer">
+            <div class="sb-user">
+                <div class="sb-avatar" id="sbAvatar">?</div>
+                <span class="sb-uname" id="sbUname">—</span>
+            </div>
+            <button class="sb-icon-btn" onclick="openSettings()" title="Paramètres">
+                <i class="fas fa-gear"></i>
+            </button>
+            <button class="btn-lock" onclick="lockApp()" title="Verrouiller">
+                <i class="fas fa-lock"></i>
+            </button>
+        </div>
+        <div class="sb-copyright">© 2026 Talemsi</div>
+    </aside>
+
+    <!-- ── Main content ── -->
+    <div class="app-main">
+
+    <div class="ribbon" id="ribbon">
+        <div class="ribbon-dot"></div>
+        <div class="ribbon-txt" id="ribbonTxt"></div>
+        <button class="ribbon-btn" onclick="openRem()">Voir</button>
+        <button class="ribbon-x" onclick="$('ribbon').classList.remove('show')">&times;</button>
+    </div>
+
+    <div class="workspace">
+
+        <!-- Compose + IA -->
+        <div class="panel">
+            <div class="panel-hd">Nouvelle note</div>
+
+            <div class="field">
+                <label class="field-lbl">Titre <span style="color:var(--ink-5);font-weight:400">(auto si vide)</span></label>
+                <input type="text" id="fTitle" placeholder="Titre de la note" />
+            </div>
+            <div class="field">
+                <label class="field-lbl">Catégorie</label>
+                <select id="fCat">
+                    <option value="Travail">Travail</option>
+                    <option value="Personnel">Personnel</option>
+                </select>
+            </div>
+            <div class="field">
+                <label class="field-lbl">Contenu</label>
+                <textarea id="fText" placeholder="Rédigez votre note ici…"></textarea>
+            </div>
+            <div class="field">
+                <label class="field-lbl">Deadline <span style="color:var(--ink-5);font-weight:400">(optionnelle)</span></label>
+                <input type="date" id="fDate" />
+                <span class="field-sub">Rappel automatique à la date choisie.</span>
+            </div>
+            <span class="field-sub" id="dateErr" style="color:var(--red);display:none">
+                La date doit être aujourd'hui ou dans le futur.
+            </span>
+
+            <button class="btn-add" onclick="addNote()">
+                <i class="fas fa-plus"></i> Ajouter la note
+            </button>
+        </div>
+
+        <!-- Notes -->
+        <div class="panel">
+            <div class="panel-hd">Mes notes</div>
+
+            <div class="search">
+                <i class="fas fa-magnifying-glass"></i>
+                <input type="text" id="searchIn" placeholder="Rechercher…"
+                       oninput="onSearch()" autocomplete="off" />
+                <button class="search-clr" id="searchClr" onclick="clearSrc()">&times;</button>
+                <span class="search-ct" id="searchCt"></span>
+                <button class="bulk-toggle" id="bulkToggle" onclick="enterSelect()">Sélectionner</button>
+            </div>
+
+            <div class="bulk-bar" id="bulkBar">
+                <span class="bulk-ct" id="bulkCt">0 sélectionnée(s)</span>
+                <button class="btn-bulk-cancel" onclick="exitSelect()">Annuler</button>
+                <button class="btn-bulk-del" onclick="deleteSelected()">
+                    <i class="fas fa-trash-can"></i> Supprimer
+                </button>
+            </div>
+
+            <div class="nlist" id="nlist">
+                <div class="empty">
+                    <div class="empty-ico"><i class="far fa-file-alt"></i></div>
+                    <p><strong>Aucune note</strong>Créez votre première note.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </div><!-- /.app-main -->
+</div>
+
+<!-- Settings -->
+<div class="overlay" id="settingsOv">
+    <div class="modal modal-sm">
+        <div class="modal-hd">
+            <div class="modal-ttl"><i class="fas fa-gear" style="color:#A78BFA;margin-right:8px;font-size:14px"></i>Paramètres</div>
+            <button class="modal-x" onclick="closeSettings()">&times;</button>
+        </div>
+        <div class="modal-body" style="padding:22px 24px 24px">
+            <div class="settings-section-title"><i class="fas fa-bolt" style="color:#A78BFA;margin-right:5px"></i>Clé API Groq</div>
+            <div class="settings-hint">
+                Clé stockée chiffrée (AES-256) sur cet appareil uniquement.<br>
+                Obtenez une clé gratuite sur <strong style="color:#A78BFA">console.groq.com</strong>
+            </div>
+            <div class="settings-key-row">
+                <input type="password" id="cfgKey" placeholder="gsk_…" autocomplete="off" spellcheck="false"
+                       onkeydown="if(event.key==='Enter') saveKeyInline()">
+                <button class="btn-key-sv" id="btnKeySv" onclick="saveKeyInline()">Enregistrer</button>
+            </div>
+            <div class="settings-status none" id="keyStatus"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Note detail -->
+<div class="overlay" id="noteOv">
+    <div class="modal">
+        <div class="modal-hd">
+            <div style="flex:1;min-width:0">
+                <div class="modal-ttl" id="mTitle"></div>
+                <div class="modal-meta" id="mMeta"></div>
+            </div>
+            <button class="modal-x" onclick="closeNote()">&times;</button>
+        </div>
+        <!-- View mode -->
+        <div class="modal-body" id="mBody" style="white-space:pre-wrap"></div>
+        <!-- Edit mode (hidden by default) -->
+        <div id="mEditForm" style="display:none;padding:0 24px 4px">
+            <div class="field">
+                <label class="field-lbl">Titre</label>
+                <input type="text" id="mEditTitle" maxlength="200" />
+            </div>
+            <div class="field">
+                <label class="field-lbl">Catégorie</label>
+                <select id="mEditCat">
+                    <option value="Travail">Travail</option>
+                    <option value="Personnel">Personnel</option>
+                </select>
+            </div>
+            <div class="field">
+                <label class="field-lbl">Contenu</label>
+                <textarea id="mEditText" style="min-height:140px;max-height:280px"></textarea>
+            </div>
+            <div class="field">
+                <label class="field-lbl">Deadline <span style="color:var(--ink-5);font-weight:400">(optionnelle)</span></label>
+                <input type="date" id="mEditDate" />
+            </div>
+        </div>
+        <div class="modal-ft">
+            <button class="btn-del" id="mBtnDel" onclick="delFromModal()">
+                <i class="fas fa-trash-can"></i> Supprimer
+            </button>
+            <button class="btn-ghost" id="mBtnCancel" onclick="closeNote()">Fermer</button>
+            <button class="btn-ghost" id="mBtnEdit" onclick="enterEditMode()" style="color:#A78BFA;border-color:#A78BFA22">
+                <i class="fas fa-pen"></i> Modifier
+            </button>
+            <button class="btn-add" id="mBtnSave" onclick="saveEditedNote()" style="display:none;padding:8px 18px;font-size:13px">
+                <i class="fas fa-check"></i> Sauvegarder
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Reminders -->
+<div class="overlay" id="remOv">
+    <div class="modal modal-sm">
+        <div class="modal-hd">
+            <div class="modal-ttl">Rappels</div>
+            <button class="modal-x" onclick="closeRem()">&times;</button>
+        </div>
+        <div id="remList"></div>
+        <div class="modal-ft">
+            <button class="btn-ghost" onclick="closeRem()">Fermer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Compiler -->
+<div class="overlay" id="compileOv">
+    <div class="modal modal-compile">
+        <div class="modal-hd">
+            <div>
+                <div class="modal-ttl">Compiler les notes</div>
+                <div class="modal-meta" id="compileMeta"></div>
+            </div>
+            <button class="modal-x" onclick="closeCompiler()">&times;</button>
+        </div>
+
+        <div class="compile-ctrl">
+            <div class="compile-tabs">
+                <button class="ctab active" id="tabCR" onclick="switchCompileTab('cr')">
+                    <i class="fas fa-file-lines"></i> Compte rendu
+                </button>
+                <button class="ctab" id="tabPrompt" onclick="switchCompileTab('prompt')">
+                    <i class="fas fa-wand-magic-sparkles"></i> Prompt Claude
+                </button>
+            </div>
+            <select class="compile-scope" id="compileScope" onchange="refreshCompiler()">
+                <option value="all">Toutes les notes</option>
+                <option value="filtered">Notes filtrées</option>
+            </select>
+        </div>
+
+        <div class="cr-view" id="viewCR"></div>
+
+        <div id="viewPrompt" style="display:none">
+            <div class="prompt-config">
+                <div class="prompt-config-label">Votre demande</div>
+                <textarea class="prompt-user-ta" id="userInstruction"
+                    placeholder="Optionnel — ex : focus sur les actions à suivre, prépare un email de synthèse, compare avec les bonnes pratiques du secteur…"
+                    oninput="refreshCompiler()"></textarea>
+                <div class="prompt-web-row">
+                    <label class="prompt-web-label">
+                        <input type="checkbox" id="webSearch" onchange="refreshCompiler()">
+                        <i class="fas fa-globe" style="color:var(--khaki);font-size:11px"></i>
+                        Demander à Claude de chercher sur le web
+                    </label>
+                    <span class="token-est" id="tokenEst"></span>
+                </div>
+            </div>
+            <div class="prompt-hint" style="border-radius:0;border-top:none;margin-bottom:0">
+                <i class="fas fa-circle-info"></i>
+                <span>Copiez ce prompt → collez dans <a href="https://claude.ai" target="_blank" rel="noopener noreferrer">claude.ai</a>. Zéro token consommé ici.</span>
+            </div>
+            <div class="prompt-ta-wrap">
+                <textarea class="prompt-ta" id="promptTa" readonly></textarea>
+            </div>
+        </div>
+
+        <div id="viewIA" style="display:none">
+            <div class="ia-key-row">
+                <i class="fas fa-key" style="color:var(--ink-4);font-size:11px;flex-shrink:0"></i>
+                <input type="password" id="iaApiKey" placeholder="gsk_…" autocomplete="off" spellcheck="false">
+                <button class="ia-key-save" id="iaKeySaveBtn" onclick="saveApiKey()">Sauvegarder</button>
+            </div>
+            <div class="ia-config-inner">
+                <div class="prompt-config-label">Modèle</div>
+                <select class="ia-model-sel" id="iaModel">
+                    <option value="llama-3.1-8b-instant">Llama 3.1 8B — rapide &amp; gratuit</option>
+                    <option value="llama-3.3-70b-versatile">Llama 3.3 70B — meilleure qualité</option>
+                </select>
+                <div class="prompt-config-label">Votre demande</div>
+                <textarea class="prompt-user-ta" id="iaInstruction"
+                    placeholder="Ex : synthétise les actions à suivre, rédige un email, compare avec les bonnes pratiques…"></textarea>
+                <div class="prompt-web-row">
+                    <span id="iaUsage" class="ia-usage" style="margin-left:0"></span>
+                </div>
+            </div>
+            <div class="ia-result" id="iaResult">
+                <div class="ia-result-empty">
+                    <i class="fas fa-robot" style="font-size:22px;display:block;margin-bottom:8px;opacity:.3"></i>
+                    Entrez votre clé API, configurez votre demande, puis cliquez sur Générer.
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-ft">
+            <button class="btn-ghost" onclick="closeCompiler()">Fermer</button>
+            <button class="btn-ia-gen" id="iaGenBtn" onclick="generateWithOpenAI()" style="display:none">
+                <i class="fas fa-wand-magic-sparkles"></i> Générer
+            </button>
+            <button class="btn-copy-compile" id="copyCompileBtn" onclick="copyCompiled()">
+                <i class="fas fa-copy"></i> Copier le texte
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+'use strict';
+
+/* ── Crypto ── */
+const LS_SALT      = 'ns_salt_v3';   // legacy (migration only)
+const LS_DATA      = 'ns_data_v4';   // legacy (migration only)
+const LS_USERS      = 'ns_users_v1';
+const groqKey = () => `ns_gk_${currentUserId}`;
+const LOCK_TIMEOUT    = 5 * 60 * 1000;
+const MAX_ATT         = 5;
+const BLOCK_MS        = 2 * 60 * 1000;
+const DEVICE_USER_KEY = 'ns_dv';
+
+/* Vault params for new vaults — 600k iterations + SHA-512 (OWASP 2024) */
+const NEW_VAULT_PARAMS = { iter: 600_000, hash: 'SHA-512' };
+/* Legacy default for vaults created before this version */
+const LEGACY_PARAMS    = { iter: 100_000, hash: 'SHA-256' };
+
+const saltKey       = id => `ns_s3_${id}`;
+const dataKey       = id => `ns_d4_${id}`;
+const blockKey      = id => `ns_bl_${id}`;
+const failsKey      = id => `ns_fa_${id}`;
+const vaultParamsKey= id => `ns_vp_${id}`;
+const metaKey       = id => `ns_mt_${id}`;
+
+/* ── Security Audit Log (in-memory, cleared on lock) ── */
+const _secLog = [];
+function secAudit(event, detail = '') {
+    _secLog.push({ ts: new Date().toISOString(), ev: event, d: String(detail).slice(0, 120) });
+    if (_secLog.length > 500) _secLog.shift();
+}
+
+/* ── Input Validation ── */
+function validateStr(v, maxLen, label) {
+    if (typeof v !== 'string') throw new Error('Entrée invalide');
+    if (v.length > maxLen) throw new Error(`${label} trop long (max ${maxLen} caractères)`);
+    return v.trim();
+}
+
+/* ── Lock screen — rotating text, app window animation & personal stats ── */
+const PV_WORDS = ['vos idées.', 'vos projets.', 'vos connaissances.', 'tout, sécurisé.'];
+let _pvIdx = 0, _pvTimer = null;
+function startPvRotate() {
+    const el = document.getElementById('pvRotate');
+    if (!el) return;
+    clearInterval(_pvTimer);
+    _pvTimer = setInterval(() => {
+        _pvIdx = (_pvIdx + 1) % PV_WORDS.length;
+        el.style.transform = `translateY(-${_pvIdx * 40}px)`;
+    }, 3000);
+}
+
+let _awTimer = null, _awItemIdx = 0, _awCatIdx = 0;
+const AW_ITEMS = 6, AW_CATS = 6;
+const AW_CAT_SEQ = [0, 1, 0, 2, 0, 3, 0, 4, 0, 1];
+function startAwAnimation() {
+    clearInterval(_awTimer);
+    _awItemIdx = 0; _awCatIdx = 0;
+    _awTimer = setInterval(() => {
+        const prevItem = document.getElementById(`awItem${_awItemIdx}`);
+        const prevCat  = document.getElementById(`awCat${AW_CAT_SEQ[_awCatIdx]}`);
+        if (prevItem) prevItem.classList.remove('on');
+        if (prevCat)  prevCat.classList.remove('on');
+        _awItemIdx = (_awItemIdx + 1) % AW_ITEMS;
+        _awCatIdx  = (_awCatIdx  + 1) % AW_CAT_SEQ.length;
+        const nextItem = document.getElementById(`awItem${_awItemIdx}`);
+        const nextCat  = document.getElementById(`awCat${AW_CAT_SEQ[_awCatIdx]}`);
+        if (nextItem) nextItem.classList.add('on');
+        if (nextCat)  nextCat.classList.add('on');
+    }, 2200);
+}
+
+function saveUserMeta() {
+    if (!currentUserId || !notes) return;
+    const cats = new Set(notes.map(n => n.category).filter(Boolean));
+    localStorage.setItem(metaKey(currentUserId), JSON.stringify({
+        lastLogin: new Date().toISOString(),
+        noteCount: notes.length,
+        catCount:  cats.size
+    }));
+}
+
+function showUserMeta(id) {
+    const pvStats = document.getElementById('pvStats');
+    if (!pvStats) return;
+    try {
+        const m = JSON.parse(localStorage.getItem(metaKey(id)) || 'null');
+        if (!m) { pvStats.style.display = 'none'; return; }
+        document.getElementById('pvNoteCount').textContent = m.noteCount ?? '—';
+        document.getElementById('pvCatCount').textContent  = m.catCount  ?? '—';
+        if (m.lastLogin) {
+            const d = new Date(m.lastLogin);
+            const now = new Date();
+            const time = d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+            const isToday = d.toDateString() === now.toDateString();
+            const isYest  = d.toDateString() === new Date(now - 86400000).toDateString();
+            document.getElementById('pvLastLogin').textContent =
+                isToday ? `Aujourd'hui à ${time}` : isYest ? `Hier à ${time}` : `il y a ${Math.floor((Date.now()-d)/86400000)}j`;
+        }
+        pvStats.style.display = 'flex';
+    } catch { pvStats.style.display = 'none'; }
+}
+
+function getUsers() { try { return JSON.parse(localStorage.getItem(LS_USERS) || '[]'); } catch { return []; } }
+function saveUsers(u) { localStorage.setItem(LS_USERS, JSON.stringify(u)); }
+
+function migrate() {
+    const oldSalt = localStorage.getItem(LS_SALT);
+    if (!oldSalt) return;
+    const users = getUsers();
+    if (users.find(u => u.id === '_v1')) return;
+    const id = '_v1';
+    localStorage.setItem(saltKey(id), oldSalt);
+    const d = localStorage.getItem(LS_DATA) || localStorage.getItem('ns_data_v3');
+    if (d) localStorage.setItem(dataKey(id), d);
+    users.unshift({ id, name: 'Mes notes' });
+    saveUsers(users);
+    ['ns_salt_v3','ns_data_v4','ns_data_v3','ns_block_v1','notes','ns_name'].forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem('ns_fails_v1');
+}
+
+let encKey = null, notes = [];
+let lockTimer;
+let fails = 0, blockedUntil = 0;
+let state = 'unlock', tmpPwd = null;
+let currentUserId = null;
+
+const enc    = t => new TextEncoder().encode(t);
+const dec    = b => new TextDecoder().decode(b);
+function toB64(buf) {
+    const bytes = new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer);
+    let s = '';
+    for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+}
+const fromB64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+async function deriveKey(pw, salt, params = LEGACY_PARAMS) {
+    const raw = await crypto.subtle.importKey('raw', enc(pw), { name:'PBKDF2' }, false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+        { name:'PBKDF2', salt, iterations: params.iter, hash: params.hash },
+        raw, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
+    );
+}
+async function cryptEnc(data, key) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, enc(JSON.stringify(data)));
+    const out = new Uint8Array(12 + ct.byteLength);
+    out.set(iv); out.set(new Uint8Array(ct), 12);
+    return toB64(out);
+}
+async function cryptDec(b64, key) {
+    const buf = fromB64(b64);
+    const pt  = await crypto.subtle.decrypt({ name:'AES-GCM', iv:buf.slice(0,12) }, key, buf.slice(12));
+    return JSON.parse(dec(pt));
+}
+async function tryUnlock(pw) {
+    const sb = localStorage.getItem(saltKey(currentUserId));
+    if (!sb) return null;
+    try {
+        let params = LEGACY_PARAMS;
+        try {
+            const vp = JSON.parse(localStorage.getItem(vaultParamsKey(currentUserId)) || 'null');
+            if (vp?.iter && vp?.hash) params = vp;
+        } catch {}
+        const key = await deriveKey(pw, fromB64(sb), params);
+        const blob = localStorage.getItem(dataKey(currentUserId));
+        if (!blob) return { key, notes: [] };
+        const raw = await cryptDec(blob, key);
+        return { key, notes: Array.isArray(raw) ? raw : (raw.notes || []) };
+    } catch { return null; }
+}
+async function createVault(pw) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    localStorage.setItem(saltKey(currentUserId), toB64(salt));
+    localStorage.setItem(vaultParamsKey(currentUserId), JSON.stringify(NEW_VAULT_PARAMS));
+    const key = await deriveKey(pw, salt, NEW_VAULT_PARAMS);
+    localStorage.setItem(dataKey(currentUserId), await cryptEnc([], key));
+    return key;
+}
+async function reencrypt(pw) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    localStorage.setItem(saltKey(currentUserId), toB64(salt));
+    localStorage.setItem(vaultParamsKey(currentUserId), JSON.stringify(NEW_VAULT_PARAMS));
+    encKey = await deriveKey(pw, salt, NEW_VAULT_PARAMS);
+    localStorage.setItem(dataKey(currentUserId), await cryptEnc(notes, encKey));
+}
+async function persist() {
+    if (!encKey || !currentUserId) return;
+    localStorage.setItem(dataKey(currentUserId), await cryptEnc(notes, encKey));
+}
+
+/* ── Lock screen ── */
+const $ = id => document.getElementById(id);
+const esc = t => { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; };
+
+function ui({ icon='fa-lock', title='Notes', hint='', btn='Continuer', err='', att='',
+              showChange=false, showBack=false, pwMode=true, placeholder='' }) {
+    $('lockIconEl').className        = `fas ${icon}`;
+    $('lockTitle').textContent       = title;
+    $('lockHint').textContent        = hint;
+    $('lockBtn').textContent         = btn;
+    $('lockErr').textContent         = err;
+    $('lockAtt').textContent         = att;
+    $('changePwdLink').style.display = showChange ? 'inline' : 'none';
+    $('backLink').style.display      = showBack   ? 'inline' : 'none';
+    $('lockInput').type              = pwMode ? 'password' : 'text';
+    $('lockInput').className         = pwMode ? 'pw' : '';
+    $('lockInput').placeholder       = placeholder;
+    $('lockInput').value             = '';
+    $('lockBtn').disabled            = false;
+    $('lockInput').disabled          = false;
+    $('lockEye').classList.toggle('on', pwMode);
+    $('eyeIco').className            = 'fas fa-eye';
+    $('userGrid').style.display      = 'none';
+    $('lockField').style.display     = '';
+    $('lockBtn').style.display       = '';
+    setTimeout(() => $('lockInput').focus(), 50);
+}
+
+function showSelectUser() {
+    state = 'select';
+    currentUserId = null;
+    fails = 0; blockedUntil = 0;
+    const pvStats = document.getElementById('pvStats');
+    if (pvStats) pvStats.style.display = 'none';
+    const users = getUsers();
+
+    $('lockIconEl').className        = 'fas fa-lock';
+    $('lockTitle').textContent       = 'Notes';
+    $('lockErr').textContent         = '';
+    $('lockAtt').textContent         = '';
+    $('lockHint').textContent        = users.length === 0 ? 'Créez votre premier profil.' : '';
+    $('changePwdLink').style.display = 'none';
+    $('backLink').style.display      = 'none';
+    $('lockField').style.display     = 'none';
+    $('lockBtn').style.display       = 'none';
+    $('userGrid').style.display      = 'grid';
+
+    $('userGrid').innerHTML = users.map(u =>
+        `<div class="user-card" onclick="selectUser('${esc(u.id)}')">
+            <div class="user-av">${esc(u.name.charAt(0).toUpperCase())}</div>
+            <div class="user-nm">${esc(u.name)}</div>
+            <button class="user-del" onclick="event.stopPropagation();deleteUser('${esc(u.id)}')" title="Supprimer">×</button>
+        </div>`
+    ).join('') +
+        `<div class="user-card" onclick="startNewUser()">
+            <div class="user-av user-av-new"><i class="fas fa-plus"></i></div>
+            <div class="user-nm user-nm-new">Nouveau</div>
+        </div>`;
+}
+
+function selectUser(id) {
+    const user = getUsers().find(u => u.id === id);
+    if (!user) return;
+    currentUserId = id;
+    fails        = parseInt(sessionStorage.getItem(failsKey(id)) || '0', 10);
+    blockedUntil = parseInt(localStorage.getItem(blockKey(id))   || '0', 10);
+    showUserMeta(id);
+
+    if (!localStorage.getItem(saltKey(id))) {
+        state = 'setup_1';
+        ui({ title: user.name, hint: 'Choisissez un mot de passe (min. 8 caractères).', btn: 'Continuer', showBack: true });
+    } else {
+        state = 'unlock';
+        ui({ title: user.name, btn: 'Déverrouiller', showChange: true, showBack: true });
+    }
+}
+
+function startNewUser() {
+    state = 'setup_name';
+    ui({ hint: 'Choisissez un nom pour ce profil.', btn: 'Continuer', showBack: true, pwMode: false, placeholder: 'Marouane...' });
+}
+
+async function deleteUser(id) {
+    const user = getUsers().find(u => u.id === id);
+    if (!user || !confirm(`Supprimer le profil « ${user.name} » et toutes ses notes ?`)) return;
+    saveUsers(getUsers().filter(u => u.id !== id));
+    [saltKey(id), dataKey(id), blockKey(id), vaultParamsKey(id), metaKey(id), `ns_ck_${id}`, `ns_ok_${id}`, `ns_gk_${id}`].forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem(failsKey(id));
+    if (localStorage.getItem(DEVICE_USER_KEY) === id) localStorage.removeItem(DEVICE_USER_KEY);
+    showSelectUser();
+}
+
+function showLock() {
+    $('lockScreen').classList.add('show');
+    $('appContent').classList.remove('show');
+    clearTimeout(lockTimer);
+    startPvRotate();
+    startAwAnimation();
+    migrate();
+    const storedId = localStorage.getItem(DEVICE_USER_KEY);
+    const known    = storedId && getUsers().find(u => u.id === storedId);
+    if (known) selectUser(storedId); else showSelectUser();
+}
+
+function updateSidebar() {
+    const user = getUsers().find(u => u.id === currentUserId);
+    if (user) {
+        $('sbAvatar').textContent = user.name.charAt(0).toUpperCase();
+        $('sbUname').textContent  = user.name;
+    }
+    $('sbAllCt').textContent = notes.length;
+    const cats = [...new Set(notes.map(n => n.category).filter(Boolean))].sort();
+    $('sbCats').innerHTML = cats.map(c => {
+        const ct = notes.filter(n => n.category === c).length;
+        return `<div class="sb-item" onclick="sbFilter('cat:${esc(c)}',this)">
+            <i class="fas fa-tag"></i> ${esc(c)}
+            <span class="sb-cat-pill">${ct}</span>
+        </div>`;
+    }).join('');
+}
+
+let sbCurrentFilter = null;
+function sbFilter(filter, el) {
+    sbCurrentFilter = filter;
+    document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+    if (el) el.classList.add('active');
+    if (!filter || filter === 'recent') {
+        render('', filter === 'recent' ? 5 : null);
+    } else if (filter.startsWith('cat:')) {
+        const cat = filter.slice(4);
+        render('', null, cat);
+    }
+}
+
+function showApp() {
+    secAudit('LOGIN', currentUserId);
+    localStorage.setItem(DEVICE_USER_KEY, currentUserId);
+    $('lockScreen').classList.remove('show');
+    $('appContent').classList.add('show');
+    $('fDate').min = new Date().toISOString().split('T')[0];
+    resetTimer();
+    render();
+    checkRem();
+    updateSidebar();
+}
+
+function lockApp() {
+    secAudit('LOCK', currentUserId || '');
+    saveUserMeta();
+    /* Zeroize sensitive in-memory state */
+    encKey = null; notes = []; tmpPwd = null; currentUserId = null;
+    _secLog.length = 0;
+    clearTimeout(lockTimer);
+    $('nlist').innerHTML = '';
+    selectMode = false; selected.clear();
+    $('bulkBar').classList.remove('show');
+    $('ribbon').classList.remove('show');
+    if ($('searchIn')) { $('searchIn').value = ''; $('searchCt').textContent = ''; }
+    $('searchClr')?.classList.remove('on');
+    /* Clear any sensitive form fields */
+    if ($('cfgKey')) $('cfgKey').value = '';
+    closeNote(); closeRem(); closeCompiler();
+    showLock();
+}
+
+function resetTimer() {
+    clearTimeout(lockTimer);
+    lockTimer = setTimeout(lockApp, LOCK_TIMEOUT);
+}
+
+function setBusy(on) {
+    $('lockBtn').disabled   = on;
+    $('lockInput').disabled = on;
+    if (on) $('lockBtn').textContent = '…';
+}
+
+async function handleLock() {
+    if (Date.now() < blockedUntil) {
+        $('lockErr').textContent = `Trop de tentatives — réessayez dans ${Math.ceil((blockedUntil-Date.now())/1000)} s.`;
+        return;
+    }
+    const v = $('lockInput').value;
+    if (!v.trim()) { $('lockErr').textContent = 'Champ requis.'; return; }
+    setBusy(true);
+    try { await dispatch(v); } finally { setBusy(false); }
+}
+
+async function dispatch(v) {
+    switch (state) {
+        case 'setup_name': {
+            const name = v.trim();
+            if (!name) { $('lockErr').textContent = 'Choisissez un nom.'; return; }
+            if (name.length > 30) { $('lockErr').textContent = 'Nom trop long (max 30 caractères).'; return; }
+            const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            const users = getUsers();
+            users.push({ id, name });
+            saveUsers(users);
+            currentUserId = id;
+            state = 'setup_1';
+            ui({ title: name, hint: 'Choisissez un mot de passe (min. 8 caractères).', btn: 'Continuer', showBack: true });
+            break;
+        }
+
+        case 'setup_1':
+            if (v.length < 8) { $('lockErr').textContent = 'Minimum 8 caractères.'; return; }
+            tmpPwd = v; state = 'setup_2';
+            ui({ title: getUsers().find(u=>u.id===currentUserId)?.name||'Notes', hint:'Confirmez votre mot de passe.', btn:'Créer', showBack: true });
+            break;
+
+        case 'setup_2':
+            if (v !== tmpPwd) {
+                tmpPwd = null; state = 'setup_1';
+                ui({ hint:'Choisissez un mot de passe (min. 8 caractères).', btn:'Continuer', err:'Les mots de passe ne correspondent pas.', showBack: true });
+                return;
+            }
+            encKey = await createVault(tmpPwd); notes = []; tmpPwd = null;
+            showApp();
+            break;
+
+        case 'unlock': {
+            const r = await tryUnlock(v);
+            if (r) {
+                fails = 0;
+                sessionStorage.removeItem(failsKey(currentUserId));
+                localStorage.removeItem(blockKey(currentUserId));
+                encKey = r.key; notes = r.notes;
+                showApp();
+            } else {
+                fails++;
+                secAudit('LOGIN_FAIL', `attempt ${fails}/${MAX_ATT}`);
+                sessionStorage.setItem(failsKey(currentUserId), String(fails));
+                $('lockInput').value = '';
+                if (fails >= MAX_ATT) {
+                    blockedUntil = Date.now() + BLOCK_MS;
+                    localStorage.setItem(blockKey(currentUserId), String(blockedUntil));
+                    fails = 0;
+                    sessionStorage.removeItem(failsKey(currentUserId));
+                    secAudit('ACCOUNT_BLOCKED', '2 min');
+                    $('lockErr').textContent = 'Accès bloqué 2 minutes.';
+                } else {
+                    const left = MAX_ATT - fails;
+                    $('lockErr').textContent = 'Mot de passe incorrect.';
+                    $('lockAtt').textContent = `${left} essai${left>1?'s':''} restant${left>1?'s':''}.`;
+                }
+            }
+            break;
+        }
+
+        case 'ch0': {
+            const r = await tryUnlock(v);
+            if (!r) { $('lockErr').textContent = 'Mot de passe actuel incorrect.'; $('lockInput').value=''; return; }
+            notes = r.notes; state = 'ch1';
+            ui({ hint:'Nouveau mot de passe (min. 8 caractères).', btn:'Continuer' });
+            break;
+        }
+        case 'ch1':
+            if (v.length < 8) { $('lockErr').textContent = 'Minimum 8 caractères.'; return; }
+            tmpPwd = v; state = 'ch2';
+            ui({ hint:'Confirmez le nouveau mot de passe.', btn:'Enregistrer' });
+            break;
+
+        case 'ch2':
+            if (v !== tmpPwd) {
+                tmpPwd = null; state = 'ch1';
+                ui({ hint:'Nouveau mot de passe (min. 8 caractères).', btn:'Continuer', err:'Mots de passe différents.' });
+                return;
+            }
+            await reencrypt(tmpPwd); tmpPwd = null;
+            showApp();
+            break;
+    }
+}
+
+function startChangePwd() {
+    state = 'ch0';
+    ui({ hint:'Entrez votre mot de passe actuel.', btn:'Vérifier' });
+}
+
+function togglePwd() {
+    const i = $('lockInput'), h = i.type==='password';
+    i.type = h ? 'text' : 'password';
+    i.className = h ? '' : 'pw';
+    $('eyeIco').className = h ? 'fas fa-eye-slash' : 'fas fa-eye';
+}
+
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        hiddenAt = Date.now();
+    } else {
+        if (hiddenAt && Date.now() - hiddenAt >= LOCK_TIMEOUT) lockApp();
+        hiddenAt = 0;
+    }
+});
+['click','keydown','mousemove','touchstart'].forEach(e =>
+    document.addEventListener(e, () => { if ($('appContent').classList.contains('show')) resetTimer(); }, { passive:true })
+);
+showLock();
+
+/* ── Notes ── */
+let activeNoteId = null;
+let selectMode   = false;
+let selected     = new Set();
+
+function fmtD(iso) {
+    if (!iso) return '';
+    if (iso.includes('-')) { const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+    return iso;
+}
+function rSt(iso) {
+    if (!iso) return null;
+    const t = new Date().toISOString().split('T')[0];
+    return iso < t ? 'overdue' : iso===t ? 'today' : 'future';
+}
+function rLbl(s) { return s==='overdue' ? 'En retard' : s==='today' ? "Aujourd'hui" : 'À venir'; }
+
+async function addNote() {
+    let title, cat, text;
+    try {
+        title = validateStr($('fTitle').value, 200, 'Titre');
+        cat   = validateStr($('fCat').value, 100, 'Catégorie') || 'Général';
+        text  = validateStr($('fText').value, 50_000, 'Contenu');
+    } catch (e) { alert(e.message); return; }
+    const reminder = $('fDate').value || null;
+    if (!text) { $('fText').focus(); return; }
+
+    if (reminder) {
+        const today = new Date().toISOString().split('T')[0];
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(reminder) || reminder < today) {
+            $('dateErr').style.display = 'block';
+            $('fDate').focus();
+            return;
+        }
+    }
+    $('dateErr').style.display = 'none';
+
+    notes.push({
+        id:   Date.now(),
+        title: title || text.split('\n')[0].substring(0, 50) || 'Note',
+        category: cat, text,
+        created:  new Date().toISOString().split('T')[0],
+        reminderDate: reminder
+    });
+    secAudit('NOTE_CREATE');
+    await persist();
+    ['fTitle','fCat','fText','fDate'].forEach(id => $(id).value = '');
+    onSearch();
+    $('fText').focus();
+}
+
+async function delNote(id) {
+    if (!confirm('Supprimer cette note ?')) return;
+    notes = notes.filter(n => n.id !== id);
+    secAudit('NOTE_DELETE');
+    await persist();
+    onSearch();
+}
+
+/* ── Bulk select ── */
+function enterSelect() {
+    selectMode = true; selected.clear();
+    $('nlist').classList.add('select-mode');
+    $('bulkBar').classList.add('show');
+    $('bulkToggle').textContent = 'Tout sélectionner';
+    updateBulkCount();
+    render($('searchIn').value.trim().toLowerCase());
+}
+
+function exitSelect() {
+    selectMode = false; selected.clear();
+    $('nlist').classList.remove('select-mode');
+    $('bulkBar').classList.remove('show');
+    $('bulkToggle').textContent = 'Sélectionner';
+    render($('searchIn').value.trim().toLowerCase());
+}
+
+function toggleSelect(id, cb) {
+    if (cb.checked) selected.add(id); else selected.delete(id);
+    updateBulkCount();
+}
+
+function updateBulkCount() {
+    $('bulkCt').textContent = `${selected.size} sélectionnée${selected.size>1?'s':''}`;
+}
+
+async function deleteSelected() {
+    if (!selected.size) return;
+    if (!confirm(`Supprimer ${selected.size} note${selected.size>1?'s':''} ?`)) return;
+    notes = notes.filter(n => !selected.has(n.id));
+    await persist();
+    exitSelect();
+}
+
+async function delFromModal() { await delNote(activeNoteId); closeNote(); }
+
+function openNote(id) {
+    const n = notes.find(n=>n.id===id);
+    if (!n) return;
+    activeNoteId = id;
+    $('mTitle').textContent = n.title;
+    const rs = rSt(n.reminderDate);
+    const badge = rs ? `<span class="rbadge ${rs}">${fmtD(n.reminderDate)} — ${rLbl(rs)}</span>` : '';
+    $('mMeta').innerHTML = `<span>${esc(n.category)}</span><span>·</span><span>${fmtD(n.created)}</span>${badge?'<span>·</span>'+badge:''}`;
+    $('mBody').textContent = n.text;
+    $('noteOv').classList.add('show');
+}
+function closeNote() {
+    $('noteOv').classList.remove('show');
+    activeNoteId = null;
+    exitEditMode();
+}
+
+function enterEditMode() {
+    const n = notes.find(n => n.id === activeNoteId);
+    if (!n) return;
+    $('mBody').style.display     = 'none';
+    $('mEditForm').style.display = '';
+    $('mBtnEdit').style.display  = 'none';
+    $('mBtnSave').style.display  = '';
+    $('mBtnCancel').textContent  = 'Annuler';
+    $('mBtnCancel').onclick      = () => { exitEditMode(); };
+    $('mEditTitle').value = n.title;
+    $('mEditCat').value   = n.category;
+    $('mEditText').value  = n.text;
+    $('mEditDate').value  = n.reminderDate || '';
+}
+
+function exitEditMode() {
+    $('mBody').style.display     = '';
+    $('mEditForm').style.display = 'none';
+    $('mBtnEdit').style.display  = '';
+    $('mBtnSave').style.display  = 'none';
+    $('mBtnCancel').textContent  = 'Fermer';
+    $('mBtnCancel').onclick      = closeNote;
+}
+
+async function saveEditedNote() {
+    const n = notes.find(n => n.id === activeNoteId);
+    if (!n) return;
+    let title, cat, text;
+    try {
+        title = validateStr($('mEditTitle').value, 200, 'Titre');
+        cat   = validateStr($('mEditCat').value, 100, 'Catégorie') || 'Général';
+        text  = validateStr($('mEditText').value, 50_000, 'Contenu');
+    } catch (e) { alert(e.message); return; }
+    if (!text) { $('mEditText').focus(); return; }
+    const dl = $('mEditDate').value || null;
+    if (dl) {
+        const today = new Date().toISOString().split('T')[0];
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dl) || dl < today) {
+            alert('La deadline doit être aujourd\'hui ou dans le futur.'); return;
+        }
+    }
+    n.title        = title || text.split('\n')[0].substring(0, 50) || 'Note';
+    n.category     = cat;
+    n.text         = text;
+    n.reminderDate = dl;
+    await persist();
+    onSearch();
+    openNote(activeNoteId);
+    exitEditMode();
+}
+
+/* ── Reminders ── */
+function checkRem() {
+    const t = new Date().toISOString().split('T')[0];
+    const due = notes.filter(n=>n.reminderDate && n.reminderDate<=t);
+    if (!due.length) return;
+    const td = due.filter(n=>n.reminderDate===t).length;
+    const ov = due.filter(n=>n.reminderDate<t).length;
+    $('ribbonTxt').innerHTML = td && ov
+        ? `<b>${td}</b> rappel${td>1?'s':''} aujourd'hui · <b>${ov}</b> en retard`
+        : td ? `<b>${td}</b> rappel${td>1?'s':''} pour aujourd'hui`
+             : `<b>${ov}</b> rappel${ov>1?'s':''} en retard`;
+    $('ribbon').classList.add('show');
+}
+
+function openRem() {
+    const t = new Date().toISOString().split('T')[0];
+    const due = notes.filter(n=>n.reminderDate && n.reminderDate<=t);
+    $('remList').innerHTML = due.map(n => {
+        const s = rSt(n.reminderDate);
+        return `<div class="rem-item ${s}" onclick="closeRem(); openNote(${n.id})">
+            <div class="rem-dot"></div>
+            <div>
+                <div class="rem-t">${esc(n.title)}</div>
+                <div class="rem-w">${s==='today'?"Aujourd'hui":'En retard — '+fmtD(n.reminderDate)}</div>
+            </div>
+        </div>`;
+    }).join('');
+    $('remOv').classList.add('show');
+    $('ribbon').classList.remove('show');
+}
+function closeRem() { $('remOv').classList.remove('show'); }
+
+/* ── Search + render ── */
+function onSearch() {
+    const q = $('searchIn').value.trim().toLowerCase();
+    $('searchClr').classList.toggle('on', q.length>0);
+    render(q);
+}
+function clearSrc() { $('searchIn').value=''; onSearch(); }
+
+function hl(html, q) {
+    if (!q) return html;
+    return html.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>');
+}
+
+function render(q='', recentLimit=null, catFilter=null) {
+    const el = $('nlist');
+    let items = q ? notes.filter(n =>
+        n.title.toLowerCase().includes(q) ||
+        n.text.toLowerCase().includes(q)  ||
+        n.category.toLowerCase().includes(q)) : notes;
+    if (catFilter)   items = items.filter(n => n.category === catFilter);
+    if (recentLimit) items = [...items].sort((a,b) => b.id - a.id).slice(0, recentLimit);
+    updateSidebar();
+    $('searchCt').textContent = q && items.length!==notes.length ? `${items.length}/${notes.length}` : '';
+
+    if (!items.length) {
+        el.innerHTML = q
+            ? `<div class="empty"><div class="empty-ico"><i class="fas fa-magnifying-glass"></i></div><p><strong>Aucun résultat</strong>Aucune note pour « ${esc(q)} »</p></div>`
+            : `<div class="empty"><div class="empty-ico"><i class="far fa-file-alt"></i></div><p><strong>Aucune note</strong>Créez votre première note.</p></div>`;
+        return;
+    }
+
+    const g = {};
+    items.forEach(n => { (g[n.category]??=[]).push(n); });
+
+    // Show/hide "Sélectionner" toggle
+    $('bulkToggle').classList.toggle('show', items.length > 0);
+    if (selectMode && $('bulkToggle').textContent === 'Tout sélectionner') {
+        $('bulkToggle').onclick = () => { items.forEach(n => selected.add(n.id)); updateBulkCount(); render(q); };
+    }
+
+    el.innerHTML = Object.entries(g).map(([cat, arr]) => `
+        <div class="cat-hd">${esc(cat)}</div>
+        ${arr.map(n => {
+            const rs  = rSt(n.reminderDate);
+            const b   = rs ? `<span class="rbadge ${rs}"><i class="fas fa-bell"></i> ${fmtD(n.reminderDate)}</span>` : '';
+            const chk = selectMode ? `<input type="checkbox" class="note-check" ${selected.has(n.id)?'checked':''} onclick="event.stopPropagation(); toggleSelect(${n.id}, this)" />` : '';
+            const click = selectMode ? '' : `onclick="openNote(${n.id})"`;
+            return `<div class="note-row" ${click}>
+                ${chk}
+                <div class="note-body">
+                    <div class="note-t">${hl(esc(n.title),q)}</div>
+                    <div class="note-foot">
+                        <span class="note-date">${fmtD(n.created)}</span>
+                        ${b}
+                    </div>
+                </div>
+                <button class="note-del" onclick="event.stopPropagation(); delNote(${n.id})" title="Supprimer">
+                    <i class="fas fa-trash-can"></i>
+                </button>
+            </div>`;
+        }).join('')}
+    `).join('');
+}
+
+$('noteOv').addEventListener('click',    e => { if(e.target===$('noteOv'))    closeNote(); });
+$('remOv').addEventListener('click',     e => { if(e.target===$('remOv'))     closeRem(); });
+$('compileOv').addEventListener('click', e => { if(e.target===$('compileOv')) closeCompiler(); });
+$('settingsOv').addEventListener('click',e => { if(e.target===$('settingsOv')) closeSettings(); });
+
+/* ── Compiler ── */
+let compileTab = 'cr';
+
+function openCompiler() {
+    if (!notes.length) {
+        $('compileOv').classList.add('show');
+        $('viewCR').innerHTML = '<div class="cr-empty"><i class="far fa-file-alt" style="font-size:24px;display:block;margin-bottom:10px"></i>Aucune note à compiler.</div>';
+        $('viewPrompt').style.display = 'none';
+        $('viewIA').style.display = 'none';
+        $('viewCR').style.display = '';
+        $('compileMeta').textContent = '';
+        $('tabCR').classList.add('active');
+        $('tabPrompt').classList.remove('active');
+        $('tabIA').classList.remove('active');
+        $('iaGenBtn').style.display = 'none';
+        return;
+    }
+    $('compileScope').value = 'all';
+    compileTab = 'cr';
+    $('tabCR').classList.add('active');
+    $('tabPrompt').classList.remove('active');
+    $('tabIA').classList.remove('active');
+    $('viewCR').style.display = '';
+    $('viewPrompt').style.display = 'none';
+    $('viewIA').style.display = 'none';
+    $('iaGenBtn').style.display = 'none';
+    initApiKeyUI();
+    refreshCompiler();
+    $('compileOv').classList.add('show');
+}
+
+function closeCompiler() { $('compileOv').classList.remove('show'); }
+
+function switchCompileTab(tab) {
+    compileTab = tab;
+    $('tabCR').classList.toggle('active', tab === 'cr');
+    $('tabPrompt').classList.toggle('active', tab === 'prompt');
+    $('tabIA').classList.toggle('active', tab === 'ia');
+    $('viewCR').style.display     = tab === 'cr'     ? '' : 'none';
+    $('viewPrompt').style.display = tab === 'prompt' ? '' : 'none';
+    $('viewIA').style.display     = tab === 'ia'     ? '' : 'none';
+    $('iaGenBtn').style.display   = tab === 'ia'     ? '' : 'none';
+    const labels = { cr: 'Copier le texte', prompt: 'Copier le prompt', ia: 'Copier le résultat' };
+    $('copyCompileBtn').innerHTML = `<i class="fas fa-copy"></i> ${labels[tab] || 'Copier'}`;
+    $('copyCompileBtn').classList.remove('copied');
+}
+
+function getCompileNotes() {
+    if ($('compileScope').value === 'filtered') {
+        const q = $('searchIn').value.trim().toLowerCase();
+        if (q) return notes.filter(n =>
+            n.title.toLowerCase().includes(q) ||
+            n.text.toLowerCase().includes(q)  ||
+            n.category.toLowerCase().includes(q));
+    }
+    return notes;
+}
+
+function groupBy(arr) {
+    const g = {};
+    arr.forEach(n => { (g[n.category] ??= []).push(n); });
+    return g;
+}
+
+function refreshCompiler() {
+    const list = getCompileNotes();
+    const n    = list.length;
+    $('compileMeta').textContent = `${n} note${n > 1 ? 's' : ''}`;
+
+    const groups = groupBy(list);
+
+    /* ── Compte rendu view ── */
+    if (!n) {
+        $('viewCR').innerHTML = '<div class="cr-empty">Aucune note correspondante.</div>';
+    } else {
+        $('viewCR').innerHTML = Object.entries(groups).map(([cat, items]) =>
+            `<div class="cr-cat">${esc(cat)}</div>` +
+            items.map(note =>
+                `<div class="cr-note">
+                    <div class="cr-note-title">${esc(note.title)}</div>
+                    ${note.text ? `<div class="cr-note-body">${esc(note.text)}</div>` : ''}
+                    <div class="cr-note-meta">
+                        <span><i class="fas fa-calendar-days" style="font-size:9px"></i> ${fmtD(note.created)}</span>
+                        ${note.reminderDate ? `<span><i class="fas fa-bell" style="font-size:9px"></i> ${fmtD(note.reminderDate)}</span>` : ''}
+                    </div>
+                </div>`
+            ).join('')
+        ).join('');
+    }
+
+    /* ── Prompt Claude (compact, économique) ── */
+    const today = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+    const userInstr = ($('userInstruction') ? $('userInstruction').value.trim() : '');
+    const webSearch = ($('webSearch') ? $('webSearch').checked : false);
+
+    let prompt = '';
+
+    // Demande personnalisée en tête — Claude y prête plus d'attention
+    if (userInstr) {
+        prompt += `Demande : ${userInstr}\n\n`;
+    }
+
+    prompt += `Date : ${today}\n\nNotes :\n`;
+    for (const [cat, items] of Object.entries(groups)) {
+        prompt += `\n[${cat}]\n`;
+        items.forEach(note => {
+            const preview = note.text.length > 200 ? note.text.slice(0, 200) + '…' : note.text;
+            prompt += `• ${note.title}${preview ? ' : ' + preview.replace(/\n/g, ' ') : ''}\n`;
+        });
+    }
+
+    if (userInstr) {
+        prompt += `\nRéponds à la demande ci-dessus en te basant sur ces notes, en français.`;
+    } else {
+        prompt += `\nTâche : génère un compte rendu structuré en français. Pour chaque point, ajoute un court complément si utile (conseil, ressource, point de vigilance). Format : sections par thème, points clés, compléments en italique.`;
+    }
+    if (webSearch) {
+        prompt += ` Utilise la recherche web pour enrichir avec des informations récentes si pertinent.`;
+    }
+
+    $('promptTa').value = prompt;
+
+    // Estimation tokens (~4 chars/token, approximation GPT/Claude)
+    const tokenEst = $('tokenEst');
+    if (tokenEst) {
+        const est = Math.round(prompt.length / 4);
+        tokenEst.textContent = `~${est} tokens`;
+        tokenEst.style.color = est > 2000 ? 'var(--amber)' : 'var(--ink-4)';
+    }
+}
+
+/* ── Groq API ── */
+/* ── Encrypted API key storage ── */
+async function saveGroqKey(rawKey) {
+    if (!rawKey || !encKey) return;
+    const encrypted = await cryptEnc({ k: rawKey }, encKey);
+    localStorage.setItem(groqKey(), encrypted);
+}
+
+async function loadGroqKey() {
+    const stored = localStorage.getItem(groqKey());
+    if (!stored || !encKey) return '';
+    // Migration : ancienne clé en clair (commence par gsk_)
+    if (stored.startsWith('gsk_')) {
+        await saveGroqKey(stored);
+        return stored;
+    }
+    try {
+        const data = await cryptDec(stored, encKey);
+        return data.k || '';
+    } catch { return ''; }
+}
+
+function hasGroqKey() { return !!localStorage.getItem(groqKey()); }
+
+function initApiKeyUI() {
+    if ($('iaApiKey')) {
+        $('iaApiKey').value = '';
+        $('iaApiKey').placeholder = hasGroqKey()
+            ? 'Clé configurée — entrez une nouvelle pour remplacer' : 'gsk_…';
+    }
+}
+
+function openSettings() {
+    const saved = hasGroqKey();
+    $('cfgKey').value = '';
+    $('cfgKey').placeholder = saved ? 'Clé configurée — entrez une nouvelle pour remplacer' : 'gsk_…';
+    const st = $('keyStatus');
+    st.className = saved ? 'settings-status ok' : 'settings-status none';
+    st.innerHTML  = saved
+        ? '<i class="fas fa-lock-open"></i> Clé chiffrée enregistrée'
+        : '<i class="fas fa-circle-exclamation"></i> Aucune clé configurée';
+    $('settingsOv').classList.add('show');
+    setTimeout(() => $('cfgKey').focus(), 80);
+}
+
+function closeSettings() { $('settingsOv').classList.remove('show'); }
+
+async function saveKeyInline() {
+    const key = $('cfgKey').value.trim();
+    if (!key) { closeSettings(); return; }
+    await saveGroqKey(key);
+    $('cfgKey').value = '';
+    $('cfgKey').placeholder = 'Clé configurée — entrez une nouvelle pour remplacer';
+    const st = $('keyStatus');
+    st.className = 'settings-status ok';
+    st.innerHTML = '<i class="fas fa-check-circle"></i> Clé chiffrée et enregistrée';
+    const btn = $('btnKeySv');
+    const orig = btn.textContent;
+    btn.textContent = 'Enregistré !';
+    btn.classList.add('saved');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('saved'); closeSettings(); }, 1400);
+}
+
+function _groqErrMsg(status) {
+    if (status === 401) return 'Clé API invalide — vérifiez vos paramètres.';
+    if (status === 429) return 'Quota Groq dépassé — réessayez dans quelques instants.';
+    if (status >= 500) return 'Erreur temporaire du service IA — réessayez.';
+    return 'Génération impossible — vérifiez votre clé API.';
+}
+
+
+async function saveApiKey() {
+    const key = $('iaApiKey')?.value.trim();
+    if (!key) return;
+    await saveGroqKey(key);
+    const btn = $('iaKeySaveBtn');
+    if (btn) { btn.textContent = 'Sauvegardé !'; btn.classList.add('saved'); setTimeout(() => { btn.textContent = 'Sauvegarder'; btn.classList.remove('saved'); }, 2000); }
+}
+
+function buildClaudePrompt() {
+    const list   = getCompileNotes();
+    const groups = groupBy(list);
+    const today  = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+    const instr  = $('iaInstruction').value.trim();
+    let prompt = '';
+    if (instr) prompt += `Demande : ${instr}\n\n`;
+    prompt += `Date : ${today}\n\nNotes :\n`;
+    for (const [cat, items] of Object.entries(groups)) {
+        prompt += `\n[${cat}]\n`;
+        items.forEach(n => {
+            const preview = n.text.length > 300 ? n.text.slice(0, 300) + '…' : n.text;
+            prompt += `• ${n.title}${preview ? ' : ' + preview.replace(/\n/g, ' ') : ''}\n`;
+        });
+    }
+    if (instr) {
+        prompt += `\nRéponds à la demande ci-dessus en te basant sur ces notes, en français.`;
+    } else {
+        prompt += `\nTâche : génère un compte rendu structuré en français. Pour chaque point, ajoute un court complément si utile. Format : sections par thème, points clés.`;
+    }
+    return prompt;
+}
+
+async function generateWithOpenAI() {
+    const apiKey = $('iaApiKey')?.value.trim() || await loadGroqKey();
+    if (!apiKey) {
+        $('iaResult').innerHTML = '<div class="ia-result-empty" style="color:var(--red)">Clé API manquante — entrez votre clé gsk_… puis sauvegardez.</div>';
+        return;
+    }
+
+    const genBtn = $('iaGenBtn');
+    genBtn.disabled = true;
+    genBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Génération…';
+    $('iaResult').innerHTML = '<div class="ia-result-empty"><i class="fas fa-circle-notch fa-spin" style="font-size:20px;color:var(--khaki);display:block;margin-bottom:8px"></i>Interrogation de Groq…</div>';
+    $('iaUsage').textContent = '';
+
+    const model = $('iaModel').value;
+
+    try {
+        const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model,
+                max_tokens: 2048,
+                messages: [{ role: 'user', content: buildClaudePrompt() }]
+            })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(_groqErrMsg(resp.status));
+
+        /* Validate response structure before using */
+        const text = data?.choices?.[0]?.message?.content;
+        if (typeof text !== 'string') throw new Error('Réponse inattendue du service IA.');
+        if (text.trim()) {
+            $('iaResult').textContent = text.trim();
+        } else {
+            $('iaResult').innerHTML = '<div class="ia-result-empty" style="color:var(--amber)">Réponse vide reçue.</div>';
+        }
+
+        if (data.usage?.prompt_tokens != null) {
+            $('iaUsage').textContent = `${data.usage.prompt_tokens} tokens entrée · ${data.usage.completion_tokens} tokens sortie`;
+        }
+    } catch (err) {
+        $('iaResult').innerHTML = `<div class="ia-result-empty" style="color:var(--red)">${esc(err.message)}</div>`;
+    } finally {
+        genBtn.disabled = false;
+        genBtn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Générer';
+    }
+}
+
+
+async function copyCompiled() {
+    const text = compileTab === 'cr'
+        ? $('viewCR').innerText.trim()
+        : compileTab === 'ia'
+            ? $('iaResult').innerText.trim()
+            : $('promptTa').value;
+    const btn = $('copyCompileBtn');
+    try {
+        await navigator.clipboard.writeText(text);
+    } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+    }
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i> Copié !';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2200);
+}
+</script>
+<script>
+startPvRotate();
+startAwAnimation();
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
