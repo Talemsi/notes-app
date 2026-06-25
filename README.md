@@ -1,2 +1,3 @@
-# notes-app
-Gestionnaire de notes avec IA
+# Notics
+
+Gestionnaire de notes et calendrier chiffré — AES-256-GCM.

@@ -1,13 +1,13 @@
 {
-  "name": "Notes sécurisées",
-  "short_name": "Notes",
-  "description": "Gestionnaire de notes chiffré — AES-256",
+  "name": "Notics",
+  "short_name": "Notics",
+  "description": "Gestionnaire de notes et calendrier chiffré",
   "start_url": "/notes-app/",
   "scope": "/notes-app/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#EAE6DA",
-  "theme_color": "#7A6847",
+  "background_color": "#0B0B1E",
+  "theme_color": "#4361EE",
   "icons": [
     {
       "src": "icon-192.png",
