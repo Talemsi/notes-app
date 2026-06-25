@@ -1,4 +1,4 @@
-const CACHE = 'notics-v5';
+const CACHE = 'notics-v6';
 const ASSETS = [
   '/notes-app/',
   '/notes-app/index.html',
