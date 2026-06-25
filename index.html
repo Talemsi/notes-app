@@ -985,7 +985,7 @@
         .prompt-ta-wrap { position: relative; }
         .prompt-ta-wrap .prompt-ta { border-radius: 0 0 var(--r-sm) var(--r-sm); border-top: none; }
 
-        /* ── IA Claude tab ── */
+        /* ── IA tab ── */
         .ia-key-row {
             display: flex; align-items: center; gap: 8px;
             padding: 10px 14px; border-bottom: 1px solid var(--line);
@@ -1575,7 +1575,7 @@
                     <i class="fas fa-file-lines"></i> Compte rendu
                 </button>
                 <button class="ctab" id="tabPrompt" onclick="switchCompileTab('prompt')">
-                    <i class="fas fa-wand-magic-sparkles"></i> Prompt Claude
+                    <i class="fas fa-wand-magic-sparkles"></i> Prompt IA
                 </button>
             </div>
             <select class="compile-scope" id="compileScope" onchange="refreshCompiler()">
@@ -1596,14 +1596,14 @@
                     <label class="prompt-web-label">
                         <input type="checkbox" id="webSearch" onchange="refreshCompiler()">
                         <i class="fas fa-globe" style="color:var(--khaki);font-size:11px"></i>
-                        Demander à Claude de chercher sur le web
+                        Demander à l'IA de chercher sur le web
                     </label>
                     <span class="token-est" id="tokenEst"></span>
                 </div>
             </div>
             <div class="prompt-hint" style="border-radius:0;border-top:none;margin-bottom:0">
                 <i class="fas fa-circle-info"></i>
-                <span>Copiez ce prompt → collez dans <a href="https://claude.ai" target="_blank" rel="noopener noreferrer">claude.ai</a>. Zéro token consommé ici.</span>
+                <span>Copiez ce prompt → collez dans votre assistant IA. Zéro token consommé ici.</span>
             </div>
             <div class="prompt-ta-wrap">
                 <textarea class="prompt-ta" id="promptTa" readonly></textarea>
@@ -2526,14 +2526,14 @@ function refreshCompiler() {
         ).join('');
     }
 
-    /* ── Prompt Claude (compact, économique) ── */
+    /* ── Prompt IA ── */
     const today = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
     const userInstr = ($('userInstruction') ? $('userInstruction').value.trim() : '');
     const webSearch = ($('webSearch') ? $('webSearch').checked : false);
 
     let prompt = '';
 
-    // Demande personnalisée en tête — Claude y prête plus d'attention
+    // Demande personnalisée en tête
     if (userInstr) {
         prompt += `Demande : ${userInstr}\n\n`;
     }
@@ -2558,7 +2558,7 @@ function refreshCompiler() {
 
     $('promptTa').value = prompt;
 
-    // Estimation tokens (~4 chars/token, approximation GPT/Claude)
+    // Estimation tokens (~4 chars/token)
     const tokenEst = $('tokenEst');
     if (tokenEst) {
         const est = Math.round(prompt.length / 4);
@@ -2646,7 +2646,7 @@ async function saveApiKey() {
     if (btn) { btn.textContent = 'Sauvegardé !'; btn.classList.add('saved'); setTimeout(() => { btn.textContent = 'Sauvegarder'; btn.classList.remove('saved'); }, 2000); }
 }
 
-function buildClaudePrompt() {
+function buildIAPrompt() {
     const list   = getCompileNotes();
     const groups = groupBy(list);
     const today  = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
@@ -2694,7 +2694,7 @@ async function generateWithOpenAI() {
             body: JSON.stringify({
                 model,
                 max_tokens: 2048,
-                messages: [{ role: 'user', content: buildClaudePrompt() }]
+                messages: [{ role: 'user', content: buildIAPrompt() }]
             })
         });
 
