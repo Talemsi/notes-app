@@ -1194,6 +1194,127 @@
         }
         .user-card:hover .user-del { opacity: 1; }
         .user-del:hover { background: var(--red); color: white; }
+
+        /* ── Calendar ── */
+        .cal-view {
+            display: none; padding: 20px; gap: 16px;
+            grid-template-columns: 1fr 320px; align-items: start;
+        }
+        .cal-view.show { display: grid; }
+
+        .cal-panel {
+            background: var(--card); border-radius: var(--r);
+            box-shadow: var(--sh-sm); overflow: hidden;
+        }
+
+        .cal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px 12px; border-bottom: 1px solid var(--line);
+        }
+        .cal-month-lbl {
+            font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -.3px;
+        }
+        .cal-nav {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: var(--card-2); border: 1px solid var(--line);
+            color: var(--ink-3); cursor: pointer; font-size: 13px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .15s;
+        }
+        .cal-nav:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .cal-wdays {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            padding: 8px 12px 0; gap: 2px;
+        }
+        .cal-wday {
+            text-align: center; font-size: 11px; font-weight: 600;
+            color: var(--ink-4); padding: 4px 0; text-transform: uppercase; letter-spacing: .5px;
+        }
+        .cal-wday.weekend { color: var(--accent); }
+
+        .cal-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            padding: 4px 12px 14px; gap: 2px;
+        }
+        .cal-cell {
+            aspect-ratio: 1; border-radius: 10px;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            padding: 6px 2px 4px; cursor: pointer; transition: background .12s;
+            position: relative; min-width: 0;
+        }
+        .cal-cell:hover { background: var(--blue-faint); }
+        .cal-cell.other-month { opacity: .28; pointer-events: none; }
+        .cal-cell.today .cal-day-num {
+            background: var(--accent); color: white; border-radius: 50%;
+            width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+        }
+        .cal-cell.selected { background: var(--blue-faint); }
+        .cal-cell.selected .cal-day-num { color: var(--accent); font-weight: 700; }
+        .cal-day-num {
+            font-size: 13px; font-weight: 500; color: var(--ink-2);
+            line-height: 26px; min-width: 26px; text-align: center;
+        }
+        .cal-dots {
+            display: flex; gap: 2px; flex-wrap: wrap; justify-content: center;
+            margin-top: 2px; min-height: 6px;
+        }
+        .cal-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: var(--accent); flex-shrink: 0;
+        }
+        .cal-dot.cat-perso { background: #A78BFA; }
+        .cal-dot.cat-autre { background: var(--green); }
+
+        /* Right panel */
+        .cal-day-hd {
+            padding: 16px 20px 12px; border-bottom: 1px solid var(--line);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .cal-day-lbl { font-size: 14px; font-weight: 700; color: var(--ink); }
+        .cal-day-sub { font-size: 11px; color: var(--ink-4); margin-top: 1px; }
+        .cal-add-btn {
+            padding: 6px 12px; font-size: 12px; border-radius: 8px;
+            background: var(--accent); color: white; border: none;
+            font-family: inherit; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 5px; transition: background .15s;
+        }
+        .cal-add-btn:hover { background: var(--accent-h); }
+
+        .cal-appt-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; }
+        .cal-appt-empty {
+            text-align: center; color: var(--ink-4); font-size: 13px;
+            padding: 24px 0; display: flex; flex-direction: column; align-items: center; gap: 6px;
+        }
+        .cal-appt-empty i { font-size: 22px; opacity: .4; }
+
+        .appt-row {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 10px 12px; border-radius: 10px;
+            background: var(--surface); border: 1px solid var(--line);
+            cursor: pointer; transition: all .15s;
+        }
+        .appt-row:hover { border-color: rgba(67,97,238,0.25); box-shadow: var(--sh-xs); }
+        .appt-stripe {
+            width: 3px; border-radius: 2px; align-self: stretch; flex-shrink: 0;
+            background: var(--accent); margin-top: 1px;
+        }
+        .appt-stripe.cat-perso { background: #A78BFA; }
+        .appt-stripe.cat-autre { background: var(--green); }
+        .appt-body { flex: 1; min-width: 0; }
+        .appt-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+        .appt-time { font-size: 11px; color: var(--ink-4); display: flex; align-items: center; gap: 4px; }
+        .appt-desc { font-size: 12px; color: var(--ink-3); margin-top: 3px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .appt-del {
+            background: none; border: none; cursor: pointer; color: var(--ink-5);
+            font-size: 12px; padding: 2px 4px; border-radius: 5px; transition: all .12s;
+            flex-shrink: 0;
+        }
+        .appt-del:hover { color: var(--red); background: var(--red-faint); }
+
+        /* Appointment modal */
+        .modal-appt { max-width: 440px; }
     </style>
 </head>
 <body>
@@ -1368,6 +1489,10 @@
             <div class="sb-item" id="sbRecent" onclick="sbFilter('recent',this)">
                 <i class="fas fa-clock-rotate-left"></i> Récentes
             </div>
+            <div class="sb-item" id="sbCal" onclick="sbFilter('calendar',this)">
+                <i class="fas fa-calendar-days"></i> Calendrier
+                <span class="sb-cat-pill" id="sbCalCt" style="display:none">0</span>
+            </div>
             <div class="sb-item closed-item" id="sbClosed" onclick="sbFilter('closed',this)">
                 <i class="fas fa-circle-check"></i> Clôturées
                 <span class="sb-cat-pill closed-pill" id="sbClosedCt" style="display:none">0</span>
@@ -1401,7 +1526,7 @@
         <button class="ribbon-x" onclick="$('ribbon').classList.remove('show')">&times;</button>
     </div>
 
-    <div class="workspace">
+    <div class="workspace" id="workspace">
 
         <!-- Compose + IA -->
         <div class="panel">
@@ -1466,6 +1591,42 @@
         </div>
 
     </div>
+
+    <!-- ── Calendar View ── -->
+    <div class="cal-view" id="calView">
+
+        <!-- Monthly grid -->
+        <div class="cal-panel">
+            <div class="cal-header">
+                <button class="cal-nav" onclick="calPrev()"><i class="fas fa-chevron-left"></i></button>
+                <div class="cal-month-lbl" id="calMonthLbl"></div>
+                <button class="cal-nav" onclick="calNext()"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="cal-wdays" id="calWdays"></div>
+            <div class="cal-grid" id="calGrid"></div>
+        </div>
+
+        <!-- Day detail -->
+        <div class="cal-panel">
+            <div class="cal-day-hd">
+                <div>
+                    <div class="cal-day-lbl" id="calDayLbl">Sélectionnez un jour</div>
+                    <div class="cal-day-sub" id="calDaySub"></div>
+                </div>
+                <button class="cal-add-btn" id="calAddBtn" onclick="openApptModal()" style="display:none">
+                    <i class="fas fa-plus"></i> Ajouter
+                </button>
+            </div>
+            <div class="cal-appt-list" id="calApptList">
+                <div class="cal-appt-empty">
+                    <i class="fas fa-calendar-days"></i>
+                    Cliquez sur un jour pour voir vos rendez-vous
+                </div>
+            </div>
+        </div>
+
+    </div>
+
     </div><!-- /.app-main -->
 </div>
 
@@ -1539,6 +1700,63 @@
             </button>
             <button class="btn-add" id="mBtnSave" onclick="saveEditedNote()" style="display:none;padding:8px 18px;font-size:13px">
                 <i class="fas fa-check"></i> Sauvegarder
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Appointment modal -->
+<div class="overlay" id="apptOv">
+    <div class="modal modal-appt">
+        <div class="modal-hd">
+            <div class="modal-ttl" id="apptModalTitle">Nouveau rendez-vous</div>
+            <button class="modal-x" onclick="closeApptModal()">&times;</button>
+        </div>
+        <div class="modal-body" style="padding:20px 24px">
+            <div class="field">
+                <label class="field-lbl">Titre</label>
+                <input type="text" id="apptTitle" placeholder="Ex : Réunion d'équipe" />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="field">
+                    <label class="field-lbl">Date</label>
+                    <input type="date" id="apptDate" />
+                </div>
+                <div class="field">
+                    <label class="field-lbl">Catégorie</label>
+                    <select id="apptCat">
+                        <option value="Travail">Travail</option>
+                        <option value="Personnel">Personnel</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="field">
+                    <label class="field-lbl">Heure de début</label>
+                    <input type="time" id="apptStart" />
+                </div>
+                <div class="field">
+                    <label class="field-lbl">Heure de fin</label>
+                    <input type="time" id="apptEnd" />
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-lbl">Lieu <span style="color:var(--ink-5);font-weight:400">(optionnel)</span></label>
+                <input type="text" id="apptLocation" placeholder="Ex : Salle B, 12 rue des Nations…" />
+            </div>
+            <div class="field">
+                <label class="field-lbl">Description <span style="color:var(--ink-5);font-weight:400">(optionnelle)</span></label>
+                <textarea id="apptDesc" style="min-height:80px;max-height:160px" placeholder="Notes sur ce rendez-vous…"></textarea>
+            </div>
+        </div>
+        <div class="modal-ft">
+            <button class="btn-del" id="apptBtnDel" onclick="delApptFromModal()" style="display:none">
+                <i class="fas fa-trash-can"></i> Supprimer
+            </button>
+            <button class="btn-ghost" onclick="closeApptModal()">Annuler</button>
+            <button class="btn-add" onclick="saveAppt()" style="padding:8px 20px;font-size:13px">
+                <i class="fas fa-check"></i> Enregistrer
             </button>
         </div>
     </div>
@@ -1770,7 +1988,7 @@ function migrate() {
     sessionStorage.removeItem('ns_fails_v1');
 }
 
-let encKey = null, notes = [];
+let encKey = null, notes = [], appointments = [];
 let lockTimer;
 let fails = 0, blockedUntil = 0;
 let state = 'unlock', tmpPwd = null;
@@ -1816,9 +2034,10 @@ async function tryUnlock(pw) {
         } catch {}
         const key = await deriveKey(pw, fromB64(sb), params);
         const blob = localStorage.getItem(dataKey(currentUserId));
-        if (!blob) return { key, notes: [] };
+        if (!blob) return { key, notes: [], appointments: [] };
         const raw = await cryptDec(blob, key);
-        return { key, notes: Array.isArray(raw) ? raw : (raw.notes || []) };
+        if (Array.isArray(raw)) return { key, notes: raw, appointments: [] };
+        return { key, notes: raw.notes || [], appointments: raw.appointments || [] };
     } catch { return null; }
 }
 async function createVault(pw) {
@@ -1826,7 +2045,7 @@ async function createVault(pw) {
     localStorage.setItem(saltKey(currentUserId), toB64(salt));
     localStorage.setItem(vaultParamsKey(currentUserId), JSON.stringify(NEW_VAULT_PARAMS));
     const key = await deriveKey(pw, salt, NEW_VAULT_PARAMS);
-    localStorage.setItem(dataKey(currentUserId), await cryptEnc([], key));
+    localStorage.setItem(dataKey(currentUserId), await cryptEnc({ notes: [], appointments: [] }, key));
     return key;
 }
 async function reencrypt(pw) {
@@ -1834,11 +2053,11 @@ async function reencrypt(pw) {
     localStorage.setItem(saltKey(currentUserId), toB64(salt));
     localStorage.setItem(vaultParamsKey(currentUserId), JSON.stringify(NEW_VAULT_PARAMS));
     encKey = await deriveKey(pw, salt, NEW_VAULT_PARAMS);
-    localStorage.setItem(dataKey(currentUserId), await cryptEnc(notes, encKey));
+    localStorage.setItem(dataKey(currentUserId), await cryptEnc({ notes, appointments }, encKey));
 }
 async function persist() {
     if (!encKey || !currentUserId) return;
-    localStorage.setItem(dataKey(currentUserId), await cryptEnc(notes, encKey));
+    localStorage.setItem(dataKey(currentUserId), await cryptEnc({ notes, appointments }, encKey));
 }
 
 /* ── Lock screen ── */
@@ -1957,6 +2176,11 @@ function updateSidebar() {
     const closedPill = $('sbClosedCt');
     if (closed.length) { closedPill.textContent = closed.length; closedPill.style.display = ''; }
     else { closedPill.style.display = 'none'; }
+    const today = new Date().toISOString().split('T')[0];
+    const upcomingAppts = appointments.filter(a => a.date >= today);
+    const calPill = $('sbCalCt');
+    if (upcomingAppts.length) { calPill.textContent = upcomingAppts.length; calPill.style.display = ''; }
+    else { calPill.style.display = 'none'; }
     const cats = [...new Set(active.map(n => n.category).filter(Boolean))].sort();
     $('sbCats').innerHTML = cats.map(c => {
         const ct = active.filter(n => n.category === c).length;
@@ -1968,11 +2192,24 @@ function updateSidebar() {
 }
 
 let sbCurrentFilter = null;
+function showWorkspace(isCalendar) {
+    $('workspace') && ($('workspace').style.display = isCalendar ? 'none' : '');
+    const cv = $('calView');
+    if (isCalendar) { cv.classList.add('show'); }
+    else            { cv.classList.remove('show'); }
+}
+
 function sbFilter(filter, el) {
     sbCurrentFilter = filter;
     _closedFilter = (filter === 'closed');
     document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
     if (el) el.classList.add('active');
+    if (filter === 'calendar') {
+        showWorkspace(true);
+        renderCalendar();
+        return;
+    }
+    showWorkspace(false);
     if (!filter || filter === 'recent') {
         render('', filter === 'recent' ? 5 : null);
     } else if (filter === 'closed') {
@@ -1999,7 +2236,7 @@ function lockApp() {
     secAudit('LOCK', currentUserId || '');
     saveUserMeta();
     /* Zeroize sensitive in-memory state */
-    encKey = null; notes = []; tmpPwd = null; currentUserId = null;
+    encKey = null; notes = []; appointments = []; tmpPwd = null; currentUserId = null;
     _secLog.length = 0;
     clearTimeout(lockTimer);
     $('nlist').innerHTML = '';
@@ -2074,7 +2311,7 @@ async function dispatch(v) {
                 fails = 0;
                 sessionStorage.removeItem(failsKey(currentUserId));
                 localStorage.removeItem(blockKey(currentUserId));
-                encKey = r.key; notes = r.notes;
+                encKey = r.key; notes = r.notes; appointments = r.appointments;
                 showApp();
             } else {
                 fails++;
@@ -2100,7 +2337,7 @@ async function dispatch(v) {
         case 'ch0': {
             const r = await tryUnlock(v);
             if (!r) { $('lockErr').textContent = 'Mot de passe actuel incorrect.'; $('lockInput').value=''; return; }
-            notes = r.notes; state = 'ch1';
+            notes = r.notes; appointments = r.appointments; state = 'ch1';
             ui({ hint:'Nouveau mot de passe (min. 8 caractères).', btn:'Continuer' });
             break;
         }
@@ -2745,6 +2982,203 @@ async function copyCompiled() {
     btn.classList.add('copied');
     setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2200);
 }
+
+/* ═══════════════════════════════════════
+   CALENDRIER
+   ═══════════════════════════════════════ */
+
+let calYear  = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let calSelectedDate = null;
+let editingApptId   = null;
+
+const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                   'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const DAYS_FR   = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+
+function catClass(cat) {
+    if (cat === 'Personnel') return 'cat-perso';
+    if (cat === 'Autre')     return 'cat-autre';
+    return '';
+}
+
+function renderCalendar() {
+    $('calMonthLbl').textContent = `${MONTHS_FR[calMonth]} ${calYear}`;
+
+    // Weekday headers
+    $('calWdays').innerHTML = DAYS_FR.map((d,i) =>
+        `<div class="cal-wday${i>=5?' weekend':''}">${d}</div>`
+    ).join('');
+
+    const today = new Date().toISOString().split('T')[0];
+    const firstDay = new Date(calYear, calMonth, 1);
+    const lastDay  = new Date(calYear, calMonth + 1, 0);
+
+    // Monday-based offset (0=Mon…6=Sun)
+    let startOff = (firstDay.getDay() + 6) % 7;
+    const totalCells = startOff + lastDay.getDate();
+    const rows = Math.ceil(totalCells / 7);
+
+    let html = '';
+    for (let i = 0; i < rows * 7; i++) {
+        const dayNum = i - startOff + 1;
+        if (dayNum < 1 || dayNum > lastDay.getDate()) {
+            html += `<div class="cal-cell other-month"></div>`;
+            continue;
+        }
+        const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+        const dayAppts = appointments.filter(a => a.date === dateStr);
+        const isToday    = dateStr === today;
+        const isSelected = dateStr === calSelectedDate;
+        const dots = dayAppts.slice(0, 3).map(a =>
+            `<div class="cal-dot ${catClass(a.category)}"></div>`
+        ).join('');
+        html += `<div class="cal-cell${isToday?' today':''}${isSelected?' selected':''}" onclick="calSelectDay('${dateStr}')">
+            <div class="cal-day-num">${dayNum}</div>
+            <div class="cal-dots">${dots}</div>
+        </div>`;
+    }
+    $('calGrid').innerHTML = html;
+}
+
+function calSelectDay(dateStr) {
+    calSelectedDate = dateStr;
+    renderCalendar();
+
+    const d     = new Date(dateStr + 'T00:00:00');
+    const label = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+    $('calDayLbl').textContent = label.charAt(0).toUpperCase() + label.slice(1);
+
+    const dayAppts = appointments
+        .filter(a => a.date === dateStr)
+        .sort((a,b) => (a.startTime||'').localeCompare(b.startTime||''));
+
+    $('calDaySub').textContent = dayAppts.length
+        ? `${dayAppts.length} rendez-vous`
+        : 'Aucun rendez-vous';
+
+    $('calAddBtn').style.display = '';
+
+    if (!dayAppts.length) {
+        $('calApptList').innerHTML = `<div class="cal-appt-empty">
+            <i class="fas fa-calendar-check"></i>
+            Journée libre — cliquez sur <strong>Ajouter</strong> pour planifier
+        </div>`;
+        return;
+    }
+
+    $('calApptList').innerHTML = dayAppts.map(a => {
+        const timeStr = a.startTime
+            ? `${a.startTime}${a.endTime ? ' → ' + a.endTime : ''}`
+            : '';
+        return `<div class="appt-row" onclick="openApptModal('${a.id}')">
+            <div class="appt-stripe ${catClass(a.category)}"></div>
+            <div class="appt-body">
+                <div class="appt-title">${esc(a.title)}</div>
+                ${timeStr ? `<div class="appt-time"><i class="fas fa-clock" style="font-size:10px"></i>${timeStr}</div>` : ''}
+                ${a.location ? `<div class="appt-desc"><i class="fas fa-location-dot" style="font-size:10px;margin-right:3px"></i>${esc(a.location)}</div>` : ''}
+                ${a.description ? `<div class="appt-desc">${esc(a.description)}</div>` : ''}
+            </div>
+            <button class="appt-del" onclick="event.stopPropagation(); delAppt('${a.id}')" title="Supprimer">
+                <i class="fas fa-trash-can"></i>
+            </button>
+        </div>`;
+    }).join('');
+}
+
+function calPrev() {
+    if (calMonth === 0) { calMonth = 11; calYear--; } else calMonth--;
+    renderCalendar();
+    if (calSelectedDate) calSelectDay(calSelectedDate);
+}
+function calNext() {
+    if (calMonth === 11) { calMonth = 0; calYear++; } else calMonth++;
+    renderCalendar();
+    if (calSelectedDate) calSelectDay(calSelectedDate);
+}
+
+function openApptModal(idOrNull) {
+    editingApptId = (idOrNull && typeof idOrNull === 'string' && appointments.find(a => a.id == idOrNull))
+        ? idOrNull : null;
+
+    if (editingApptId) {
+        const a = appointments.find(a => a.id == editingApptId);
+        $('apptModalTitle').textContent = 'Modifier le rendez-vous';
+        $('apptTitle').value    = a.title;
+        $('apptDate').value     = a.date;
+        $('apptCat').value      = a.category || 'Travail';
+        $('apptStart').value    = a.startTime || '';
+        $('apptEnd').value      = a.endTime   || '';
+        $('apptLocation').value = a.location  || '';
+        $('apptDesc').value     = a.description || '';
+        $('apptBtnDel').style.display = '';
+    } else {
+        $('apptModalTitle').textContent = 'Nouveau rendez-vous';
+        $('apptTitle').value    = '';
+        $('apptDate').value     = calSelectedDate || new Date().toISOString().split('T')[0];
+        $('apptCat').value      = 'Travail';
+        $('apptStart').value    = '';
+        $('apptEnd').value      = '';
+        $('apptLocation').value = '';
+        $('apptDesc').value     = '';
+        $('apptBtnDel').style.display = 'none';
+    }
+    $('apptOv').classList.add('show');
+    setTimeout(() => $('apptTitle').focus(), 80);
+}
+
+function closeApptModal() { $('apptOv').classList.remove('show'); editingApptId = null; }
+
+async function saveAppt() {
+    const title = $('apptTitle').value.trim();
+    if (!title) { $('apptTitle').focus(); return; }
+    const date  = $('apptDate').value;
+    if (!date)  { $('apptDate').focus(); return; }
+
+    if (editingApptId) {
+        const a = appointments.find(a => a.id == editingApptId);
+        if (a) {
+            a.title       = title.substring(0, 200);
+            a.date        = date;
+            a.category    = $('apptCat').value;
+            a.startTime   = $('apptStart').value;
+            a.endTime     = $('apptEnd').value;
+            a.location    = $('apptLocation').value.trim().substring(0, 200);
+            a.description = $('apptDesc').value.trim().substring(0, 2000);
+        }
+    } else {
+        appointments.push({
+            id:          Date.now(),
+            title:       title.substring(0, 200),
+            date,
+            category:    $('apptCat').value,
+            startTime:   $('apptStart').value,
+            endTime:     $('apptEnd').value,
+            location:    $('apptLocation').value.trim().substring(0, 200),
+            description: $('apptDesc').value.trim().substring(0, 2000),
+        });
+    }
+    await persist();
+    closeApptModal();
+    renderCalendar();
+    updateSidebar();
+    if (calSelectedDate) calSelectDay(calSelectedDate);
+}
+
+async function delAppt(id) {
+    appointments = appointments.filter(a => a.id != id);
+    await persist();
+    renderCalendar();
+    updateSidebar();
+    if (calSelectedDate) calSelectDay(calSelectedDate);
+}
+async function delApptFromModal() {
+    if (!editingApptId) return;
+    await delAppt(editingApptId);
+    closeApptModal();
+}
+
+$('apptOv').addEventListener('click', e => { if (e.target === $('apptOv')) closeApptModal(); });
 </script>
 <script>
 startPvRotate();
