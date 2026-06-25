@@ -1869,6 +1869,7 @@
 
 <script>
 'use strict';
+(function () {
 
 /* ── Crypto ── */
 const LS_SALT      = 'ns_salt_v3';   // legacy (migration only)
@@ -1940,11 +1941,12 @@ function startAwAnimation() {
 }
 
 function saveUserMeta() {
-    if (!currentUserId || !notes) return;
-    const cats = new Set(notes.map(n => n.category).filter(Boolean));
+    if (!currentUserId) return;
+    const n_ = _vault.getNotes();
+    const cats = new Set(n_.map(n => n.category).filter(Boolean));
     localStorage.setItem(metaKey(currentUserId), JSON.stringify({
         lastLogin: new Date().toISOString(),
-        noteCount: notes.length,
+        noteCount: n_.length,
         catCount:  cats.size
     }));
 }
@@ -1988,17 +1990,34 @@ function migrate() {
     sessionStorage.removeItem('ns_fails_v1');
 }
 
-/* La clé de chiffrement est isolée dans une closure — inaccessible via window.* */
+/* Clé, notes et rendez-vous isolés dans une closure — inaccessibles via window.* ou console */
 const _vault = (() => {
-    let _k = null;
+    let _k     = null;
+    let _notes = [];
+    let _appts = [];
     return {
-        set(k)  { _k = k; },
-        get()   { return _k; },
-        lock()  { _k = null; },
-        isOpen(){ return _k !== null; }
+        /* Clé */
+        setKey(k)        { _k = k; },
+        getKey()         { return _k; },
+        isOpen()         { return _k !== null; },
+        /* Notes */
+        getNotes()       { return _notes; },
+        setNotes(n)      { _notes = Array.isArray(n) ? n : []; },
+        addNote(n)       { _notes.push(n); },
+        filterNotes(fn)  { _notes = _notes.filter(fn); },
+        /* Rendez-vous */
+        getAppts()       { return _appts; },
+        setAppts(a)      { _appts = Array.isArray(a) ? a : []; },
+        addAppt(a)       { _appts.push(a); },
+        filterAppts(fn)  { _appts = _appts.filter(fn); },
+        /* Verrouillage — purge complète avec écrasement avant libération GC */
+        lock() {
+            _k = null;
+            _notes.fill(null); _notes.length = 0;
+            _appts.fill(null); _appts.length = 0;
+        }
     };
 })();
-let notes = [], appointments = [];
 let lockTimer;
 let fails = 0, blockedUntil = 0;
 let state = 'unlock', tmpPwd = null;
@@ -2062,12 +2081,12 @@ async function reencrypt(pw) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     localStorage.setItem(saltKey(currentUserId), toB64(salt));
     localStorage.setItem(vaultParamsKey(currentUserId), JSON.stringify(NEW_VAULT_PARAMS));
-    _vault.set(await deriveKey(pw, salt, NEW_VAULT_PARAMS));
-    localStorage.setItem(dataKey(currentUserId), await cryptEnc({ notes, appointments }, _vault.get()));
+    _vault.setKey(await deriveKey(pw, salt, NEW_VAULT_PARAMS));
+    localStorage.setItem(dataKey(currentUserId), await cryptEnc({ notes: _vault.getNotes(), appointments: _vault.getAppts() }, _vault.getKey()));
 }
 async function persist() {
     if (!_vault.isOpen() || !currentUserId) return;
-    localStorage.setItem(dataKey(currentUserId), await cryptEnc({ notes, appointments }, _vault.get()));
+    localStorage.setItem(dataKey(currentUserId), await cryptEnc({ notes: _vault.getNotes(), appointments: _vault.getAppts() }, _vault.getKey()));
 }
 
 /* ── Lock screen ── */
@@ -2180,14 +2199,15 @@ function updateSidebar() {
         $('sbAvatar').textContent = user.name.charAt(0).toUpperCase();
         $('sbUname').textContent  = user.name;
     }
-    const active = notes.filter(n => !n.closed);
-    const closed = notes.filter(n => n.closed);
+    const allNotes = _vault.getNotes();
+    const active = allNotes.filter(n => !n.closed);
+    const closed = allNotes.filter(n => n.closed);
     $('sbAllCt').textContent = active.length;
     const closedPill = $('sbClosedCt');
     if (closed.length) { closedPill.textContent = closed.length; closedPill.style.display = ''; }
     else { closedPill.style.display = 'none'; }
     const today = new Date().toISOString().split('T')[0];
-    const upcomingAppts = appointments.filter(a => a.date >= today);
+    const upcomingAppts = _vault.getAppts().filter(a => a.date >= today);
     const calPill = $('sbCalCt');
     if (upcomingAppts.length) { calPill.textContent = upcomingAppts.length; calPill.style.display = ''; }
     else { calPill.style.display = 'none'; }
@@ -2246,7 +2266,7 @@ function lockApp() {
     secAudit('LOCK', currentUserId || '');
     saveUserMeta();
     /* Zeroize sensitive in-memory state */
-    _vault.lock(); notes.length = 0; appointments.length = 0; tmpPwd = null; currentUserId = null;
+    _vault.lock(); tmpPwd = null; currentUserId = null;
     _secLog.length = 0;
     clearTimeout(lockTimer);
     $('nlist').innerHTML = '';
@@ -2311,7 +2331,7 @@ async function dispatch(v) {
                 ui({ hint:'Choisissez un mot de passe (min. 8 caractères).', btn:'Continuer', err:'Les mots de passe ne correspondent pas.', showBack: true });
                 return;
             }
-            _vault.set(await createVault(tmpPwd)); notes = []; tmpPwd = null;
+            _vault.setKey(await createVault(tmpPwd)); _vault.setNotes([]); _vault.setAppts([]); tmpPwd = null;
             showApp();
             break;
 
@@ -2333,7 +2353,7 @@ async function dispatch(v) {
                 fails = 0;
                 sessionStorage.removeItem(failsKey(currentUserId));
                 localStorage.removeItem(blockKey(currentUserId));
-                _vault.set(r.key); notes = r.notes; appointments = r.appointments;
+                _vault.setKey(r.key); _vault.setNotes(r.notes); _vault.setAppts(r.appointments);
                 /* Auto-upgrade vault legacy (100k SHA-256 → 600k SHA-512) */
                 const vp = JSON.parse(localStorage.getItem(vaultParamsKey(currentUserId)) || 'null');
                 if (!vp || vp.iter < NEW_VAULT_PARAMS.iter) {
@@ -2365,7 +2385,7 @@ async function dispatch(v) {
         case 'ch0': {
             const r = await tryUnlock(v);
             if (!r) { $('lockErr').textContent = 'Mot de passe actuel incorrect.'; $('lockInput').value=''; return; }
-            _vault.set(r.key); notes = r.notes; appointments = r.appointments; state = 'ch1';
+            _vault.setKey(r.key); _vault.setNotes(r.notes); _vault.setAppts(r.appointments); state = 'ch1';
             ui({ hint:'Nouveau mot de passe (min. 8 caractères).', btn:'Continuer' });
             break;
         }
@@ -2460,7 +2480,7 @@ async function addNote() {
     }
     $('dateErr').style.display = 'none';
 
-    notes.push({
+    _vault.addNote({
         id:   Date.now(),
         title: title || text.split('\n')[0].substring(0, 50) || 'Note',
         category: cat, text,
@@ -2476,7 +2496,7 @@ async function addNote() {
 
 async function delNote(id) {
     if (!confirm('Supprimer cette note ?')) return;
-    notes = notes.filter(n => n.id !== id);
+    _vault.filterNotes(n => n.id !== id);
     secAudit('NOTE_DELETE');
     await persist();
     onSearch();
@@ -2512,7 +2532,7 @@ function updateBulkCount() {
 async function deleteSelected() {
     if (!selected.size) return;
     if (!confirm(`Supprimer ${selected.size} note${selected.size>1?'s':''} ?`)) return;
-    notes = notes.filter(n => !selected.has(n.id));
+    _vault.filterNotes(n => !selected.has(n.id));
     await persist();
     exitSelect();
 }
@@ -2520,7 +2540,7 @@ async function deleteSelected() {
 async function delFromModal() { await delNote(activeNoteId); closeNote(); }
 
 function openNote(id) {
-    const n = notes.find(n=>n.id===id);
+    const n = _vault.getNotes().find(n=>n.id===id);
     if (!n) return;
     activeNoteId = id;
     $('mTitle').textContent = n.title;
@@ -2541,7 +2561,7 @@ function openNote(id) {
 }
 
 async function toggleCloseNote() {
-    const n = notes.find(n => n.id === activeNoteId);
+    const n = _vault.getNotes().find(n => n.id === activeNoteId);
     if (!n) return;
     n.closed = !n.closed;
     await persist();
@@ -2555,7 +2575,7 @@ function closeNote() {
 }
 
 function enterEditMode() {
-    const n = notes.find(n => n.id === activeNoteId);
+    const n = _vault.getNotes().find(n => n.id === activeNoteId);
     if (!n) return;
     $('mBody').style.display     = 'none';
     $('mEditForm').style.display = '';
@@ -2579,7 +2599,7 @@ function exitEditMode() {
 }
 
 async function saveEditedNote() {
-    const n = notes.find(n => n.id === activeNoteId);
+    const n = _vault.getNotes().find(n => n.id === activeNoteId);
     if (!n) return;
     let title, cat, text;
     try {
@@ -2608,7 +2628,7 @@ async function saveEditedNote() {
 /* ── Reminders ── */
 function checkRem() {
     const t = new Date().toISOString().split('T')[0];
-    const due = notes.filter(n=>n.reminderDate && n.reminderDate<=t);
+    const due = _vault.getNotes().filter(n=>n.reminderDate && n.reminderDate<=t);
     if (!due.length) return;
     const td = due.filter(n=>n.reminderDate===t).length;
     const ov = due.filter(n=>n.reminderDate<t).length;
@@ -2621,7 +2641,7 @@ function checkRem() {
 
 function openRem() {
     const t = new Date().toISOString().split('T')[0];
-    const due = notes.filter(n=>n.reminderDate && n.reminderDate<=t);
+    const due = _vault.getNotes().filter(n=>n.reminderDate && n.reminderDate<=t);
     $('remList').innerHTML = due.map(n => {
         const s = rSt(n.reminderDate);
         return `<div class="rem-item ${s}" onclick="closeRem(); openNote(${n.id})">
@@ -2654,7 +2674,8 @@ let _closedFilter = false;
 
 function render(q='', recentLimit=null, catFilter=null) {
     const el = $('nlist');
-    let pool = _closedFilter ? notes.filter(n => n.closed) : notes.filter(n => !n.closed);
+    const _n  = _vault.getNotes();
+    let pool = _closedFilter ? _n.filter(n => n.closed) : _n.filter(n => !n.closed);
     let items = q ? pool.filter(n =>
         n.title.toLowerCase().includes(q) ||
         n.text.toLowerCase().includes(q)  ||
@@ -2715,7 +2736,7 @@ $('settingsOv').addEventListener('click',e => { if(e.target===$('settingsOv')) c
 let compileTab = 'cr';
 
 function openCompiler() {
-    if (!notes.length) {
+    if (!_vault.getNotes().length) {
         $('compileOv').classList.add('show');
         $('viewCR').innerHTML = '<div class="cr-empty"><i class="far fa-file-alt" style="font-size:24px;display:block;margin-bottom:10px"></i>Aucune note à compiler.</div>';
         $('viewPrompt').style.display = 'none';
@@ -2759,14 +2780,15 @@ function switchCompileTab(tab) {
 }
 
 function getCompileNotes() {
+    const allNotes = _vault.getNotes();
     if ($('compileScope').value === 'filtered') {
         const q = $('searchIn').value.trim().toLowerCase();
-        if (q) return notes.filter(n =>
+        if (q) return allNotes.filter(n =>
             n.title.toLowerCase().includes(q) ||
             n.text.toLowerCase().includes(q)  ||
             n.category.toLowerCase().includes(q));
     }
-    return notes;
+    return allNotes;
 }
 
 function groupBy(arr) {
@@ -2846,7 +2868,7 @@ function refreshCompiler() {
 /* ── Encrypted API key storage ── */
 async function saveGroqKey(rawKey) {
     if (!rawKey || !_vault.isOpen()) return;
-    const encrypted = await cryptEnc({ k: rawKey }, _vault.get());
+    const encrypted = await cryptEnc({ k: rawKey }, _vault.getKey());
     localStorage.setItem(groqKey(), encrypted);
 }
 
@@ -2858,7 +2880,7 @@ async function loadGroqKey() {
         return stored;
     }
     try {
-        const data = await cryptDec(stored, _vault.get());
+        const data = await cryptDec(stored, _vault.getKey());
         return data.k || '';
     } catch { return ''; }
 }
@@ -3064,7 +3086,7 @@ function renderCalendar() {
             continue;
         }
         const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
-        const dayAppts = appointments.filter(a => a.date === dateStr);
+        const dayAppts = _vault.getAppts().filter(a => a.date === dateStr);
         const isToday    = dateStr === today;
         const isSelected = dateStr === calSelectedDate;
         const dots = dayAppts.slice(0, 3).map(a =>
@@ -3086,7 +3108,7 @@ function calSelectDay(dateStr) {
     const label = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
     $('calDayLbl').textContent = label.charAt(0).toUpperCase() + label.slice(1);
 
-    const dayAppts = appointments
+    const dayAppts = _vault.getAppts()
         .filter(a => a.date === dateStr)
         .sort((a,b) => (a.startTime||'').localeCompare(b.startTime||''));
 
@@ -3135,11 +3157,11 @@ function calNext() {
 }
 
 function openApptModal(idOrNull) {
-    editingApptId = (idOrNull && typeof idOrNull === 'string' && appointments.find(a => a.id == idOrNull))
+    editingApptId = (idOrNull && typeof idOrNull === 'string' && _vault.getAppts().find(a => a.id == idOrNull))
         ? idOrNull : null;
 
     if (editingApptId) {
-        const a = appointments.find(a => a.id == editingApptId);
+        const a = _vault.getAppts().find(a => a.id == editingApptId);
         $('apptModalTitle').textContent = 'Modifier le rendez-vous';
         $('apptTitle').value    = a.title;
         $('apptDate').value     = a.date;
@@ -3173,7 +3195,7 @@ async function saveAppt() {
     if (!date)  { $('apptDate').focus(); return; }
 
     if (editingApptId) {
-        const a = appointments.find(a => a.id == editingApptId);
+        const a = _vault.getAppts().find(a => a.id == editingApptId);
         if (a) {
             a.title       = title.substring(0, 200);
             a.date        = date;
@@ -3184,7 +3206,7 @@ async function saveAppt() {
             a.description = $('apptDesc').value.trim().substring(0, 2000);
         }
     } else {
-        appointments.push({
+        _vault.addAppt({
             id:          Date.now(),
             title:       title.substring(0, 200),
             date,
@@ -3203,7 +3225,7 @@ async function saveAppt() {
 }
 
 async function delAppt(id) {
-    appointments = appointments.filter(a => a.id != id);
+    _vault.filterAppts(a => a.id != id);
     await persist();
     renderCalendar();
     updateSidebar();
@@ -3216,6 +3238,25 @@ async function delApptFromModal() {
 }
 
 $('apptOv').addEventListener('click', e => { if (e.target === $('apptOv')) closeApptModal(); });
+
+/* ── Exposer uniquement les fonctions appelées depuis le HTML inline ── */
+/* Notes, appointments, _vault, currentUserId restent dans la closure IIFE */
+const _pub = {
+    $, esc,
+    addNote, onSearch, clearSrc,
+    sbFilter, openNote, closeNote,
+    enterEditMode, saveEditedNote, toggleCloseNote,
+    delFromModal, delNote, deleteSelected, enterSelect, exitSelect, toggleSelect,
+    openCompiler, closeCompiler, switchCompileTab, refreshCompiler, copyCompiled, generateWithOpenAI,
+    openSettings, closeSettings, saveKeyInline, saveApiKey,
+    openRem, closeRem,
+    calPrev, calNext, calSelectDay, openApptModal, closeApptModal, saveAppt, delAppt, delApptFromModal,
+    lockApp, handleLock, startChangePwd, togglePwd, selectUser, startNewUser, deleteUser, showSelectUser,
+    startPvRotate, startAwAnimation
+};
+Object.assign(window, _pub);
+
+})(); /* fin IIFE */
 </script>
 <script>
 startPvRotate();
