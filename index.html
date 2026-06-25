@@ -1988,7 +1988,17 @@ function migrate() {
     sessionStorage.removeItem('ns_fails_v1');
 }
 
-let encKey = null, notes = [], appointments = [];
+/* La clé de chiffrement est isolée dans une closure — inaccessible via window.* */
+const _vault = (() => {
+    let _k = null;
+    return {
+        set(k)  { _k = k; },
+        get()   { return _k; },
+        lock()  { _k = null; },
+        isOpen(){ return _k !== null; }
+    };
+})();
+let notes = [], appointments = [];
 let lockTimer;
 let fails = 0, blockedUntil = 0;
 let state = 'unlock', tmpPwd = null;
@@ -2052,12 +2062,12 @@ async function reencrypt(pw) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     localStorage.setItem(saltKey(currentUserId), toB64(salt));
     localStorage.setItem(vaultParamsKey(currentUserId), JSON.stringify(NEW_VAULT_PARAMS));
-    encKey = await deriveKey(pw, salt, NEW_VAULT_PARAMS);
-    localStorage.setItem(dataKey(currentUserId), await cryptEnc({ notes, appointments }, encKey));
+    _vault.set(await deriveKey(pw, salt, NEW_VAULT_PARAMS));
+    localStorage.setItem(dataKey(currentUserId), await cryptEnc({ notes, appointments }, _vault.get()));
 }
 async function persist() {
-    if (!encKey || !currentUserId) return;
-    localStorage.setItem(dataKey(currentUserId), await cryptEnc({ notes, appointments }, encKey));
+    if (!_vault.isOpen() || !currentUserId) return;
+    localStorage.setItem(dataKey(currentUserId), await cryptEnc({ notes, appointments }, _vault.get()));
 }
 
 /* ── Lock screen ── */
@@ -2236,7 +2246,7 @@ function lockApp() {
     secAudit('LOCK', currentUserId || '');
     saveUserMeta();
     /* Zeroize sensitive in-memory state */
-    encKey = null; notes = []; appointments = []; tmpPwd = null; currentUserId = null;
+    _vault.lock(); notes.length = 0; appointments.length = 0; tmpPwd = null; currentUserId = null;
     _secLog.length = 0;
     clearTimeout(lockTimer);
     $('nlist').innerHTML = '';
@@ -2301,17 +2311,35 @@ async function dispatch(v) {
                 ui({ hint:'Choisissez un mot de passe (min. 8 caractères).', btn:'Continuer', err:'Les mots de passe ne correspondent pas.', showBack: true });
                 return;
             }
-            encKey = await createVault(tmpPwd); notes = []; tmpPwd = null;
+            _vault.set(await createVault(tmpPwd)); notes = []; tmpPwd = null;
             showApp();
             break;
 
         case 'unlock': {
+            /* Délai exponentiel en RAM — non contournable sans rechargement de page */
+            const BACKOFF = [0, 1000, 3000, 10000, 30000];
+            const delay   = BACKOFF[Math.min(fails, BACKOFF.length - 1)];
+            if (delay > 0) {
+                $('lockBtn').disabled   = true;
+                $('lockInput').disabled = true;
+                $('lockErr').textContent = `Patientez ${delay / 1000}s…`;
+                await new Promise(r => setTimeout(r, delay));
+                $('lockBtn').disabled   = false;
+                $('lockInput').disabled = false;
+                $('lockErr').textContent = '';
+            }
             const r = await tryUnlock(v);
             if (r) {
                 fails = 0;
                 sessionStorage.removeItem(failsKey(currentUserId));
                 localStorage.removeItem(blockKey(currentUserId));
-                encKey = r.key; notes = r.notes; appointments = r.appointments;
+                _vault.set(r.key); notes = r.notes; appointments = r.appointments;
+                /* Auto-upgrade vault legacy (100k SHA-256 → 600k SHA-512) */
+                const vp = JSON.parse(localStorage.getItem(vaultParamsKey(currentUserId)) || 'null');
+                if (!vp || vp.iter < NEW_VAULT_PARAMS.iter) {
+                    await reencrypt(v);
+                    secAudit('VAULT_UPGRADED', '600k SHA-512');
+                }
                 showApp();
             } else {
                 fails++;
@@ -2337,7 +2365,7 @@ async function dispatch(v) {
         case 'ch0': {
             const r = await tryUnlock(v);
             if (!r) { $('lockErr').textContent = 'Mot de passe actuel incorrect.'; $('lockInput').value=''; return; }
-            notes = r.notes; appointments = r.appointments; state = 'ch1';
+            _vault.set(r.key); notes = r.notes; appointments = r.appointments; state = 'ch1';
             ui({ hint:'Nouveau mot de passe (min. 8 caractères).', btn:'Continuer' });
             break;
         }
@@ -2372,11 +2400,21 @@ function togglePwd() {
 }
 
 let hiddenAt = 0;
+const HIDDEN_LOCK_DELAY = 30_000; // verrouillage si l'onglet est caché plus de 30s
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
         hiddenAt = Date.now();
+        /* Accélérer le timer à 30s dès que l'onglet est caché */
+        if (_vault.isOpen()) {
+            clearTimeout(lockTimer);
+            lockTimer = setTimeout(lockApp, HIDDEN_LOCK_DELAY);
+        }
     } else {
-        if (hiddenAt && Date.now() - hiddenAt >= LOCK_TIMEOUT) lockApp();
+        if (hiddenAt && Date.now() - hiddenAt >= LOCK_TIMEOUT) {
+            lockApp();
+        } else {
+            resetTimer(); /* restaurer le timer normal au retour */
+        }
         hiddenAt = 0;
     }
 });
@@ -2807,21 +2845,20 @@ function refreshCompiler() {
 /* ── Groq API ── */
 /* ── Encrypted API key storage ── */
 async function saveGroqKey(rawKey) {
-    if (!rawKey || !encKey) return;
-    const encrypted = await cryptEnc({ k: rawKey }, encKey);
+    if (!rawKey || !_vault.isOpen()) return;
+    const encrypted = await cryptEnc({ k: rawKey }, _vault.get());
     localStorage.setItem(groqKey(), encrypted);
 }
 
 async function loadGroqKey() {
     const stored = localStorage.getItem(groqKey());
-    if (!stored || !encKey) return '';
-    // Migration : ancienne clé en clair (commence par gsk_)
+    if (!stored || !_vault.isOpen()) return '';
     if (stored.startsWith('gsk_')) {
         await saveGroqKey(stored);
         return stored;
     }
     try {
-        const data = await cryptDec(stored, encKey);
+        const data = await cryptDec(stored, _vault.get());
         return data.k || '';
     } catch { return ''; }
 }
