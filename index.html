@@ -502,24 +502,24 @@
 
         /* Reminder ribbon */
         .ribbon {
-            background: rgba(245,158,11,0.10); border-bottom: 1px solid rgba(245,158,11,0.18);
+            background: #7C3A02; border-bottom: 1px solid #92450A;
             padding: 9px 22px;
             display: none; align-items: center; gap: 10px;
         }
         .ribbon.show { display: flex; }
-        .ribbon-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
-        .ribbon-txt { flex: 1; font-size: 13px; color: #FCD34D; }
-        .ribbon-txt b { color: #FDE68A; }
+        .ribbon-dot { width: 7px; height: 7px; border-radius: 50%; background: #FFD166; flex-shrink: 0; }
+        .ribbon-txt { flex: 1; font-size: 13px; color: #FFE8A3; }
+        .ribbon-txt b { color: #FFD166; }
         .ribbon-btn {
             padding: 4px 12px; border: none; border-radius: var(--r-xs);
-            background: var(--amber); color: white;
-            font-family: inherit; font-size: 12px; font-weight: 600;
+            background: #FFD166; color: #3D1A00;
+            font-family: inherit; font-size: 12px; font-weight: 700;
             cursor: pointer; transition: background .15s; flex-shrink: 0;
         }
-        .ribbon-btn:hover { background: #D97706; }
+        .ribbon-btn:hover { background: #FFC233; }
         .ribbon-x {
             background: none; border: none; cursor: pointer;
-            color: #FCD34D; font-size: 16px; flex-shrink: 0; padding: 0; opacity: .6;
+            color: #FFD166; font-size: 16px; flex-shrink: 0; padding: 0; opacity: .7;
             transition: opacity .15s;
         }
         .ribbon-x:hover { opacity: 1; }
@@ -742,10 +742,36 @@
             display: inline-flex; align-items: center; gap: 3px;
             padding: 2px 7px; border-radius: 20px;
         }
-        .rbadge.future  { background: rgba(91,127,255,0.10); color: #5B7FFF; }
-        .rbadge.today   { background: #FFFBEB; color: var(--amber); animation: pulse 2.5s ease infinite; }
-        .rbadge.overdue { background: #FEF2F2; color: var(--red); }
+        .rbadge.future   { background: rgba(67,97,238,0.10); color: #4361EE; }
+        .rbadge.today    { background: #FFFBEB; color: var(--amber); animation: pulse 2.5s ease infinite; }
+        .rbadge.overdue  { background: #FEF2F2; color: var(--red); }
+        .rbadge.closed   { background: rgba(6,214,160,0.12); color: #05A87C; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+        .note-row.is-closed { opacity: 0.62; }
+        .note-row.is-closed .note-t { text-decoration: line-through; color: var(--ink-3); }
+
+        .btn-close {
+            padding: 8px 16px; border-radius: var(--r-sm);
+            background: rgba(6,214,160,0.10); border: 1px solid rgba(6,214,160,0.25);
+            font-family: inherit; font-size: 13px; font-weight: 500;
+            color: #05A87C; cursor: pointer; transition: all .18s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .btn-close:hover { background: #06D6A0; color: white; border-color: #06D6A0; }
+        .btn-reopen {
+            padding: 8px 16px; border-radius: var(--r-sm);
+            background: rgba(248,150,30,0.10); border: 1px solid rgba(248,150,30,0.25);
+            font-family: inherit; font-size: 13px; font-weight: 500;
+            color: var(--amber); cursor: pointer; transition: all .18s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .btn-reopen:hover { background: var(--amber); color: white; border-color: var(--amber); }
+
+        .sb-item.closed-item { color: rgba(255,255,255,0.45); }
+        .sb-item.closed-item.active { background: rgba(6,214,160,0.18); color: #06D6A0; }
+        .sb-item.closed-item.active i { color: #06D6A0; }
+        .sb-cat-pill.closed-pill { background: rgba(6,214,160,0.18); color: #06D6A0; }
 
         .note-del {
             background: none; border: none; cursor: pointer;
@@ -1342,6 +1368,10 @@
             <div class="sb-item" id="sbRecent" onclick="sbFilter('recent',this)">
                 <i class="fas fa-clock-rotate-left"></i> Récentes
             </div>
+            <div class="sb-item closed-item" id="sbClosed" onclick="sbFilter('closed',this)">
+                <i class="fas fa-circle-check"></i> Clôturées
+                <span class="sb-cat-pill closed-pill" id="sbClosedCt" style="display:none">0</span>
+            </div>
             <div class="sb-section">Catégories</div>
             <div id="sbCats"></div>
         </div>
@@ -1501,7 +1531,10 @@
                 <i class="fas fa-trash-can"></i> Supprimer
             </button>
             <button class="btn-ghost" id="mBtnCancel" onclick="closeNote()">Fermer</button>
-            <button class="btn-ghost" id="mBtnEdit" onclick="enterEditMode()" style="color:#A78BFA;border-color:#A78BFA22">
+            <button class="btn-close" id="mBtnClose" onclick="toggleCloseNote()">
+                <i class="fas fa-circle-check"></i> Clôturer
+            </button>
+            <button class="btn-ghost" id="mBtnEdit" onclick="enterEditMode()" style="color:#4361EE;border-color:rgba(67,97,238,0.2)">
                 <i class="fas fa-pen"></i> Modifier
             </button>
             <button class="btn-add" id="mBtnSave" onclick="saveEditedNote()" style="display:none;padding:8px 18px;font-size:13px">
@@ -1918,10 +1951,15 @@ function updateSidebar() {
         $('sbAvatar').textContent = user.name.charAt(0).toUpperCase();
         $('sbUname').textContent  = user.name;
     }
-    $('sbAllCt').textContent = notes.length;
-    const cats = [...new Set(notes.map(n => n.category).filter(Boolean))].sort();
+    const active = notes.filter(n => !n.closed);
+    const closed = notes.filter(n => n.closed);
+    $('sbAllCt').textContent = active.length;
+    const closedPill = $('sbClosedCt');
+    if (closed.length) { closedPill.textContent = closed.length; closedPill.style.display = ''; }
+    else { closedPill.style.display = 'none'; }
+    const cats = [...new Set(active.map(n => n.category).filter(Boolean))].sort();
     $('sbCats').innerHTML = cats.map(c => {
-        const ct = notes.filter(n => n.category === c).length;
+        const ct = active.filter(n => n.category === c).length;
         return `<div class="sb-item" onclick="sbFilter('cat:${esc(c)}',this)">
             <i class="fas fa-tag"></i> ${esc(c)}
             <span class="sb-cat-pill">${ct}</span>
@@ -1932,10 +1970,13 @@ function updateSidebar() {
 let sbCurrentFilter = null;
 function sbFilter(filter, el) {
     sbCurrentFilter = filter;
+    _closedFilter = (filter === 'closed');
     document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
     if (el) el.classList.add('active');
     if (!filter || filter === 'recent') {
         render('', filter === 'recent' ? 5 : null);
+    } else if (filter === 'closed') {
+        render('');
     } else if (filter.startsWith('cat:')) {
         const cat = filter.slice(4);
         render('', null, cat);
@@ -2209,10 +2250,28 @@ function openNote(id) {
     activeNoteId = id;
     $('mTitle').textContent = n.title;
     const rs = rSt(n.reminderDate);
-    const badge = rs ? `<span class="rbadge ${rs}">${fmtD(n.reminderDate)} — ${rLbl(rs)}</span>` : '';
-    $('mMeta').innerHTML = `<span>${esc(n.category)}</span><span>·</span><span>${fmtD(n.created)}</span>${badge?'<span>·</span>'+badge:''}`;
+    const badge = rs ? `<span class="rbadge ${rs}"><i class="fas fa-bell"></i> ${fmtD(n.reminderDate)} — ${rLbl(rs)}</span>` : '';
+    const closedBadge = n.closed ? `<span class="rbadge closed"><i class="fas fa-circle-check"></i> Clôturée</span>` : '';
+    $('mMeta').innerHTML = `<span>${esc(n.category)}</span><span>·</span><span>${fmtD(n.created)}</span>${badge?'<span>·</span>'+badge:''}${closedBadge?'<span>·</span>'+closedBadge:''}`;
     $('mBody').textContent = n.text;
+    const btn = $('mBtnClose');
+    if (n.closed) {
+        btn.className = 'btn-reopen';
+        btn.innerHTML = '<i class="fas fa-rotate-left"></i> Réactiver';
+    } else {
+        btn.className = 'btn-close';
+        btn.innerHTML = '<i class="fas fa-circle-check"></i> Clôturer';
+    }
     $('noteOv').classList.add('show');
+}
+
+async function toggleCloseNote() {
+    const n = notes.find(n => n.id === activeNoteId);
+    if (!n) return;
+    n.closed = !n.closed;
+    await persist();
+    onSearch();
+    openNote(activeNoteId);
 }
 function closeNote() {
     $('noteOv').classList.remove('show');
@@ -2316,28 +2375,32 @@ function hl(html, q) {
     return html.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>');
 }
 
+let _closedFilter = false;
+
 function render(q='', recentLimit=null, catFilter=null) {
     const el = $('nlist');
-    let items = q ? notes.filter(n =>
+    let pool = _closedFilter ? notes.filter(n => n.closed) : notes.filter(n => !n.closed);
+    let items = q ? pool.filter(n =>
         n.title.toLowerCase().includes(q) ||
         n.text.toLowerCase().includes(q)  ||
-        n.category.toLowerCase().includes(q)) : notes;
+        n.category.toLowerCase().includes(q)) : pool;
     if (catFilter)   items = items.filter(n => n.category === catFilter);
     if (recentLimit) items = [...items].sort((a,b) => b.id - a.id).slice(0, recentLimit);
     updateSidebar();
-    $('searchCt').textContent = q && items.length!==notes.length ? `${items.length}/${notes.length}` : '';
+    $('searchCt').textContent = q && items.length!==pool.length ? `${items.length}/${pool.length}` : '';
 
     if (!items.length) {
         el.innerHTML = q
             ? `<div class="empty"><div class="empty-ico"><i class="fas fa-magnifying-glass"></i></div><p><strong>Aucun résultat</strong>Aucune note pour « ${esc(q)} »</p></div>`
-            : `<div class="empty"><div class="empty-ico"><i class="far fa-file-alt"></i></div><p><strong>Aucune note</strong>Créez votre première note.</p></div>`;
+            : _closedFilter
+                ? `<div class="empty"><div class="empty-ico"><i class="fas fa-circle-check"></i></div><p><strong>Aucune note clôturée</strong>Les notes terminées apparaîtront ici.</p></div>`
+                : `<div class="empty"><div class="empty-ico"><i class="far fa-file-alt"></i></div><p><strong>Aucune note</strong>Créez votre première note.</p></div>`;
         return;
     }
 
     const g = {};
     items.forEach(n => { (g[n.category]??=[]).push(n); });
 
-    // Show/hide "Sélectionner" toggle
     $('bulkToggle').classList.toggle('show', items.length > 0);
     if (selectMode && $('bulkToggle').textContent === 'Tout sélectionner') {
         $('bulkToggle').onclick = () => { items.forEach(n => selected.add(n.id)); updateBulkCount(); render(q); };
@@ -2348,15 +2411,16 @@ function render(q='', recentLimit=null, catFilter=null) {
         ${arr.map(n => {
             const rs  = rSt(n.reminderDate);
             const b   = rs ? `<span class="rbadge ${rs}"><i class="fas fa-bell"></i> ${fmtD(n.reminderDate)}</span>` : '';
+            const cb  = n.closed ? `<span class="rbadge closed"><i class="fas fa-circle-check"></i> Clôturée</span>` : '';
             const chk = selectMode ? `<input type="checkbox" class="note-check" ${selected.has(n.id)?'checked':''} onclick="event.stopPropagation(); toggleSelect(${n.id}, this)" />` : '';
             const click = selectMode ? '' : `onclick="openNote(${n.id})"`;
-            return `<div class="note-row" ${click}>
+            return `<div class="note-row${n.closed?' is-closed':''}" ${click}>
                 ${chk}
                 <div class="note-body">
                     <div class="note-t">${hl(esc(n.title),q)}</div>
                     <div class="note-foot">
                         <span class="note-date">${fmtD(n.created)}</span>
-                        ${b}
+                        ${b}${cb}
                     </div>
                 </div>
                 <button class="note-del" onclick="event.stopPropagation(); delNote(${n.id})" title="Supprimer">
