@@ -1,8 +1,9 @@
-const CACHE = 'notics-v9';
+const CACHE = 'notics-v10';
 const ASSETS = [
   '/notes-app/',
   '/notes-app/index.html',
   '/notes-app/app.js',
+  '/notes-app/logo.svg',
   '/notes-app/icon-192.png',
   '/notes-app/icon-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css',

@@ -1,0 +1,22 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ng" x1="14" y1="14" x2="86" y2="86" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#4ECDC4"/>
+      <stop offset="48%"  stop-color="#4361EE"/>
+      <stop offset="100%" stop-color="#7B5EA7"/>
+    </linearGradient>
+  </defs>
+
+  <!--
+    Notics — Logo
+    N stylisé : un chemin unique formant les 3 traits (barre gauche, diagonale, barre droite).
+    Accent teal en bas à droite : allusion au chiffrement local.
+  -->
+  <path d="M22 84 L22 16 L78 84 L78 16"
+        stroke="url(#ng)"
+        stroke-width="13"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+  <circle cx="78" cy="84" r="9" fill="#4ECDC4" opacity="0.88"/>
+</svg>
