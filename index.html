@@ -12,7 +12,7 @@
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta name="referrer" content="no-referrer">
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline' https://cdnjs.cloudflare.com; font-src https://cdnjs.cloudflare.com; connect-src https://api.groq.com; worker-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; frame-ancestors 'none';">
+          content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline' https://cdnjs.cloudflare.com; font-src https://cdnjs.cloudflare.com; connect-src https://api.groq.com https://api.github.com; worker-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; frame-ancestors 'none';">
     <title>Notics</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#5B7FFF">
@@ -518,6 +518,34 @@
             background: rgba(67,97,238,.10); border-color: rgba(67,97,238,.30); color: #818CF8;
         }
         .btn-bk-im:hover { background: rgba(67,97,238,.22); border-color: #4361EE; }
+
+        .sync-dot {
+            width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+            transition: background .3s;
+        }
+        .sync-idle { background: var(--ink-5); }
+        .sync-ok   { background: var(--green); }
+        .sync-err  { background: var(--red); }
+        @keyframes spin-sync { to { transform: rotate(360deg); } }
+        .sync-ing  { background: #4361EE; animation: spin-sync .8s linear infinite; border-radius: 2px; }
+        .gh-token-row {
+            display: flex; gap: 8px; align-items: center; margin-top: 12px;
+        }
+        .gh-token-row input {
+            flex: 1; padding: 9px 12px;
+            background: var(--card-2); border: 1.5px solid var(--line);
+            border-radius: var(--r-sm); color: var(--ink);
+            font-family: inherit; font-size: 12px; outline: none;
+            transition: border-color .2s; caret-color: #7C5CFC;
+        }
+        .gh-token-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+        .gh-restore-btn {
+            margin-top: 10px; padding: 7px 13px; border-radius: 8px; font-size: 12px;
+            font-weight: 600; cursor: pointer; font-family: inherit; width: 100%;
+            background: rgba(67,97,238,.08); border: 1.5px solid rgba(67,97,238,.25); color: #818CF8;
+            display: flex; align-items: center; justify-content: center; gap: 6px; transition: all .15s;
+        }
+        .gh-restore-btn:hover { background: rgba(67,97,238,.18); border-color: #4361EE; }
 
         /* ── App main area ── */
         .app-main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-y: auto; }
@@ -1527,6 +1555,7 @@
                 <div class="sb-avatar" id="sbAvatar">?</div>
                 <span class="sb-uname" id="sbUname">—</span>
             </div>
+            <div class="sync-dot sync-idle" id="sbSyncDot" title="Sync GitHub" style="cursor:default"></div>
             <button class="sb-icon-btn" id="sbSettingsBtn" title="Paramètres">
                 <i class="fas fa-gear"></i>
             </button>
@@ -1688,6 +1717,26 @@
             </div>
             <input type="file" id="importFile" accept=".notics,.json" style="display:none">
             <div class="settings-status none" id="backupStatus"></div>
+
+            <hr class="settings-sep">
+
+            <div class="settings-section-title" style="display:flex;align-items:center;gap:6px">
+                <i class="fas fa-cloud-arrow-up" style="color:#818CF8"></i>
+                Sync automatique GitHub
+                <div class="sync-dot sync-idle" id="syncDot" style="margin-left:auto"></div>
+            </div>
+            <div class="settings-hint">
+                Token GitHub avec scope <code>gist</code> uniquement.
+                Vault chiffré sauvegardé automatiquement après chaque modification.
+            </div>
+            <div class="gh-token-row">
+                <input type="password" id="ghTokenInput" placeholder="ghp_…" autocomplete="off" spellcheck="false">
+                <button class="btn-key-sv" id="btnGhSave">Sauver</button>
+            </div>
+            <button class="gh-restore-btn" id="btnGhRestore">
+                <i class="fas fa-cloud-arrow-down"></i> Restaurer depuis GitHub
+            </button>
+            <div class="settings-status none" id="ghStatus"></div>
         </div>
     </div>
 </div>

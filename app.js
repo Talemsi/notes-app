@@ -217,6 +217,7 @@ async function reencrypt(pw) {
 async function persist() {
     if (!_vault.isOpen() || !currentUserId) return;
     localStorage.setItem(dataKey(currentUserId), await cryptEnc({ notes: _vault.getNotes(), appointments: _vault.getAppts() }, _vault.getKey()));
+    gistSync().catch(() => {}); // auto-sync chiffré vers GitHub Gist si configuré
 }
 
 /* ── Lock screen ── */
@@ -1026,6 +1027,8 @@ function openSettings() {
     st.innerHTML  = saved
         ? '<i class="fas fa-lock-open"></i> Clé chiffrée enregistrée'
         : '<i class="fas fa-circle-exclamation"></i> Aucune clé configurée';
+    const ghSet = !!localStorage.getItem(ghKey());
+    $('ghTokenInput').placeholder = ghSet ? 'Token configuré — entrez-en un nouveau pour remplacer' : 'ghp_…';
     $('settingsOv').classList.add('show');
     setTimeout(() => $('cfgKey').focus(), 80);
 }
@@ -1359,6 +1362,119 @@ async function delApptFromModal() {
     closeApptModal();
 }
 
+/* ── GitHub Gist Sync ── */
+const ghKey     = () => `ns_ght_${currentUserId}`;
+const ghGistKey = () => `ns_gid_${currentUserId}`;
+const GIST_FILE = 'notics-vault.json';
+
+async function saveGhToken(raw) {
+    if (!raw || !_vault.isOpen() || !currentUserId) return;
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, _vault.getKey(), enc(raw));
+    const out = new Uint8Array(12 + ct.byteLength);
+    out.set(iv); out.set(new Uint8Array(ct), 12);
+    localStorage.setItem(ghKey(), toB64(out));
+}
+
+async function loadGhToken() {
+    const raw = localStorage.getItem(ghKey());
+    if (!raw || !_vault.isOpen()) return null;
+    try {
+        const buf = fromB64(raw);
+        const pt  = await crypto.subtle.decrypt({ name:'AES-GCM', iv: buf.slice(0,12) }, _vault.getKey(), buf.slice(12));
+        return dec(pt);
+    } catch { return null; }
+}
+
+function _setSyncDot(state) {
+    [$('syncDot'), $('sbSyncDot')].forEach(el => {
+        if (el) el.className = `sync-dot sync-${state}`;
+    });
+}
+
+async function gistSync() {
+    const token = await loadGhToken();
+    if (!token || !currentUserId) return;
+    _setSyncDot('ing');
+    const payload = JSON.stringify({
+        _v: 2,
+        userId: currentUserId,
+        user: getUsers().find(u => u.id === currentUserId)?.name || 'Notics',
+        salt:   localStorage.getItem(saltKey(currentUserId)),
+        params: localStorage.getItem(vaultParamsKey(currentUserId)),
+        vault:  localStorage.getItem(dataKey(currentUserId)),
+        updated: new Date().toISOString()
+    });
+    const headers = {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github.v3+json'
+    };
+    const body = JSON.stringify({
+        description: 'Notics vault (chiffré AES-256)',
+        public: false,
+        files: { [GIST_FILE]: { content: payload } }
+    });
+    try {
+        const gistId = localStorage.getItem(ghGistKey());
+        let res;
+        if (gistId) {
+            res = await fetch(`https://api.github.com/gists/${gistId}`, { method: 'PATCH', headers, body });
+            if (res.status === 404) {
+                localStorage.removeItem(ghGistKey());
+                res = await fetch('https://api.github.com/gists', { method: 'POST', headers, body });
+                if (res.ok) localStorage.setItem(ghGistKey(), (await res.json()).id);
+            }
+        } else {
+            res = await fetch('https://api.github.com/gists', { method: 'POST', headers, body });
+            if (res.ok) localStorage.setItem(ghGistKey(), (await res.json()).id);
+        }
+        _setSyncDot(res.ok ? 'ok' : 'err');
+        if (res.ok) setTimeout(() => _setSyncDot('idle'), 2500);
+    } catch { _setSyncDot('err'); }
+}
+
+async function saveGhSettings() {
+    const raw = $('ghTokenInput').value.trim();
+    if (!raw) { setGhStatus('Entrez votre token GitHub.', 'err'); return; }
+    await saveGhToken(raw);
+    $('ghTokenInput').value = '';
+    setGhStatus('✓ Token sauvegardé — sync actif.', 'ok');
+    gistSync().catch(() => {});
+}
+
+async function gistRestore() {
+    const token = await loadGhToken();
+    const gistId = localStorage.getItem(ghGistKey());
+    if (!token) { setGhStatus('Configurez d\'abord votre token GitHub.', 'err'); return; }
+    if (!gistId) { setGhStatus('Aucun Gist trouvé. Sauvegardez d\'abord sur cet appareil.', 'err'); return; }
+    try {
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+            headers: { 'Authorization': `token ${token}` }
+        });
+        if (!res.ok) throw new Error(`GitHub ${res.status}`);
+        const data = await res.json();
+        const content = data.files?.[GIST_FILE]?.content;
+        if (!content) throw new Error('Gist vide.');
+        const bk = JSON.parse(content);
+        if (!bk.salt || !bk.vault) throw new Error('Contenu invalide.');
+        const uid = bk.userId || currentUserId;
+        localStorage.setItem(saltKey(uid),  bk.salt);
+        localStorage.setItem(dataKey(uid),  bk.vault);
+        if (bk.params) localStorage.setItem(vaultParamsKey(uid), bk.params);
+        const users = getUsers();
+        if (!users.find(u => u.id === uid)) { users.push({ id: uid, name: bk.user || 'Notics' }); saveUsers(users); }
+        setGhStatus('✓ Restauré — verrouillez puis sélectionnez votre profil.', 'ok');
+    } catch (err) { setGhStatus('✗ ' + err.message, 'err'); }
+}
+
+function setGhStatus(msg, cls) {
+    const el = $('ghStatus');
+    if (!el) return;
+    el.textContent = msg; el.className = `settings-status ${cls}`;
+    setTimeout(() => { el.textContent = ''; el.className = 'settings-status none'; }, 5000);
+}
+
 /* ── Sauvegarde locale ── */
 function exportVault() {
     if (!currentUserId) return;
@@ -1471,6 +1587,9 @@ function initEventListeners() {
     $('btnExport').addEventListener('click', exportVault);
     $('btnImport').addEventListener('click', importVault);
     $('importFile').addEventListener('change', handleImportFile);
+    $('btnGhSave').addEventListener('click', saveGhSettings);
+    $('ghTokenInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveGhSettings(); });
+    $('btnGhRestore').addEventListener('click', gistRestore);
 
     /* Modal note */
     $('closeNoteBtn').addEventListener('click', closeNote);
