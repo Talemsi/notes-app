@@ -496,7 +496,28 @@
             display: flex; align-items: center; gap: 6px;
         }
         .settings-status.ok  { color: var(--green); }
+        .settings-status.err { color: var(--red); }
         .settings-status.none { color: var(--ink-4); }
+
+        .settings-sep {
+            border: none; border-top: 1px solid var(--line); margin: 18px 0;
+        }
+        .backup-row {
+            display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;
+        }
+        .btn-bk {
+            padding: 8px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+            cursor: pointer; font-family: inherit; border: 1.5px solid;
+            display: flex; align-items: center; gap: 6px; transition: all .15s;
+        }
+        .btn-bk-ex {
+            background: rgba(76,201,196,.10); border-color: rgba(76,201,196,.30); color: #4ECDC4;
+        }
+        .btn-bk-ex:hover { background: rgba(76,201,196,.22); border-color: #4ECDC4; }
+        .btn-bk-im {
+            background: rgba(67,97,238,.10); border-color: rgba(67,97,238,.30); color: #818CF8;
+        }
+        .btn-bk-im:hover { background: rgba(67,97,238,.22); border-color: #4361EE; }
 
         /* ── App main area ── */
         .app-main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-y: auto; }
@@ -1647,6 +1668,26 @@
                 <button class="btn-key-sv" id="btnKeySv">Enregistrer</button>
             </div>
             <div class="settings-status none" id="keyStatus"></div>
+
+            <hr class="settings-sep">
+
+            <div class="settings-section-title">
+                <i class="fas fa-database" style="color:#4ECDC4;margin-right:5px"></i>Sauvegarde locale
+            </div>
+            <div class="settings-hint">
+                Exportez votre vault chiffré (AES-256) en fichier <code>.notics</code>.
+                Seul votre mot de passe peut déchiffrer ce fichier.
+            </div>
+            <div class="backup-row">
+                <button class="btn-bk btn-bk-ex" id="btnExport">
+                    <i class="fas fa-download"></i> Exporter
+                </button>
+                <button class="btn-bk btn-bk-im" id="btnImport">
+                    <i class="fas fa-upload"></i> Importer
+                </button>
+            </div>
+            <input type="file" id="importFile" accept=".notics,.json" style="display:none">
+            <div class="settings-status none" id="backupStatus"></div>
         </div>
     </div>
 </div>

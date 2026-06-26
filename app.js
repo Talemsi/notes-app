@@ -1359,6 +1359,63 @@ async function delApptFromModal() {
     closeApptModal();
 }
 
+/* ── Sauvegarde locale ── */
+function exportVault() {
+    if (!currentUserId) return;
+    const salt   = localStorage.getItem(saltKey(currentUserId));
+    const vault  = localStorage.getItem(dataKey(currentUserId));
+    const params = localStorage.getItem(vaultParamsKey(currentUserId));
+    if (!salt || !vault) {
+        setBkStatus('Aucune donnée à exporter.', 'err'); return;
+    }
+    const name = getUsers().find(u => u.id === currentUserId)?.name || 'Notics';
+    const blob = new Blob([JSON.stringify({
+        _v: 2, userId: currentUserId, user: name,
+        salt, params, vault, exported: new Date().toISOString()
+    })], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `notics-${name.replace(/[^a-z0-9]/gi,'_')}-${new Date().toISOString().slice(0,10)}.notics`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    setBkStatus('✓ Sauvegarde téléchargée', 'ok');
+}
+
+function importVault() { $('importFile').click(); }
+
+function handleImportFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        try {
+            const bk = JSON.parse(ev.target.result);
+            if (!bk.salt || !bk.vault) throw new Error('Fichier invalide.');
+            const uid  = bk.userId || ('imp_' + Date.now());
+            const uname = bk.user  || 'Notes importées';
+            localStorage.setItem(saltKey(uid),  bk.salt);
+            localStorage.setItem(dataKey(uid),  bk.vault);
+            if (bk.params) localStorage.setItem(vaultParamsKey(uid), bk.params);
+            const users = getUsers();
+            if (!users.find(u => u.id === uid)) {
+                users.push({ id: uid, name: uname }); saveUsers(users);
+            }
+            setBkStatus('✓ Importé — verrouillez puis sélectionnez votre profil.', 'ok');
+        } catch (err) {
+            setBkStatus('✗ ' + err.message, 'err');
+        }
+        e.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+function setBkStatus(msg, cls) {
+    const el = $('backupStatus');
+    el.textContent = msg; el.className = `settings-status ${cls}`;
+    setTimeout(() => { el.textContent = ''; el.className = 'settings-status none'; }, 4000);
+}
+
 /* ── Variable pour la sélection groupée ── */
 let _visibleItems = [];
 
@@ -1411,6 +1468,9 @@ function initEventListeners() {
     $('closeSettingsBtn').addEventListener('click', closeSettings);
     $('cfgKey').addEventListener('keydown', e => { if (e.key === 'Enter') saveKeyInline(); });
     $('btnKeySv').addEventListener('click', saveKeyInline);
+    $('btnExport').addEventListener('click', exportVault);
+    $('btnImport').addEventListener('click', importVault);
+    $('importFile').addEventListener('change', handleImportFile);
 
     /* Modal note */
     $('closeNoteBtn').addEventListener('click', closeNote);
